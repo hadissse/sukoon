@@ -1,0 +1,80 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const tabs = [
+  { key: 'today', label: 'اليوم', href: '/today', icon: TodayIcon },
+  { key: 'explore', label: 'استكشاف', href: '/explore', icon: ExploreIcon },
+  { key: 'self', label: 'أنت', href: '/self', icon: SelfIcon },
+] as const;
+
+function TodayIcon({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#171B3A">
+      <path d="M12 2a7 7 0 0 1 7 7c0 4.5-7 13-7 13S5 13.5 5 9a7 7 0 0 1 7-7zm0 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" opacity="0" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="#171B3A" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ) : (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5C5C7A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </svg>
+  );
+}
+
+function ExploreIcon({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#171B3A">
+      <circle cx="12" cy="12" r="10" fill="#171B3A" />
+      <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" fill="#FFFFFF" />
+    </svg>
+  ) : (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5C5C7A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" />
+    </svg>
+  );
+}
+
+function SelfIcon({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#171B3A">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M5.5 21a6.5 6.5 0 0 1 13 0" fill="#171B3A" />
+    </svg>
+  ) : (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5C5C7A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M5.5 21a6.5 6.5 0 0 1 13 0" />
+    </svg>
+  );
+}
+
+export function TabBar() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="fixed bottom-0 inset-x-0 bg-white/90 backdrop-blur-xl border-t border-rule-soft safe-bottom z-50">
+      <div className="flex items-center justify-around max-w-[430px] mx-auto h-[52px]">
+        {tabs.map((tab) => {
+          const active = pathname.startsWith('/' + tab.key) || (tab.key === 'today' && pathname === '/today');
+          const Icon = tab.icon;
+          return (
+            <Link
+              key={tab.key}
+              href={tab.href}
+              className={`flex flex-col items-center gap-1 px-4 py-1.5 transition-colors ${
+                active ? 'text-ink' : 'text-ink-muted'
+              }`}
+            >
+              <Icon active={active} />
+              <span className="text-[10.5px] font-medium">{tab.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
