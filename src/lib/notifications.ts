@@ -1,3 +1,5 @@
+import { getUser } from './auth';
+
 const PREFS_KEY = 'sukoon.notifications';
 
 export interface NotificationPrefs {
@@ -85,6 +87,84 @@ export async function checkAndFireDailyReminder(): Promise<void> {
   if (now.getTime() >= scheduledMs) {
     await showViaSW('سُكون', 'حان وقت لحظتك اليومية — ما الذي تحمله الآن؟', '/today');
     saveNotificationPrefs({ ...prefs, lastShown: todayKey });
+  }
+}
+
+// ─── Server-side push (VAPID) ────────────────────────────────────────────────
+
+function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr.buffer;
+}
+
+// Converts user's local hour to UTC hour for cron targeting.
+function localHourToUtc(localHour: number): number {
+  const offsetMinutes = new Date().getTimezoneOffset(); // positive = behind UTC
+  const utcHour = (localHour + Math.floor(offsetMinutes / 60) + 24) % 24;
+  return utcHour;
+}
+
+export async function subscribeToPush(localHour: number, localMinute: number): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  if (!vapidPublicKey) return false;
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) await existing.unsubscribe();
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    });
+
+    const json = sub.toJSON();
+    const user = await getUser();
+    if (!user) return false;
+
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: user.id,
+        endpoint: json.endpoint,
+        p256dh: (json.keys as Record<string, string>).p256dh,
+        auth: (json.keys as Record<string, string>).auth,
+        preferredHourUtc: localHourToUtc(localHour),
+        enabled: true,
+      }),
+    });
+
+    return true;
+  } catch (e) {
+    if (process.env.NODE_ENV === 'development') console.error('subscribeToPush:', e);
+    return false;
+  }
+}
+
+export async function unsubscribeFromPush(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+    if (!reg) return;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+
+    const endpoint = sub.toJSON().endpoint;
+    await sub.unsubscribe();
+
+    await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: '', endpoint, enabled: false }),
+    });
+  } catch (e) {
+    if (process.env.NODE_ENV === 'development') console.error('unsubscribeFromPush:', e);
   }
 }
 

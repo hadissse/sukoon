@@ -11,6 +11,8 @@ import {
   registerServiceWorker,
   notificationsSupported,
   notificationPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
   type NotificationPrefs,
 } from '@/lib/notifications';
 import { syncPreferences } from '@/lib/sync';
@@ -39,24 +41,31 @@ export default function NotificationsPage() {
       // Enable: request permission first
       setRequesting(true);
       const granted = await requestNotificationPermission();
-      setRequesting(false);
       setPermission(notificationPermission());
 
-      if (!granted) return;
+      if (!granted) {
+        setRequesting(false);
+        return;
+      }
 
       await registerServiceWorker();
       const updated = { ...prefs, enabled: true };
       setPrefs(updated);
       saveNotificationPrefs(updated);
+
+      // Register server-side push subscription
+      await subscribeToPush(updated.hour, updated.minute);
+      setRequesting(false);
     } else {
-      // Disable
+      // Disable: remove server-side subscription
+      await unsubscribeFromPush();
       const updated = { ...prefs, enabled: false };
       setPrefs(updated);
       saveNotificationPrefs(updated);
     }
   };
 
-  const handleTimeChange = (field: 'hour' | 'minute', raw: string) => {
+  const handleTimeChange = async (field: 'hour' | 'minute', raw: string) => {
     if (!prefs) return;
     const val = parseInt(raw, 10);
     if (isNaN(val)) return;
@@ -64,6 +73,8 @@ export default function NotificationsPage() {
     const updated = { ...prefs, [field]: clamped };
     setPrefs(updated);
     saveNotificationPrefs(updated);
+    // Re-subscribe with new time so the server knows the updated preferred hour
+    if (updated.enabled) await subscribeToPush(updated.hour, updated.minute);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     syncPreferences();

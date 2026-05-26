@@ -42,6 +42,13 @@ export async function signInWithGoogle(): Promise<void> {
   await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
 }
 
+export async function signInWithApple(): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const redirectTo = `${window.location.origin}/auth/callback`;
+  await sb.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo } });
+}
+
 
 export async function signInWithEmail(email: string, password: string): Promise<{ error: string | null }> {
   const sb = getSupabase();
