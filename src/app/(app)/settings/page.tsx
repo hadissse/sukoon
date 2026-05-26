@@ -11,7 +11,6 @@ import Link from 'next/link';
 
 const settingsItems = [
   { label: 'الملف الشخصي', href: '/settings/profile' },
-  { label: 'الإشعارات', href: '/settings/notifications' },
   { label: 'المعايرة', href: '/settings/calibration' },
   { label: 'الاستشارات والممارسة', href: '/settings/practice' },
   { label: 'البيانات', href: '/settings/data' },

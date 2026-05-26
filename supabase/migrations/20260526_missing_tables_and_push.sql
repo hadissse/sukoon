@@ -29,10 +29,9 @@ create policy "transit_feedback: own" on public.transit_feedback
 
 -- ─── User preferences ────────────────────────────────────────────────────────
 create table if not exists public.user_preferences (
-  user_id             uuid primary key references auth.users(id) on delete cascade,
-  notifications_json  jsonb not null default '{}',
-  ui_flags            jsonb not null default '{}',
-  updated_at          timestamptz not null default now()
+  user_id     uuid primary key references auth.users(id) on delete cascade,
+  ui_flags    jsonb not null default '{}',
+  updated_at  timestamptz not null default now()
 );
 alter table public.user_preferences enable row level security;
 create policy "user_preferences: own" on public.user_preferences
@@ -74,25 +73,6 @@ alter table public.calibrations
 alter table public.calibrations
   add constraint calibrations_user_id_cal_type_cal_key_key unique (user_id, cal_type, cal_key);
 
--- ─── Push subscriptions ──────────────────────────────────────────────────────
-create table if not exists public.push_subscriptions (
-  id                  uuid primary key default gen_random_uuid(),
-  user_id             uuid not null references auth.users(id) on delete cascade,
-  endpoint            text not null unique,
-  p256dh              text not null,
-  auth                text not null,
-  preferred_hour_utc  integer not null default 8, -- 0-23
-  enabled             boolean not null default true,
-  last_sent           date,
-  created_at          timestamptz not null default now(),
-  updated_at          timestamptz not null default now()
-);
-alter table public.push_subscriptions enable row level security;
-create policy "push_subscriptions: own" on public.push_subscriptions
-  for all using (auth.uid() = user_id);
-
--- Auto-update updated_at triggers for new tables
+-- Auto-update updated_at trigger
 create trigger user_preferences_updated_at before update on public.user_preferences
-  for each row execute function public.set_updated_at();
-create trigger push_subscriptions_updated_at before update on public.push_subscriptions
   for each row execute function public.set_updated_at();

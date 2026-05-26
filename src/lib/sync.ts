@@ -7,8 +7,6 @@ const CHART_KEY = 'sukoon.primary-chart.v1';
 const QUIZ_KEY = 'sukoon.quiz';
 const JOURNEY_KEY = 'sukoon.journey1.v1';
 const TRAITS_KEY = 'sukoon.traits.v1';
-const NOTIF_KEY = 'sukoon.notifications';
-
 // ─── Chart ───────────────────────────────────────────────────────────────────
 
 export async function syncChart(): Promise<void> {
@@ -347,9 +345,6 @@ export async function syncPreferences(): Promise<void> {
   if (!sb || !user) return;
 
   try {
-    const notifRaw = localStorage.getItem(NOTIF_KEY);
-    const notifications = notifRaw ? JSON.parse(notifRaw) : {};
-
     const uiFlags: Record<string, string> = {};
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
@@ -360,7 +355,6 @@ export async function syncPreferences(): Promise<void> {
 
     await sb.from('user_preferences').upsert({
       user_id: user.id,
-      notifications_json: notifications,
       ui_flags: uiFlags,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
@@ -377,14 +371,11 @@ export async function loadRemotePreferences(): Promise<boolean> {
   try {
     const { data, error } = await sb
       .from('user_preferences')
-      .select('notifications_json, ui_flags')
+      .select('ui_flags')
       .eq('user_id', user.id)
       .maybeSingle();
     if (error || !data) return false;
 
-    if (data.notifications_json && !localStorage.getItem(NOTIF_KEY)) {
-      localStorage.setItem(NOTIF_KEY, JSON.stringify(data.notifications_json));
-    }
     if (data.ui_flags) {
       for (const [k, v] of Object.entries(data.ui_flags)) {
         if (!localStorage.getItem(k)) localStorage.setItem(k, v as string);
