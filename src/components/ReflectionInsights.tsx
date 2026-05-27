@@ -5,6 +5,7 @@ import { Meta } from '@/components/Meta';
 import { Body } from '@/components/Body';
 import { loadEvents, STREAM_AR, type StreamKey } from '@/lib/events';
 import { computeInsights, type ReflectionInsights as Insights } from '@/lib/insights';
+import { FrameworkLabel } from '@/components/FrameworkLabel';
 
 // What does each dominant stream tend to mean for the person living it?
 const STREAM_REFLECTION: Record<StreamKey, string> = {
@@ -66,7 +67,6 @@ export function ReflectionInsights() {
         <Meta>أنماطك</Meta>
         <span className="text-[11px] text-ink-muted">{insights.totalEvents} لحظة</span>
       </div>
-
       {stream && (
         <div className="flex flex-col gap-2">
           <div className="text-[11px] font-semibold tracking-wider text-ink-muted">التيّار الغالب</div>

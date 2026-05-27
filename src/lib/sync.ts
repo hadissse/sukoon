@@ -13,6 +13,7 @@ export async function syncChart(): Promise<void> {
   const sb = getSupabase();
   const user = await getUser();
   if (!sb || !user) return;
+  if (typeof window !== 'undefined' && localStorage.getItem('sukoon.cloud-sync-consent') !== 'true') return;
 
   try {
     const raw = localStorage.getItem(CHART_KEY);
@@ -394,6 +395,7 @@ export async function syncProfile(): Promise<void> {
   const sb = getSupabase();
   const user = await getUser();
   if (!sb || !user) return;
+  if (typeof window !== 'undefined' && localStorage.getItem('sukoon.cloud-sync-consent') !== 'true') return;
 
   try {
     const raw = localStorage.getItem(CHART_KEY);

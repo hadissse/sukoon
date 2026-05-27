@@ -28,6 +28,13 @@ export function Header({ title = 'سُكون' }: HeaderProps) {
 
         <div className="flex items-center gap-3">
           <Link
+            href="/self?tab=saved"
+            className="px-3 py-1 rounded-full text-xs font-medium bg-cream-soft border border-rule-soft text-ink-muted hover:text-ink transition-colors"
+            aria-label="ما حفظت"
+          >
+            ما حفظت
+          </Link>
+          <Link
             href="/log"
             className="p-1 -m-1 text-coral hover:text-coral/80 transition-colors"
             aria-label="تسجيل لحظة"

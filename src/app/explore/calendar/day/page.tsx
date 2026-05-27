@@ -10,9 +10,9 @@ import { CAL_TRANSITS, toArabicNum } from '../../calendarData';
 const DAY = 24;
 
 const DAY_FLOW: [string, string][] = [
-  ['٠٧:٤٠', 'الزهرة ☌ المشتري · بداية أيام عاطفية لطيفة'],
-  ['الآن', 'زحل ☌ الشمس · ذروة الاقتران'],
-  ['١٧:٣٠', 'القمر يدخل العقرب · مساء أعمق'],
+  ['٠٧:٤٠', 'الزهرة ☌ المشتري · في الجوزاء، درجة ١٢'],
+  ['١٢:١٥', 'زحل ☌ الشمس · مضبوط عند درجة ٤ الحوت'],
+  ['١٧:٣٠', 'القمر يدخل العقرب · البرج المائي الثامن'],
 ];
 
 export default function DayDetailPage() {
@@ -92,10 +92,10 @@ export default function DayDetailPage() {
 
           <div className="mt-3.5 p-3 bg-cream-soft rounded-[10px]" style={{ borderInlineStart: `3px solid ${main.color}` }}>
             <div className="text-[10px] font-bold tracking-wide mb-1.5" style={{ color: main.color }}>
-              ✦ كيف تحسّ به
+              ✦ ما يلاحظه الممارسون
             </div>
             <div className="text-[13px] text-ink leading-[1.8] font-serif">
-              ثقل لطيف في المسؤولية. صوت داخلي يسأل: «هل ما أحمله الآن يخصّني فعلاً؟»
+              زحل والشمس في اقتران: لحظة توقف وتقييم في التقليد الغربي. بعض الممارسين يصفه بثقل الوضوح.
             </div>
           </div>
 
@@ -135,7 +135,7 @@ export default function DayDetailPage() {
             {DAY_FLOW.map(([t, label], i) => (
               <div key={i} className="flex items-baseline gap-2.5">
                 <div className="text-[11px] text-ink-muted font-mono w-[50px] text-center shrink-0">{t}</div>
-                <div className="w-1.5 h-1.5 rounded-sm shrink-0" style={{ background: t === 'الآن' ? '#E9785E' : '#E8E2D2' }} />
+                <div className="w-1.5 h-1.5 rounded-sm shrink-0" style={{ background: '#E8E2D2' }} />
                 <div className="text-[13px] text-ink leading-[1.5]">{label}</div>
               </div>
             ))}

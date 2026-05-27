@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { AstralChart } from '@/lib/chartCalculator';
+import { planetSvgKey } from '@/lib/planetMeta';
 import { getPlacementContent, SIGN_SLUGS, type VoiceContent } from '@/content/placements';
 import { syncCalibration } from '@/lib/sync';
 
@@ -61,7 +62,7 @@ function buildHeaderAndContent(
       return {
         header: {
           glyph: '',
-          svgKey: key,
+          svgKey: planetSvgKey(key),
           title: `${PLANET_AR[key] ?? p.name} في ${ZODIAC_AR[p.signNumber]} · ${toArabicDigits(p.degree)}°`,
           meta: `البيت ${HOUSE_ORDINALS[houseNum - 1]} · ${HOUSE_THEMES[houseNum - 1]}`,
           color: coral,
@@ -244,7 +245,7 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
       {content ? (
         <>
           {/* Voice arc */}
-          <div className="px-5 mt-[18px] flex flex-col gap-4">
+          <div className="px-5 mt-[14px] flex flex-col gap-4">
             {[
               ['الملاحظة', content.obs],
               ['المعنى', content.mean],
@@ -252,12 +253,16 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
             ].map(([k, t]) => (
               <div key={k}>
                 <div className="text-[11px] text-ink-muted tracking-wide font-semibold">{k}</div>
-                <div className="text-[15px] text-ink mt-1.5 leading-[1.7]">{t}</div>
+                <div className="flex flex-col gap-2 mt-1.5">
+                  {(t as string).split('\n\n').map((para, i) => (
+                    <p key={i} className="text-[15px] text-ink leading-[1.7] m-0">{para}</p>
+                  ))}
+                </div>
               </div>
             ))}
             <div>
               <div className="text-[11px] text-ink-muted tracking-wide font-semibold">سؤال الروح</div>
-              <div className="font-serif italic text-[17px] text-ink mt-1.5 leading-[1.5]">{content.q}</div>
+              <div className="font-serif text-[17px] text-ink mt-1.5 leading-[1.5]">{content.q}</div>
             </div>
           </div>
 

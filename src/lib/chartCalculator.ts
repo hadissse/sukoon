@@ -20,6 +20,7 @@ export interface PlanetPosition {
   signNumber: number;
   degree: number;
   minute: number;
+  retrograde?: boolean;
 }
 
 export interface HousePosition {
@@ -249,15 +250,28 @@ export function calculateChart(birthData: BirthData): AstralChart {
   ] as const;
 
   const planets: Record<string, PlanetPosition> = {};
+  const birthTimePlus1 = new Astronomy.AstroTime(new Date(birthTime.date.getTime() + 3600000));
   for (const { body, key, name } of planetList) {
     const geoVec = Astronomy.GeoVector(body, birthTime, true);
     const ecl = Astronomy.Ecliptic(geoVec);
-    planets[key] = makePlanetPosition(name, PLANET_GLYPHS[key], ecl.elon, ecl.elat);
+    const p = makePlanetPosition(name, PLANET_GLYPHS[key], ecl.elon, ecl.elat);
+    // Detect retrograde: compare with position 1 day later
+    if (body !== Astronomy.Body.Sun && body !== Astronomy.Body.Moon) {
+      const geoVec2 = Astronomy.GeoVector(body, birthTimePlus1, true);
+      const ecl2 = Astronomy.Ecliptic(geoVec2);
+      const motion = norm180(ecl2.elon - ecl.elon);
+      p.retrograde = motion < 0;
+    }
+    planets[key] = p;
   }
 
   // ── Chiron (Keplerian) ────────────────────────────────────────────────────
   const chiron = chironsLongitude(jd, birthTime);
-  planets.chiron = makePlanetPosition('كيرون', PLANET_GLYPHS.chiron, chiron.lon, chiron.lat);
+  const chiroPlanet = makePlanetPosition('كيرون', PLANET_GLYPHS.chiron, chiron.lon, chiron.lat);
+  // Check chiron retrograde using position 1 day later
+  const chironNext = chironsLongitude(jd + (1/24), birthTimePlus1);
+  chiroPlanet.retrograde = norm180(chironNext.lon - chiron.lon) < 0;
+  planets.chiron = chiroPlanet;
 
   // ── Mean North Node (Mean Lunar Node) ────────────────────────────────────
   const northNodeLon = norm360(125.0445479 - 1934.1362608 * T + 0.0020762 * T * T);
@@ -330,6 +344,21 @@ export function calculateChart(birthData: BirthData): AstralChart {
     houses,
     timestamp: birthTime.ut,
   };
+}
+
+/**
+ * Calculate chart via the server-side Swiss Ephemeris API route.
+ * Use this in client components instead of calculateChart() directly.
+ * Falls back to the local calculator if the API is unavailable.
+ */
+export async function calculateChartViaAPI(birthData: BirthData): Promise<AstralChart> {
+  const res = await fetch('/api/calculate-chart', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(birthData),
+  });
+  if (!res.ok) throw new Error(`Chart API error: ${res.status}`);
+  return res.json() as Promise<AstralChart>;
 }
 
 export function getSignNumber(longitude: number): number {

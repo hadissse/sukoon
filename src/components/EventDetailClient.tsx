@@ -68,7 +68,7 @@ export function EventDetailClient({ id }: { id: string }) {
       </div>
 
       <div className="mx-5 mt-3.5 p-3.5 rounded-[14px] bg-white border border-rule-soft">
-        <div className="text-[11px] text-ink-muted font-semibold tracking-wide">السياق الكوني</div>
+        <div className="text-[11px] text-ink-muted font-semibold tracking-wide">السياق الفلكي</div>
         <div className="mt-2.5 flex flex-col gap-2">
           {[
             ['يوم الكوكب', event.stamp.dayRuler],

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { AstralChart } from '@/lib/chartCalculator';
+import { planetSvgKey } from '@/lib/planetMeta';
 
 const VB = 1000;
 const C = 500;
@@ -44,11 +45,6 @@ const PLANET_SIZES: Record<string, number> = {
   chiron: 24, northNode: 26, southNode: 26,
 };
 
-// SVG filenames that differ from the planet key
-const SVG_FILE: Partial<Record<string, string>> = {
-  northNode: 'northnode',
-  southNode: 'southnode',
-};
 
 const PLANET_KEYS = [
   'sun','moon','mercury','venus','mars','jupiter',
@@ -281,7 +277,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
             const sx = C + R_PLANET_RING * Math.cos(spreadRad);
             const sy = C - R_PLANET_RING * Math.sin(spreadRad);
             const isHov = hovered === key;
-            const svgFile = SVG_FILE[key] ?? key;
+            const svgFile = planetSvgKey(key);
 
             return (
               <g key={`planet-${key}`}
@@ -340,17 +336,18 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
         </svg>
       </div>
 
-      {/* Zoom level badge */}
-      <div style={{
-        position: 'absolute', top: 8, insetInlineEnd: 8,
-        background: 'rgba(23,27,58,0.78)', color: '#fff',
-        borderRadius: 999, padding: '4px 10px',
-        fontSize: 11, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.4px',
-        pointerEvents: 'none',
-        opacity: zoom === 1 ? 0.55 : 1,
-      }}>
-        {zoom.toFixed(1)}×{zoom > 1 ? ' · اسحب' : ' · انقر للتكبير'}
-      </div>
+      {/* Zoom badge — only visible when zoomed in */}
+      {zoom > 1 && (
+        <div style={{
+          position: 'absolute', top: 8, insetInlineEnd: 8,
+          background: 'rgba(23,27,58,0.78)', color: '#fff',
+          borderRadius: 999, padding: '4px 10px',
+          fontSize: 11, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.4px',
+          pointerEvents: 'none',
+        }}>
+          {zoom.toFixed(1)}× · اسحب
+        </div>
+      )}
     </div>
   );
 }

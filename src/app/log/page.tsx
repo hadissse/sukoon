@@ -300,11 +300,11 @@ function LogFlow() {
               {savedEvent.placement ? (
                 <>سيبقى هذا الحدث مرتبطًا بـ <span className="text-ink font-medium">{savedEvent.placement.label}</span> ويعود إليك حين يلتقيا ثانية.</>
               ) : (
-                <>حُفظ الحدث مع ختمه الكوني.</>
+                <>حُفظ الحدث مع ختمه الفلكي.</>
               )}
             </div>
             <div className="mt-[22px] p-3.5 rounded-[14px] bg-white border border-rule-soft text-right">
-              <div className="text-[11px] text-ink-muted font-semibold tracking-wide">الختم الكوني</div>
+              <div className="text-[11px] text-ink-muted font-semibold tracking-wide">الختم الفلكي</div>
               <div className="mt-2 flex flex-col gap-1.5">
                 {[
                   ['يوم الكوكب', savedEvent.stamp.dayRuler],

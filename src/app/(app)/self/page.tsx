@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Chip } from '@/components/Chip';
 import { Card } from '@/components/Card';
@@ -15,6 +16,9 @@ import { calculateTransits, orbLabel, type Transit } from '@/lib/transits';
 import { loadTraits } from '@/lib/traitEngine';
 import { NatalChartSetupForm } from '@/components/onboarding/NatalChartSetupForm';
 import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
+import { FrameworkLabel } from '@/components/FrameworkLabel';
+import type { HousePosition } from '@/lib/chartCalculator';
+import { planetSvgKey } from '@/lib/planetMeta';
 
 const chartSubtabs = [
   { key: 'planets', label: 'الكواكب' },
@@ -33,9 +37,9 @@ function formatPosition(planet: any): string {
 
 function transformChartToPlanets(chart: AstralChart | null): any[] {
   if (!chart) return [];
-  
-  const planetKeys: (keyof AstralChart)[] = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron', 'northNode', 'southNode'];
-  
+
+  const planetKeys: (keyof AstralChart)[] = ['saturn', 'northNode', 'southNode', 'jupiter', 'mars', 'venus', 'mercury', 'chiron', 'uranus', 'neptune', 'pluto'];
+
   return planetKeys.map((key) => {
     const planet = chart[key];
     if (typeof planet === 'object' && planet !== null && 'name' in planet) {
@@ -43,6 +47,8 @@ function transformChartToPlanets(chart: AstralChart | null): any[] {
         name: planet.name,
         position: formatPosition(planet),
         key,
+        svgKey: planetSvgKey(key as string),
+        retrograde: !!(planet as any).retrograde,
       };
     }
     return null;
@@ -117,6 +123,7 @@ function calculateAspects(chart: AstralChart | null): any[] {
             aspects.push({
               aspect: `${p1.name} ${aspectType.symbol} ${p2.name}`,
               orb: `${orb.toFixed(0)}°`,
+              orbDeg: orb,
               type: aspectType.name,
               color: aspectType.color,
               slug: `${planetList[i]}-${planetList[j]}`,
@@ -127,7 +134,7 @@ function calculateAspects(chart: AstralChart | null): any[] {
     }
   }
   
-  return aspects.sort((a, b) => parseFloat(a.orb) - parseFloat(b.orb)).slice(0, 5);
+  return aspects.sort((a, b) => a.orbDeg - b.orbDeg);
 }
 
 // Three-card voice intro: shows the user's Sun + Rising + Moon
@@ -214,9 +221,42 @@ function ChartVoiceIntro({ chart }: { chart: AstralChart }) {
   );
 }
 
+
+function ChartShareButton({ chart }: { chart: AstralChart }) {
+  const [copied, setCopied] = useState(false);
+
+  const share = async () => {
+    const ZODIAC_AR = ['الحمل','الثور','الجوزاء','السرطان','الأسد','السنبلة','الميزان','العقرب','القوس','الجدي','الدلو','الحوت'];
+    const ascSign = ZODIAC_AR[Math.floor((chart.asc % 360) / 30)];
+    const text = [
+      `خريطتي الفلكية — سُكون`,
+      `الشمس: ${chart.sun.sign} ${chart.sun.degree}°`,
+      `القمر: ${chart.moon.sign} ${chart.moon.degree}°`,
+      `الطالع: ${ascSign} ${Math.floor(chart.asc % 30)}°`,
+    ].join('\n');
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: 'خريطتي الفلكية', text });
+        return;
+      } catch { /* user cancelled */ }
+    }
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button onClick={share} className="text-xs text-ink-muted hover:text-ink transition-colors">
+      {copied ? 'تمّ النسخ ✓' : 'مشاركة الخريطة ←'}
+    </button>
+  );
+}
+
 function ChartView({ chart }: { chart: AstralChart | null }) {
   const [activeSubtab, setActiveSubtab] = useState<string>('planets');
   const [transits, setTransits] = useState<Transit[]>([]);
+  const [aspectFilter, setAspectFilter] = useState<string>('الكل');
   const traits = loadTraits();
 
   const ELEMENT_COLORS: Record<string, string> = {
@@ -228,7 +268,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
 
   const planets = transformChartToPlanets(chart);
   const signs = transformChartToSigns(chart);
-  const houses = transformChartToHouses(chart);
+  const houses = chart ? transformChartToHouses(chart) : [];
   const aspects = calculateAspects(chart);
 
   useEffect(() => {
@@ -245,35 +285,31 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Sub-tabs */}
-      <div className="px-5 pt-6 overflow-x-auto">
-        <div className="flex gap-2 min-w-max">
-          {chartSubtabs.map((tab) => (
-            <Chip
-              key={tab.key}
-              active={activeSubtab === tab.key}
-              onClick={() => setActiveSubtab(tab.key)}
-            >
-              {tab.label}
-            </Chip>
-          ))}
+      {/* Sub-tabs + fixed stars link */}
+      <div className="px-5 pt-6 flex items-center justify-between">
+        <div className="overflow-x-auto">
+          <div className="flex gap-2 min-w-max">
+            {chartSubtabs.map((tab) => (
+              <Chip
+                key={tab.key}
+                active={activeSubtab === tab.key}
+                onClick={() => setActiveSubtab(tab.key)}
+              >
+                {tab.label}
+              </Chip>
+            ))}
+          </div>
         </div>
+        <Link href="/self/fixed-stars" className="text-xs text-ink-muted hover:text-ink transition-colors shrink-0 mr-2">
+          النجوم الثابتة ←
+        </Link>
       </div>
 
-      {/* Chart wheel and position chip */}
+      {/* Chart wheel */}
       {activeSubtab === 'planets' && (
         <>
           <div className="flex justify-center px-2 pt-2">
-            <ZoomableWheel size={377} tone="paper" />
-          </div>
-          <div className="px-5 text-center text-xs text-ink-muted flex flex-col gap-1.5">
-            <div className="flex justify-center items-center gap-2 flex-wrap">
-              <span>الشمس · {chart.sun.sign} {chart.sun.degree}°</span>
-              <span className="opacity-40">·</span>
-              <span>القمر · {chart.moon.sign} {chart.moon.degree}°</span>
-              <span className="opacity-40">·</span>
-              <span>طالع · {ZODIAC_NAMES_AR[Math.floor((chart.asc % 360) / 30)]} {Math.floor((chart.asc % 30))}°</span>
-            </div>
+            <ZoomableWheel size={377} tone="paper" chart={chart} />
           </div>
           <ChartVoiceIntro chart={chart} />
         </>
@@ -283,15 +319,15 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       {activeSubtab === 'planets' && (
         <div className="px-5 pb-6 flex flex-col gap-3">
           {planets.map((planet) => (
-            <Link key={planet.key} href={`/self/planet/${planet.key}`} className="block">
+            <Link key={planet.key} href={`/self/planet/${planet.key}`} className="block" onClick={() => sessionStorage.setItem('sukoon.self.scrollY', String(window.scrollY))}>
               <Card>
                 <div className="flex gap-4 items-center">
                   <div className="w-11 h-11 flex-shrink-0 rounded-full bg-cream-soft flex items-center justify-center">
                     <div
                       className="w-6 h-6"
                       style={{
-                        WebkitMaskImage: `url('/svg/${planet.key}.svg')`,
-                        maskImage: `url('/svg/${planet.key}.svg')`,
+                        WebkitMaskImage: `url('/svg/${planet.svgKey}.svg')`,
+                        maskImage: `url('/svg/${planet.svgKey}.svg')`,
                         WebkitMaskSize: 'contain',
                         maskSize: 'contain',
                         WebkitMaskRepeat: 'no-repeat',
@@ -303,7 +339,12 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                     />
                   </div>
                   <div className="flex-1">
-                    <div className="font-serif text-base text-ink">{planet.name}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-serif text-base text-ink">{planet.name}</span>
+                      {planet.retrograde && (
+                        <span className="text-[10px] font-semibold text-coral border border-coral/40 rounded px-1 py-0.5 leading-none">Rx</span>
+                      )}
+                    </div>
                     <div className="text-sm text-ink-muted mt-1">{planet.position}</div>
                   </div>
                   <div className="text-lg text-ink-muted">›</div>
@@ -318,7 +359,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       {activeSubtab === 'signs' && (
         <div className="px-5 pb-6 flex flex-col gap-3">
           {signs.map((sign, idx) => (
-            <Link key={sign.name} href={`/self/sign/${SIGN_SLUGS[idx]}`} className="block">
+            <Link key={sign.name} href={`/self/sign/${SIGN_SLUGS[idx]}`} className="block" onClick={() => sessionStorage.setItem('sukoon.self.scrollY', String(window.scrollY))}>
               <Card>
                 <div className="flex gap-3 items-center">
                   <div className="w-11 h-11 rounded-full bg-cream-soft flex items-center justify-center shrink-0">
@@ -353,7 +394,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       {activeSubtab === 'houses' && (
         <div className="px-5 pb-6 flex flex-col gap-3">
           {houses.map((house, idx) => (
-            <Link key={house.num} href={`/self/house/${idx + 1}`} className="block">
+            <Link key={house.num} href={`/self/house/${idx + 1}`} className="block" onClick={() => sessionStorage.setItem('sukoon.self.scrollY', String(window.scrollY))}>
               <Card>
                 <div className="flex gap-3 items-start">
                   <div className="font-serif text-lg text-coral w-12">{house.num}</div>
@@ -373,11 +414,12 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       {activeSubtab === 'aspects' && (
         <>
           <div className="px-5 flex gap-2 overflow-x-auto">
-            {['الكل', 'رئيسية', 'ثانوية', 'مقتربة'].map((filter, i) => (
+            {['الكل', 'رئيسية', 'ثانوية', 'مقتربة'].map((filter) => (
               <button
                 key={filter}
+                onClick={() => setAspectFilter(filter)}
                 className={`px-3.5 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                  i === 0
+                  aspectFilter === filter
                     ? 'bg-ink text-cream'
                     : 'bg-white text-ink border border-rule-soft'
                 }`}
@@ -387,21 +429,35 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
             ))}
           </div>
           <div className="px-5 pb-6 flex flex-col gap-3">
-            {aspects.length > 0 ? (
-              aspects.map((aspect) => (
-                <Link key={aspect.aspect} href={`/self/aspect/${aspect.slug}`} className="block">
-                  <Card>
-                    <div className="flex justify-between gap-3 mb-2">
-                      <div className="font-serif text-base text-ink">{aspect.aspect}</div>
-                      <div className="text-xs text-ink-muted font-mono">{aspect.orb}</div>
-                    </div>
-                    <div className="text-sm font-medium" style={{ color: aspect.color }}>{aspect.type}</div>
-                  </Card>
-                </Link>
-              ))
-            ) : (
-              <div className="text-center py-8 text-ink-muted text-sm">لا توجد جوانب رئيسية</div>
-            )}
+            {(() => {
+              const MAJOR = ['اقتران', 'تربيع', 'تثليث', 'تقابل'];
+              const filtered = aspects.filter((a) => {
+                if (aspectFilter === 'رئيسية') return MAJOR.includes(a.type);
+                if (aspectFilter === 'ثانوية') return !MAJOR.includes(a.type);
+                if (aspectFilter === 'مقتربة') return a.orbDeg < 2;
+                return true;
+              });
+              return filtered.length > 0 ? (
+                filtered.map((aspect) => (
+                  <Link
+                    key={aspect.aspect}
+                    href={`/self/aspect/${aspect.slug}`}
+                    className="block"
+                    onClick={() => sessionStorage.setItem('sukoon.self.scrollY', String(window.scrollY))}
+                  >
+                    <Card>
+                      <div className="flex justify-between gap-3 mb-2">
+                        <div className="font-serif text-base text-ink">{aspect.aspect}</div>
+                        <div className="text-xs text-ink-muted font-mono">{aspect.orb}</div>
+                      </div>
+                      <div className="text-sm font-medium" style={{ color: aspect.color }}>{aspect.type}</div>
+                    </Card>
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-8 text-ink-muted text-sm">لا توجد جوانب في هذا التصفية</div>
+              );
+            })()}
           </div>
         </>
       )}
@@ -419,7 +475,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               </Card>
             ) : (
               transits.map((t) => (
-                <Link key={t.id} href={`/self/aspect/${t.transitKey}-${t.natalKey}`} className="block">
+                <Link key={t.id} href={`/self/aspect/${t.transitKey}-${t.natalKey}`} className="block" onClick={() => sessionStorage.setItem('sukoon.self.scrollY', String(window.scrollY))}>
                   <Card>
                     <div className="flex justify-between items-baseline gap-2 mb-1.5">
                       <div className="font-serif text-base text-ink">
@@ -435,6 +491,11 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
           </div>
         </>
       )}
+
+      {/* Share link */}
+      <div className="px-5 pb-6 flex justify-end">
+        <ChartShareButton chart={chart} />
+      </div>
     </div>
   );
 }
@@ -569,6 +630,7 @@ function BodyView() {
       {!noTraits && activeBodyTab === 'organs' && (
         <div className="px-5 pb-6 flex flex-col gap-3">
           <div className="text-xs text-ink-muted">الكوكب وعضوه في جسدك:</div>
+          <FrameworkLabel label="قراءة هرمسية تقليدية" />
           {traits.organs.map((item) => (
             <Card key={item.organ}>
               <div className="flex gap-4 items-center">
@@ -589,6 +651,7 @@ function BodyView() {
       {!noTraits && activeBodyTab === 'minerals' && (
         <div className="px-5 pb-6 flex flex-col gap-3">
           <div className="text-xs text-ink-muted">معدن كل كوكب في التقليد الهرمسي:</div>
+          <FrameworkLabel label="قراءة هرمسية تقليدية" />
           {traits.minerals.map((m) => (
             <Card key={m.planet}>
               <div className="flex gap-4 items-center">
@@ -611,6 +674,7 @@ function BodyView() {
           <div className="text-xs text-ink-muted">
             المراكز المحدَّدة ثابتة فيك · المفتوحة تستقبل من الآخرين:
           </div>
+          <FrameworkLabel label="قراءة تصميم إنساني (Human Design)" />
           {traits.hdCentres.map((c) => (
             <Card key={c.name}>
               <div className="flex justify-between items-start gap-3">
@@ -633,16 +697,176 @@ function BodyView() {
   );
 }
 
-const lifeArcPhases = [
-  { years: '٠-٧', name: 'الطفولة', status: 'past' },
-  { years: '٧-١٤', name: 'تشكّل الأنا', status: 'past' },
-  { years: '١٤-٢١', name: 'تسمية الذات', status: 'past' },
-  { years: '٢١-٢٨', name: 'الاستقلال الأول', status: 'past' },
-  { years: '٢٨-٣٥', name: 'بناء الشكل', status: 'current' },
-  { years: '٣٥-٤٢', name: 'إرث العمل', status: 'next' },
-  { years: '٤٢-٤٩', name: 'منتصف الحياة', status: 'later' },
-  { years: '٤٩-٥٦', name: 'حصاد المعنى', status: 'later' },
+const LIFE_ARC_PHASES = [
+  { start: 0, end: 7, name: 'الطفولة الأولى', planet: 'القمر', planetKey: 'moon', desc: 'المرحلة الأولى من الوجود. بناء الجسد وتأسيس العالم الحسّي. القمر يحكم قوى النمو والتكيّف.' },
+  { start: 7, end: 14, name: 'الطفولة الثانية', planet: 'عطارد', planetKey: 'mercury', desc: 'النمو الذهني والاجتماعي. اكتساب اللغة والمنطق وأدوات التفكير.' },
+  { start: 14, end: 21, name: 'المراهقة', planet: 'الزهرة', planetKey: 'venus', desc: 'الصحوة العاطفية. البحث عن الهوية والجمال والعلاقة بالآخر.' },
+  { start: 21, end: 28, name: 'بناء الذات', planet: 'الشمس', planetKey: 'sun', desc: 'بناء هوية مستقلة. الانطلاق نحو العالم بإرادة واعية.' },
+  { start: 28, end: 35, name: 'مرحلة المريخ', planet: 'المريخ', planetKey: 'mars', desc: 'قوة الإرادة والصراع. اختبار ما بُني في المرحلة السابقة. الأهداف تُصطدم بالواقع.' },
+  { start: 35, end: 42, name: 'مرحلة المشتري', planet: 'المشتري', planetKey: 'jupiter', desc: 'منتصف الحياة. التوسّع أو الانكماش. القدرات النفسية تبلغ ذروتها. عند ~٤٢ تحدث مقابلة أورانوس — لحظة اليقظة التي تسأل: «هل عشت حياتي أم حياة غيري؟»\n\nفي نظام هوبر، النقطة المنخفضة حول سن ٣٦ هي لحظة المراجعة الصامتة — حيث يعيد الإنسان تقييم كل ما بناه.' },
+  { start: 42, end: 49, name: 'مرحلة زحل', planet: 'زحل', planetKey: 'saturn', desc: 'العودة إلى الجوهر. الحصاد والتعديل الصعب. ما لا يصمد يتساقط.' },
+  { start: 49, end: 56, name: 'مرحلة أورانوس', planet: 'أورانوس', planetKey: 'uranus', desc: 'التحرر من القوالب. ما لم يُقَل يطفو إلى السطح. ثورة داخلية هادئة.' },
+  { start: 56, end: 63, name: 'مرحلة نبتون', planet: 'نبتون', planetKey: 'neptune', desc: 'الذوبان والتسامح. البحث عن المعنى الروحي. الحدود بين الأنا والعالم ترقّ.' },
+  { start: 63, end: 70, name: 'مرحلة بلوتو', planet: 'بلوتو', planetKey: 'pluto', desc: 'التحول الأخير. مواجهة الموروث والزائل. ما يتبقّى هو الجوهر.' },
 ];
+
+function toArabicNumStr(n: number): string {
+  return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+}
+
+function LifeArcView({ chart }: { chart: AstralChart | null }) {
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [birthYear, setBirthYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('sukoon.birth-data');
+      if (raw) setBirthYear(JSON.parse(raw).year ?? null);
+    } catch {}
+  }, []);
+
+  const currentAge = birthYear ? new Date().getFullYear() - birthYear : null;
+
+  const currentPhaseIdx = currentAge !== null
+    ? LIFE_ARC_PHASES.findIndex(p => currentAge >= p.start && currentAge < p.end)
+    : -1;
+
+  const currentPhase = currentPhaseIdx >= 0 ? LIFE_ARC_PHASES[currentPhaseIdx] : null;
+
+  const phaseProgress = currentPhase && currentAge !== null
+    ? (currentAge - currentPhase.start) / (currentPhase.end - currentPhase.start)
+    : null;
+
+  const midPhaseAge = currentPhase ? (currentPhase.start + currentPhase.end) / 2 : null;
+
+  return (
+    <div className="px-5 pb-8 flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-center gap-2">
+          <span className="text-coral text-xs font-semibold tracking-wider">✦</span>
+          <span className="text-[11px] text-ink-muted font-semibold tracking-wider">السيرة البانورامية</span>
+        </div>
+        <p className="text-xs text-ink-muted leading-[1.6] mt-1">المراحل السبعينية في حياتك حسب التقليد الأنثروبوصوفي.</p>
+      </div>
+
+      <FrameworkLabel label="قراءة العلم الروحاني" />
+
+      {/* Current age + phase summary */}
+      {currentAge !== null && currentPhase && phaseProgress !== null ? (
+        <div className="bg-white rounded-[18px] p-4 border border-rule-soft">
+          <div className="flex items-baseline justify-between mb-3">
+            <div>
+              <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-0.5">العمر</div>
+              <div className="font-serif text-3xl text-ink">{toArabicNumStr(currentAge)} <span className="text-base text-ink-muted font-sans">سنة</span></div>
+            </div>
+            <div className="text-right">
+              <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-0.5">المرحلة</div>
+              <div className="font-serif text-xl text-coral">{currentPhase.planet}</div>
+            </div>
+          </div>
+          {/* Phase progress bar */}
+          <div className="relative h-6 flex items-center mb-1">
+            <div className="absolute inset-x-0 h-1 rounded-full bg-cream-soft" />
+            <div className="absolute h-1 rounded-full bg-coral" style={{ width: `${phaseProgress * 100}%` }} />
+            <div className="absolute w-2.5 h-2.5 rounded-full bg-coral border-2 border-white shadow-sm" style={{ left: `calc(${phaseProgress * 100}% - 5px)` }} />
+            <div className="absolute left-0 top-5 text-[10px] text-ink-muted font-mono">{toArabicNumStr(currentPhase.start)}</div>
+            <div className="absolute right-0 top-5 text-[10px] text-ink-muted font-mono">{toArabicNumStr(currentPhase.end)}</div>
+          </div>
+          <div className="mt-5 text-[11px] text-ink-muted text-center">
+            منتصف المرحلة · سن ~{toArabicNumStr(Math.round(midPhaseAge!))}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-cream-soft rounded-[14px] p-4 text-sm text-ink-muted text-center">
+          أدخل بيانات ميلادك لحساب مرحلتك.
+        </div>
+      )}
+
+      {/* Phases list */}
+      <div className="font-serif text-base text-ink mb-1">المراحل السبعينية</div>
+      <div className="flex flex-col gap-2">
+        {LIFE_ARC_PHASES.map((phase, i) => {
+          const status = currentAge === null ? 'unknown'
+            : currentAge >= phase.end ? 'past'
+            : i === currentPhaseIdx ? 'current'
+            : 'future';
+          const isExpanded = expanded === i || status === 'current';
+
+          return (
+            <button
+              key={i}
+              onClick={() => setExpanded(expanded === i ? null : i)}
+              className={`w-full text-right rounded-[14px] p-3.5 border transition-all ${
+                status === 'current'
+                  ? 'bg-white border-coral/40 shadow-sm'
+                  : status === 'past'
+                  ? 'bg-white border-rule-soft opacity-50'
+                  : 'bg-white border-rule-soft'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: status === 'current' ? '#FFF0EC' : '#F5F2EC' }}
+                  >
+                    <div
+                      className="w-3.5 h-3.5"
+                      style={{
+                        WebkitMaskImage: `url('/svg/${phase.planetKey}.svg')`,
+                        maskImage: `url('/svg/${phase.planetKey}.svg')`,
+                        WebkitMaskSize: 'contain', maskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center', maskPosition: 'center',
+                        background: status === 'current' ? '#E9785E' : '#9A9482',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className={`font-serif text-sm ${status === 'current' ? 'text-ink' : 'text-ink'}`}>{phase.name}</div>
+                    <div className="text-[11px] text-ink-muted mt-0.5">{toArabicNumStr(phase.start)}–{toArabicNumStr(phase.end)} · {phase.planet}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {status === 'current' && currentAge !== null && (
+                    <div className="text-[11px] font-mono text-coral font-semibold">{toArabicNumStr(currentAge)}</div>
+                  )}
+                  <div className={`text-[11px] font-semibold ${
+                    status === 'current' ? 'text-coral' : status === 'past' ? 'text-ink-muted' : 'text-ink-muted'
+                  }`}>
+                    {status === 'current' ? 'أنت هنا' : status === 'past' ? 'مضى' : status === 'future' ? 'التالي' : '‹'}
+                  </div>
+                  <span className="text-ink-muted text-xs">‹</span>
+                </div>
+              </div>
+
+              {/* Expanded detail */}
+              {isExpanded && (
+                <div className="mt-3 pt-3 border-t border-rule-soft text-right">
+                  {status === 'current' && (
+                    <div className="text-[11px] text-coral font-semibold mb-1.5">أنت في هذه المرحلة الآن</div>
+                  )}
+                  <p className="text-[13px] text-ink leading-[1.8] whitespace-pre-line">{phase.desc}</p>
+                  {status === 'current' && (
+                    <Link href="/explore/biography" className="inline-flex items-center gap-1 mt-2.5 text-xs text-coral font-medium" onClick={e => e.stopPropagation()}>
+                      عرض التفاصيل ←
+                    </Link>
+                  )}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="text-center text-[11px] text-ink-muted pt-2 pb-1">
+        ٧٠ سنة · ١٠ مراحل · سَكنٌ كوكبيّ لكل فصل
+      </div>
+    </div>
+  );
+}
 
 const grandTransits = [
   { name: 'عودة المشتري الأولى', age: 'حوالي عمر ١٢', status: 'past' },
@@ -686,7 +910,7 @@ function TransitsView() {
           ))}
         </div>
         <Link href="/explore/great-transits" className="mt-3 flex items-center justify-between p-3.5 rounded-[14px] bg-cream-soft border border-rule-soft">
-          <span className="text-sm font-serif text-ink">العبورات الكونية الكبرى</span>
+          <span className="text-sm font-serif text-ink">العبورات الكبرى</span>
           <span className="text-coral text-sm">←</span>
         </Link>
       </div>
@@ -694,45 +918,6 @@ function TransitsView() {
   );
 }
 
-function LifeArcView() {
-  return (
-    <div className="px-5 pb-6 flex flex-col gap-3">
-      <div className="font-serif text-2xl text-ink -tracking-0.5">القوس الحياتي</div>
-      <p className="text-sm text-ink-muted mb-3">
-        سبع سنوات في كل طور — حياتك مَبنيّة من فصول.
-      </p>
-      <div className="flex flex-col gap-2">
-        {lifeArcPhases.map((phase) => (
-          <div
-            key={phase.years}
-            className={`bg-white rounded-[14px] p-3.5 border border-rule-soft transition-opacity ${
-              phase.status === 'past' ? 'opacity-55' : 'opacity-100'
-            }`}
-          >
-            <div className="flex justify-between items-start mb-1.5">
-              <span className="text-xs text-coral font-semibold font-serif">{phase.years}</span>
-              <span className="text-xs text-ink-muted font-semibold tracking-wide">
-                {phase.status === 'current' ? 'الآن' : phase.status === 'next' ? 'التالي' : phase.status === 'past' ? 'مضى' : 'لاحقًا'}
-              </span>
-            </div>
-            <div className="font-serif text-base text-ink">{phase.name}</div>
-            {phase.status === 'current' && (
-              <div className="flex gap-1 mt-2">
-                {['#C2D3E2', '#D4A04C', '#E9785E', '#D4A04C', '#C2D3E2'].map((color, i) => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <Link href="/explore/biography" className="mt-3 flex items-center justify-between p-3.5 rounded-[14px] bg-cream-soft border border-rule-soft">
-        <span className="text-sm font-serif text-ink">السيرة البانورامية الكاملة</span>
-        <span className="text-coral text-sm">←</span>
-      </Link>
-    </div>
-  );
-}
 
 function SavedView() {
   const [events, setEvents] = useState<LoggedEvent[]>([]);
@@ -858,6 +1043,9 @@ function ChartIntroOverlay({ chart, onDone }: { chart: AstralChart; onDone: () =
           ))}
         </div>
 
+        <div className="flex justify-center mb-3">
+        </div>
+
         {/* Sign glyph in a circle */}
         <div className="flex justify-center mb-5">
           <div
@@ -901,8 +1089,9 @@ function ChartIntroOverlay({ chart, onDone }: { chart: AstralChart; onDone: () =
   );
 }
 
-export default function SelfPage() {
-  const [mainTab, setMainTab] = useState<string>('chart');
+function SelfPageInner() {
+  const searchParams = useSearchParams();
+  const [mainTab, setMainTab] = useState<string>(searchParams.get('tab') ?? 'chart');
   const [chart, setChart] = useState<AstralChart | null>(null);
   const [showGuide, setShowGuide] = useState(false);
 
@@ -912,14 +1101,17 @@ export default function SelfPage() {
       try {
         const parsed = JSON.parse(stored);
         setChart(parsed);
-        // Only show the personalized walkthrough once, and only when we
-        // actually have a chart to read from.
         if (!localStorage.getItem('sukoon.chart-guide-seen')) {
           setShowGuide(true);
         }
       } catch (e) {
         console.error('Failed to parse chart from localStorage:', e);
       }
+    }
+    const savedY = sessionStorage.getItem('sukoon.self.scrollY');
+    if (savedY) {
+      sessionStorage.removeItem('sukoon.self.scrollY');
+      requestAnimationFrame(() => window.scrollTo({ top: parseInt(savedY, 10), behavior: 'instant' }));
     }
   }, []);
 
@@ -929,10 +1121,36 @@ export default function SelfPage() {
   };
 
   return (
-    <div className="pb-24">
+    <div className="pb-32">
       {showGuide && chart && <ChartIntroOverlay chart={chart} onDone={dismissGuide} />}
       <div className="pt-6">
-        {/* Daily tracking entry */}
+        {/* Main tabs — fixed bottom bar */}
+        <div
+          className="fixed bottom-20 left-0 right-0 flex gap-2 justify-center px-5 py-3 overflow-x-auto"
+          style={{ scrollbarWidth: 'none', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'rgba(245,242,234,0.72)' }}
+        >
+          {[
+            { key: 'chart', label: 'الخريطة' },
+            { key: 'body', label: 'الجسد' },
+            { key: 'transits', label: 'العبورات' },
+            { key: 'arc', label: 'القوس' },
+            { key: 'saved', label: 'ما حفظت' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setMainTab(tab.key)}
+              className={`px-4 py-2 rounded-[14px] text-xs font-medium transition-colors whitespace-nowrap ${
+                mainTab === tab.key
+                  ? 'bg-ink text-cream'
+                  : 'bg-white text-ink border border-rule-soft'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Daily tracking entry — below tabs */}
         <div className="px-5 mb-4">
           <Link href="/journey-2" className="block">
             <Card>
@@ -949,38 +1167,12 @@ export default function SelfPage() {
           </Link>
         </div>
 
-        {/* Main tabs */}
-        <div className="px-5 mb-6 flex gap-3">
-          {[
-            { key: 'chart', label: 'الخريطة' },
-            { key: 'body', label: 'الجسد' },
-            { key: 'transits', label: 'العبورات' },
-            { key: 'arc', label: 'القوس' },
-            { key: 'saved', label: 'ما حفظت' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setMainTab(tab.key)}
-              className={`px-3.5 py-2 rounded-full text-xs font-medium transition-colors ${
-                mainTab === tab.key
-                  ? 'bg-ink text-cream'
-                  : 'bg-white text-ink border border-rule-soft'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         {mainTab === 'chart' && (
           <>
             {!chart ? (
               <NatalChartSetupForm onComplete={(newChart) => setChart(newChart)} />
             ) : (
               <>
-                <div className="px-5 mb-4">
-                  <Headline>الخريطة</Headline>
-                </div>
                 {/* Journey 1 entry */}
                 <div className="px-5 mb-4">
                   <Link href="/journey-1" className="block">
@@ -1034,12 +1226,7 @@ export default function SelfPage() {
         )}
 
         {mainTab === 'arc' && (
-          <>
-            <div className="px-5 mb-4">
-              <Headline>القوس الحياتي</Headline>
-            </div>
-            <LifeArcView />
-          </>
+          <LifeArcView chart={chart} />
         )}
 
         {mainTab === 'saved' && (
@@ -1050,7 +1237,16 @@ export default function SelfPage() {
             <SavedView />
           </>
         )}
+
       </div>
     </div>
+  );
+}
+
+export default function SelfPage() {
+  return (
+    <Suspense fallback={<div className="min-h-dvh bg-cream" />}>
+      <SelfPageInner />
+    </Suspense>
   );
 }

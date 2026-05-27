@@ -71,6 +71,7 @@ export function TransitEssayView({ essay }: { essay: TransitEssay }) {
         <span>{essay.words} كلمة</span>
       </div>
 
+
       <div className="px-5 pt-2">
         {essay.blocks.map((b, i) => {
           if ('sub' in b) return <Sub key={i}>{b.sub}</Sub>;

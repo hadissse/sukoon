@@ -7,15 +7,14 @@ import { Rule } from '@/components/Rule';
 import { TransitHeroCard } from '@/components/TransitHeroCard';
 import { GradientOrb } from '@/components/GradientOrb';
 import { getCosmicStamp, type CosmicStamp } from '@/lib/cosmicStamp';
-import { findPhase as findLunarPhase } from '@/content/lunarJourney';
 
 // Daily rotating question — advances each day
 const DAILY_QUESTIONS = [
-  'ما الذي يحتاج منك أن تسمعه اليوم — لا أن تحلّه؟',
+  'ما الذي يحتاج منك أن تسمعه اليوم، لا أن تحلّه؟',
   'من أنت حين لا يراك أحد؟',
-  'ما الشيء الذي تؤجّله منذ زمن — وما السبب الحقيقي؟',
+  'ما الشيء الذي تؤجّله منذ زمن، وما السبب الحقيقي؟',
   'ما الذي تعطيه بسهولة، وما الذي تجد صعوبة في أخذه؟',
-  'في أيّ لحظة شعرت اليوم أنك أنت — لا دورك؟',
+  'في أيّ لحظة شعرت اليوم أنك أنت، لا دورك؟',
   'ما الذي ينمو فيك الآن في الصمت؟',
   'ما الحاجة التي لم تقلها بعد؟',
 ];
@@ -118,30 +117,17 @@ export default function TodayPage() {
           </div>
         </Link>
 
-        {/* Lunar journey — current moon phase prompt */}
-        {stamp && (() => {
-          const phase = findLunarPhase(stamp.moonPhase);
-          return (
-            <Link href="/journey-lunar" className="block">
-              <div
-                className="relative rounded-[20px] overflow-hidden p-5"
-                style={{ background: phase.accent + '18', borderColor: phase.accent + '44', borderWidth: 1 }}
-              >
-                <div className="relative flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ background: phase.accent }} />
-                    <div className="text-[11px] font-semibold tracking-wider" style={{ color: phase.accent }}>
-                      الرحلة القمريّة · {phase.name}
-                    </div>
-                  </div>
-                  <div className="font-serif text-[16px] text-ink leading-[1.7]">{phase.arcTitle}</div>
-                  <div className="text-xs text-ink-muted leading-[1.7]">{phase.essence}</div>
-                  <div className="text-xs font-medium mt-1" style={{ color: phase.accent }}>تابع المرحلة ←</div>
-                </div>
-              </div>
-            </Link>
-          );
-        })()}
+        {/* Knowledge — link to learn section */}
+        <Link href="/learn" className="block">
+          <div className="rounded-[20px] p-5" style={{ background: '#F5F0E8', border: '1px solid #E8E2D2' }}>
+            <div className="flex flex-col gap-2">
+              <div className="text-[11px] text-ink/50 font-semibold tracking-wider">المعرفة</div>
+              <div className="font-serif text-[17px] text-ink leading-[1.6]">الأسس · السلاسل · المعلّمون</div>
+              <div className="text-xs text-ink-muted leading-[1.7]">تقاليد الفلك الثلاثة — غربي، عربي، روحاني</div>
+              <div className="text-xs text-coral font-medium mt-1">استكشف المعرفة ←</div>
+            </div>
+          </div>
+        </Link>
 
         <Rule />
 
@@ -156,7 +142,7 @@ export default function TodayPage() {
                 <div className="font-serif text-2xl text-cream leading-snug">
                   {stamp ? `القمر في ${stamp.moonPhase.split(' في ')[1] ?? 'السماء'}` : 'القمر والجسد'}
                 </div>
-                <div className="text-sm text-cream/70 mt-2">انتبه إلى ما يحتاجه جسدك اليوم</div>
+                <div className="text-sm text-cream/70 mt-2">القمر في خريطتك وصلته بالجسد</div>
                 <div className="text-xs text-coral font-medium mt-3">افتح خريطتك ←</div>
               </div>
             </div>

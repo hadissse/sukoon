@@ -1,96 +1,215 @@
 'use client';
 
-// Scr182 — Fixed-star detail (ad-Dabaran). Voice arc + active-now marker.
-
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { FIXED_STARS, fixedStarSlug, starLongitudeAtJD, findStarConjunctions } from '@/content/fixedStars';
+import type { AstralChart } from '@/lib/chartCalculator';
 
-interface StarData {
-  name: string;
-  sub: string;
-  activeNote?: string;
+interface StarContent {
   lineage: string;
   obs: string;
   mean: string;
   shadow: string;
   q: string;
-  cycles: [string, string][];
 }
 
-const STARS: Record<string, StarData> = {
-  dabaran: {
-    name: 'الدبران',
-    sub: 'ad-Dabaran · تابع الثريّا',
-    activeNote: 'نشط الآن · يلامس شمسك ضمن ١°',
-    lineage:
-      'أوّل ظهور موثَّق في كتالوج عبد الرحمن الصُّوفي · «كتاب صُوَر الكواكب الثابتة» ٩٦٤ م. عند بدو الجزيرة: «التابع» لأنّه يلحق بالثُّريّا في صعودها.',
-    obs:
-      'نجمٌ أحمر بحجم ٤٤ شمسًا، عينُ الثور في كوكبة الثور. يلحق بالثُّريّا في صعودها كأنّه راعٍ يتبع قطيعه.',
-    mean:
-      'حضور الدبران في خريطتك يربطك بسلالةٍ من الانتباه — أن تتبعَ ما يُضيء، لا ما يُلَمَّع. شعورٌ أنّ ما يستحقّ يأتي ببطء.',
-    shadow: 'التبَعيّة دون اختيار — أن تتبع ضوءًا ليس لك لأنّه أسهل من شقّ ضوئك.',
+const STAR_CONTENT: Record<string, StarContent> = {
+  algol: {
+    lineage: 'أقدم إشارة موثّقة في كتالوج بطليموس «المجسطي» كنجم متغيّر. عرفه العرب باسم «رأس الغول» — رأس الوحش في كوكبة برشاوس. يومض كل ٢٫٨٧ يومًا حين يحجبه قمره الرفيق.',
+    obs: 'نجمٌ ثنائي متغيّر يبدو وكأنّه يطرف بانتظام. درجته ٢٦° من برج الثور. كان مرجعًا للوقت في الملاحة العربية القديمة لانتظام تغيّره.',
+    mean: 'رأس الغول في خريطتك يربطك بطاقة التحوّل الجذري — ما يبدو مرعبًا في الخارج كثيرًا ما يكون مفتاح قوّة داخلية. الثبات أمام ما يخيف هو الدرس الأعمق هنا.',
+    shadow: 'النظرة المستمرّة إلى ما يُخيف بدلًا من المضيّ. الانشغال بالتهديد على حساب الفعل.',
+    q: 'ما الذي تسمّيه خطرًا وهو في الحقيقة دعوة للتحوّل؟',
+  },
+  pleiades: {
+    lineage: 'الثريّا في كتاب الصوفي «صُوَر الكواكب» ٩٦٤ م: عنقود نجمي يُستخدم لتحديد المواسم الزراعية. حملت اسمًا في معظم الحضارات القديمة — سبع نجمات، سبع أخوات في الميثولوجيا اليونانية.',
+    obs: 'عنقود نجمي مفتوح يضمّ أكثر من ألف نجم، تُرى منه بالعين المجرّدة ست أو سبع نجمات. موقعه عند ٠° من الجوزاء. يرتبط بمواسم المطر في الموروث العربي.',
+    mean: 'الثريّا في خريطتك تمنحك حساسيّة جمعية — القدرة على الشعور بما وراء الكلمات. ارتباطك بالجماعة والتراث عميق، وأحيانًا تحمل من الماضي أكثر مما تدرك.',
+    shadow: 'الحزن المتوارث الذي لا تعرف أصله. التعلّق بالذاكرة الجماعية على حساب الحاضر.',
+    q: 'ما الذي تحمله عن جماعتك لم تختره أنت، وهل ما زال يخدمك؟',
+  },
+  aldebaran: {
+    lineage: 'أوّل ظهور موثَّق في كتالوج عبد الرحمن الصُّوفي · «كتاب صُوَر الكواكب الثابتة» ٩٦٤ م. عند بدو الجزيرة: «التابع» لأنّه يلحق بالثُّريّا في صعودها. أحد النجوم الملكية الأربعة في التراث الفلكي القديم.',
+    obs: 'نجمٌ أحمر بحجم ٤٤ شمسًا، عينُ الثور في كوكبة الثور. يلحق بالثُّريّا في صعودها كأنّه راعٍ يتبع قطيعه. قدره ٠٫٨٥ — من أشدّ نجوم السماء إضاءةً.',
+    mean: 'حضور الدبران في خريطتك يربطك بسلالةٍ من الانتباه — أن تتبعَ ما يُضيء، لا ما يُلَمَّع. طاقة الشجاعة الهادئة والحضور الأصيل. الشرف هنا يُبنى من الداخل، لا يُمنح من الخارج.',
+    shadow: 'التبَعيّة دون اختيار — أن تتبع ضوءًا ليس لك لأنّه أسهل من شقّ ضوئك الخاصّ.',
     q: 'من تتبعه الآن، وهل اخترتَه أم اعتدتَه؟',
-    cycles: [
-      ['موقع الآن', 'الجوزاء ١٠°٠٢′'],
-      ['التقاء مع شمسك', 'مايو ٢٠٢٦'],
-      ['الانحراف الحالي', '٠٫٠١٤°/سنة'],
-    ],
+  },
+  rigel: {
+    lineage: 'رِجل الجوزاء في كتالوجات العرب القدماء رمزٌ للسفر والاكتشاف. اسمه من «رجل» أي القدم — قدم الصيّاد. يستخدمه الملاحون حتى اليوم لتحديد خط الاستواء السماوي.',
+    obs: 'أزرق-أبيض فائق، من أشدّ النجوم إضاءةً في المجرّة. بُعده ٨٦٠ سنة ضوئية. يجلس عند ١٧° من الجوزاء، ويُعدّ من نجوم الحظ والبناء في التراث الفلكي.',
+    mean: 'رجل الجوزاء في خريطتك يمنحك طاقة البناء المادي والمعنوي معًا. القدرة على إنشاء ما يدوم. ليس الثروة فقط بمعنى المال، بل الثروة بمعنى ما تتركه خلفك.',
+    shadow: 'الانشغال بالإنجاز الخارجي على حساب التساؤل: لماذا أبني هذا؟ لمن؟',
+    q: 'ما الذي تبنيه الآن وستفخر به بعد عشرين سنة؟',
+  },
+  capella: {
+    lineage: 'العيّوق — من «العوق» أي الإعاقة في بعض الروايات، أو «المعتدل» في روايات أخرى. نجم ألفا في كوكبة العوّاء (Auriga). رصده العرب كمرجع للخريف.',
+    obs: 'نجمٌ رباعي في الحقيقة — نظام من أربعة نجوم. يضيء بضوء أصفر دافئ، قدره ٠٫٠٨ من الأكثر إضاءةً. يقع عند ٢٢° من الجوزاء.',
+    mean: 'العيّوق في خريطتك يمنحك تعدّدية الرؤية — القدرة على احتواء وجهات نظر متعارضة دون أن تتفكّك. الشرف يأتي من النزاهة الفكرية، من الفضول الذي لا يُحاكم.',
+    shadow: 'التشتّت بين اهتمامات كثيرة دون عمق في واحدة. الفضول الذي يهرب من الالتزام.',
+    q: 'إلى أيّ فكرة أو مسار تعود دائمًا رغم كلّ التشعّبات؟',
+  },
+  betelgeuse: {
+    lineage: 'إبط الجوزاء — من «إبط» أي الإبط، وهو موضعه في كوكبة الجبّار. رصده الصوفي في القرن العاشر ووثّقه كنجم أحمر متغيّر عملاق. يتوقّع العلماء انفجاره كمستعرة عظمى في المستقبل.',
+    obs: 'نجم أحمر عملاق يفوق قطره الشمس بألف مرّة. متغيّر في سطوعه — يتنفّس وكأنّه حيّ. بُعده ٧٠٠ سنة ضوئية، يقع عند ٢٩° من الجوزاء.',
+    mean: 'إبط الجوزاء في خريطتك يمنحك قوّة الحضور الكامل — لا تمرّ في الأمكنة بل تملأها. طاقة الذكاء العملي الذي يتحوّل إلى نجاح حين يُوجَّه بوعي.',
+    shadow: 'التوسّع الذي يستنزف من حوله. الحضور الذي يمتصّ الفضاء بدلًا من أن يمنحه.',
+    q: 'كيف تكون حاضرًا كاملًا دون أن تطغى على من حولك؟',
+  },
+  sirius: {
+    lineage: 'الشِّعرى اليمانية — ألمع نجوم السماء. عبده المصريّون القدماء وربطوا شروقه بفيضان النيل. وردت في شعر العرب رمزًا للوفاء والإخلاص. ذُكر في القرآن الكريم: «وَأَنَّهُ هُوَ رَبُّ الشِّعْرَى».',
+    obs: 'ألمع نجم في السماء الليلية بقدر سالب ١٫٤٦. نجم ثنائي مع قزم أبيض خفيّ. يقع عند ١٤° من السرطان. صعوده الشرقي يُؤرّخ له في الحضارة المصرية القديمة.',
+    mean: 'الشِّعرى في خريطتك تمنحك طاقة الإخلاص المحترق — ما تؤمن به تؤمن به بكامل نفسك. هذا النجم يرتبط بالمسار وليس بالنتيجة. الأمانة لمن تحبّ ولما تحبّ.',
+    shadow: 'الإخلاص الذي يُعمي عن الواقع. الاحتراق في قضية أو علاقة لم تعد تستحق.',
+    q: 'لمن أو لماذا تُعطي كلّ هذا، وهل هو يستحقّ هذا العطاء؟',
+  },
+  castor: {
+    lineage: 'رأس التوأم المقدِّم في تراث التوأمين — كاستور وبولوكس، الأخوان الإلهيّان في الميثولوجيا اليونانية. رصده العرب مع رفيقه بولوكس كعلامة على بداية الصيف.',
+    obs: 'نجم سداسي في الحقيقة — ثلاثة أزواج نجمية تدور حول بعضها. بُعده ٥١ سنة ضوئية عند ٢٠° من السرطان. يُعطي ضوءًا أبيض-أزرق.',
+    mean: 'كاستور في خريطتك يمنحك قدرة ذهنية استثنائية — سرعة التفكير وتعدّد المستويات. العبقرية هنا عملية لا نظرية. ما تتعلّمه تطبّقه بسرعة.',
+    shadow: 'العقل الذي يتفوّق على التجسيد. أفكار كثيرة وقليل من التنفيذ حتى النهاية.',
+    q: 'ما الفكرة التي فكّرت بها طويلًا ولم تنفّذها بعد؟',
+  },
+  pollux: {
+    lineage: 'رأس التوأم المؤخِّر — بولوكس، الأخ الفاني بين التوأمين. سمّاه العرب «المؤخِّر» لأنّه يتلو كاستور في الشروق. أكثر سطوعًا من كاستور رغم أنّه الثاني في الترتيب.',
+    obs: 'نجمٌ برتقالي-أصفر، أكبر من كاستور حجمًا وأشدّ منه إضاءةً. كوكب يدور حوله. بُعده ٣٤ سنة ضوئية عند ٢٣° من السرطان.',
+    mean: 'بولوكس في خريطتك يمنحك دفء العطاء الجسدي والحرفي — الإتقان في ما تصنع بيديك أو بجسدك. القوّة التي تلمسها الآخرون بوجودك لا بكلماتك.',
+    shadow: 'الاندفاع الذي يتعدّى على حدود الآخرين. القوّة التي لا تعرف متى تتوقّف.',
+    q: 'أين تضع قوّتك — في خدمة نفسك أم في خدمة ما هو أكبر منك؟',
+  },
+  procyon: {
+    lineage: 'الشِّعرى الشامية — «الشامية» لأنّها تشرق شمال الشعرى اليمانية. اسمها اليوناني بروسيون يعني «قبل الكلب». رصده العرب كمرجع لبداية موسم الحرّ.',
+    obs: 'نجمٌ أبيض-أصفر، نجم ثنائي مع قزم أبيض. أحد أقرب النجوم لنا — ١١٫٤ سنة ضوئية. يقع عند ٢٦° من السرطان.',
+    mean: 'الشعرى الشامية في خريطتك تمنحك سرعة الإدراك والتصرّف — تصل قبل الآخرين، ترى ما لم يرَه غيرك. النجاح يأتي مبكّرًا حين تعمل مع هذه الطاقة بصبر.',
+    shadow: 'الاستعجال الذي يُضيّع الثمر قبل نضجه. التصرّف قبل الوقت بسبب القلق لا الرؤية.',
+    q: 'ما الذي تحتاج إلى الانتظار عليه رغم أنّ كلّ شيء فيك يريد أن يتحرّك الآن؟',
+  },
+  regulus: {
+    lineage: 'قلب الأسد — أحد النجوم الملكية الأربعة في التراث الفلكي القديم. اسمه اللاتيني Regulus يعني «الملك الصغير». رصده البابليون والفرس والعرب كنجم الملك والسلطة.',
+    obs: 'نجمٌ أزرق-أبيض يدور بسرعة كبيرة — شكله بيضاوي لا كروي. بُعده ٧٩ سنة ضوئية، يقع عند ٠° من العذراء مع بداية الألفية الثالثة.',
+    mean: 'قلب الأسد في خريطتك يمنحك طاقة السيادة الداخلية — القوّة التي لا تحتاج إثباتًا. أعمق دروس هذا النجم: السلطة الحقيقية تأتي من العدل، لا من الانتقام.',
+    shadow: 'الكبرياء الذي يسبق السقوط. الطموح الذي يطأ على الآخرين.',
+    q: 'هل قوّتك تخدم من حولك أم تحرسها منهم؟',
+  },
+  spica: {
+    lineage: 'السِّماك الأعزل — «الأعزل» أي غير المسلّح، مقابل السماك الرامح. نجم ألفا في كوكبة العذراء. استخدمه هيبارخوس لاكتشاف ظاهرة التقدّم في الاعتدالين.',
+    obs: 'نجمٌ ثنائي قريب متبادل — كلٌّ منهما يشوّه شكل الآخر بجاذبيّته. أزرق فائق السطوع. بُعده ٢٥٠ سنة ضوئية عند ٢٤° من الميزان.',
+    mean: 'السماك الأعزل في خريطتك يمنحك هبةَ الرهافة — الفهم الذي يأتي قبل الكلمة. مواهب الإبداع والجمال والذكاء المتكامل. ما تصنعه يحمل توقيعًا لا يُقلَّد.',
+    shadow: 'الكمالية التي تعيق الإنجاز. البحث عن الجمال المطلق على حساب الحاضر الكافي.',
+    q: 'ما الذي أنجزته وهو كافٍ — حتى لو لم يكن مثاليًا؟',
+  },
+  arcturus: {
+    lineage: 'السِّماك الرامح — «الرامح» أي حامل الرمح. نجم ألفا في كوكبة العوّاء. كان العرب يرصدون شروقه لتحديد بداية الربيع. أرسطو ذكره في «الأرصاد الجوّية».',
+    obs: 'نجمٌ عملاق برتقالي، من ألمع النجوم في السماء الشمالية. بُعده ٣٧ سنة ضوئية عند ٢٤° من الميزان. حركته السريعة نسبيًا تميّزه عن نجوم محيطه.',
+    mean: 'السماك الرامح في خريطتك يمنحك طاقة الإرشاد — القدرة على قيادة الآخرين إلى ما لا يستطيعون رؤيته بمفردهم. النجاح يأتي من خلال الناس لا على حسابهم.',
+    shadow: 'التوجيه الذي يتحوّل إلى سيطرة. الرؤية التي تفرضها على من لم يطلبوها.',
+    q: 'من يستفيد فعلًا من إرشادك، وهل طلب ذلك؟',
+  },
+  zubenelgenubi: {
+    lineage: 'الزُّبانى — من «زُبانا» أي المخالب في الأكّادية. كانت كوكبة الميزان جزءًا من العقرب تاريخيًا — الزبانيان هما مخالب العقرب. موقعه يوازن بين قوّتين.',
+    obs: 'نجمٌ ثنائي يمكن رصد مكوّنيه بالعين المجرّدة في السماء الصافية. قدره ٢٫٧٥ عند ١٥° من العقرب. ارتبط تاريخيًا بمفهوم الميزان والقضاء.',
+    mean: 'الزبانى في خريطتك يمنحك الوعي العميق بالعدالة — الشعور الفطري بما هو حقّ وما هو خطأ. التحدّيات في حياتك غالبًا مرآة لما لم تحسم فيه موقفًا.',
+    shadow: 'الشعور بالظلم الذي يتراكم بدلًا من أن يُعالَج. الانتظار حتى يُنصف الآخرون.',
+    q: 'ما الظلم الذي تنتظر أن يُصلحه غيرك، وما الذي بيدك فعله الآن؟',
+  },
+  antares: {
+    lineage: 'قلب العقرب — أحد النجوم الملكية الأربعة. اسمه اليوناني Anti-Ares يعني «منافس المريخ» لحمرته الشديدة. عُبد في فارس القديمة كحارس فصل الخريف.',
+    obs: 'نجمٌ أحمر عملاق بحجم يفوق الشمس بستّمئة مرّة. يُضيء عند ١٠° من القوس. متغيّر في سطوعه، ويُرجَّح انفجاره مستعرةً عظمى في المستقبل.',
+    mean: 'قلب العقرب في خريطتك يمنحك الشجاعة الجذرية — القدرة على المضيّ في ما يُخيف الآخرين. الحدّة هنا مصدر قوّة حين تُوجَّه بحكمة. الخوف من العمق هو عدوّك الحقيقي.',
+    shadow: 'الاندفاع الذي يحرق الجسور. الكثافة التي تُنهك من تحبّهم.',
+    q: 'أين يكون حدّك الذي يحمي، لا الذي يهاجم؟',
+  },
+  vega: {
+    lineage: 'النسر الواقع — «الواقع» أي الهابط أو الراسخ. نجم ألفا في كوكبة القيثارة. كان قطب الشمال قبل ١٢ ألف سنة ويعود إليه بعد ١٢ ألف أخرى. رمز الدوام في التراث الفلكي.',
+    obs: 'خامس ألمع نجوم السماء، أبيض-أزرق، بُعده ٢٥ سنة ضوئية عند ١٥° من الجدي. يدور بسرعة فتجعله منبسطًا عند قطبيه.',
+    mean: 'النسر الواقع في خريطتك يمنحك طاقة الهبة الفنّية — الجمال الذي يصدر منك بسهولة وعفوية. الرهافة والأناقة في التعبير. ما تصنعه يلمس الناس بدقّة.',
+    shadow: 'المثالية التي ترفض الكاملَ الحاضر. البحث عن الجمال المطلق كهروب من الالتزام.',
+    q: 'ما الذي تمنعه من الخروج خوفًا من أن لا يكون كافيًا؟',
+  },
+  altair: {
+    lineage: 'النسر الطائر — «الطائر» أي الصاعد في الأجواء. نجم ألفا في كوكبة العقاب. سمّاه البابليون والعرب والصينيون جميعًا باسمٍ يحمل معنى العقاب الطائر.',
+    obs: 'نجمٌ أبيض يدور بسرعة فائقة — دورة كاملة كلّ ٩ ساعات. بُعده ١٧ سنة ضوئية عند ٢٢° من الجدي. شكله بيضاوي بسبب دورانه السريع.',
+    mean: 'النسر الطائر في خريطتك يمنحك الحسم والتصرّف الفوري — حين تقرّر، تتحرّك. الشجاعة هنا ليست غياب الخوف بل تجاوزه بالفعل. حظّ الصاعد يأتي فجأةً.',
+    shadow: 'الاستعجال الذي يتجاوز ما لم ينضج. القرارات الفوريّة التي تتجاهل التبعات.',
+    q: 'ما الذي يستحقّ أن تطير إليه الآن دون تردّد؟',
+  },
+  deneb: {
+    lineage: 'ذنب الدجاجة — من «ذنب» أي الذيل، وهو ذيل كوكبة الدجاجة (الدجّاج). نجمٌ في غاية البُعد عنّا رغم سطوعه الاستثنائي. يُشكّل مع الشِّعرى واقعةً وعلطيرًا «المثلّث الصيفي».',
+    obs: 'فائق اللمعان — لو كان بُعد الشِّعرى اليمانية لأضاء السماء كالقمر. بُعده ألفا سنة ضوئية عند ٥° من الثور. سطوعه الحقيقي من أعظم النجوم المعروفة.',
+    mean: 'ذنب الدجاجة في خريطتك يمنحك الرؤية الاصطناعية — القدرة على تركيب ما لا يبدو متّصلًا. الإبداع هنا يعمل من مستوى عميق، أحيانًا قبل أن تفهمه أنت نفسك.',
+    shadow: 'الانفصال عن الواقع المباشر في سبيل رؤية أبعد. عيش في المستقبل على حساب الحاضر.',
+    q: 'ما الرؤية التي تحملها لم تفهمها أنت بعد، ولكنّك تشعر بها؟',
+  },
+  fomalhaut: {
+    lineage: 'فم الحوت — نجم ألفا في كوكبة الحوت الجنوبي. أحد النجوم الملكية الأربعة — حارس فصل الشتاء. رصده الفرس والعرب والمصريون كنجم المثالية والرؤية الروحانية.',
+    obs: 'نجمٌ أبيض-أزرق يحيط به قرص من الغبار الكوني — مرشّح لامتلاك كواكب. بُعده ٢٥ سنة ضوئية عند ٤° من الحوت. سطوع استثنائي في سماء الجنوب.',
+    mean: 'فم الحوت في خريطتك يمنحك طاقة المثالية الروحانية — الإيمان بإمكانية ما لم يتحقّق بعد. الرؤية تسبق الواقع. ما تتصوّره بعمق يصبح حقيقيًا إذا لم تتخلَّ عنه.',
+    shadow: 'المثالية التي تُحبط لأنّها لا تتحمّل الواقع الناقص. التمسّك بصورة لم تُنجز بعد.',
+    q: 'ما المثالية التي تمنعك من قبول ما هو موجود وجيّد الآن؟',
+  },
+  achernar: {
+    lineage: 'آخر النهر — نهاية كوكبة النهر (إيريدانوس) الطويلة. اسمه يعني حرفيًا «آخر النهر». رصده علماء العرب في الجنوب البعيد كنجم الاكتمال والنهايات الكبرى.',
+    obs: 'نجمٌ أزرق-أبيض يدور بسرعة فائقة حتى بات شكله كالكرة المفلطحة. بُعده ١٣٩ سنة ضوئية في أقصى الجنوب. لا يُرى من أغلب مناطق الشمال.',
+    mean: 'آخر النهر في خريطتك يمنحك طاقة الاكتمال — القدرة على إتمام ما بدأه غيرك أو ما تركته أنت في منتصف الطريق. الشهرة هنا تأتي من الصمود حتى النهاية.',
+    shadow: 'الانجذاب نحو النهايات على حساب البدايات. الإحساس بأنّ كلّ شيء يجب أن يكتمل الآن.',
+    q: 'ما الذي تنتظر اكتماله، وما الذي يمكنك إتمامه بنفسك؟',
   },
 };
 
-function VoiceArc({ obs, mean, shadow, q }: { obs: string; mean: string; shadow: string; q: string }) {
-  const rows: [string, string][] = [
-    ['الملاحظة', obs],
-    ['المعنى', mean],
-    ['الظل', shadow],
-  ];
-  return (
-    <div className="px-5 mt-[18px] flex flex-col gap-4">
-      {rows.map(([k, t]) => (
-        <div key={k}>
-          <div className="text-[11px] text-ink-muted tracking-wide font-semibold">{k}</div>
-          <div className="text-[15px] text-ink mt-1.5 leading-[1.7]">{t}</div>
-        </div>
-      ))}
-      <div>
-        <div className="text-[11px] text-ink-muted tracking-wide font-semibold">سؤال الروح</div>
-        <div className="font-serif italic text-[17px] text-ink mt-1.5 leading-[1.5]">{q}</div>
-      </div>
-    </div>
-  );
+function lonToSignDeg(lon: number): string {
+  const ZODIAC = ['الحمل', 'الثور', 'الجوزاء', 'السرطان', 'الأسد', 'العذراء', 'الميزان', 'العقرب', 'القوس', 'الجدي', 'الدلو', 'الحوت'];
+  const n = ((lon % 360) + 360) % 360;
+  const sign = Math.floor(n / 30);
+  const deg = Math.floor(n % 30);
+  const min = Math.round((n % 1) * 60);
+  return `${ZODIAC[sign]} ${deg}°${min > 0 ? ` ${min}′` : ''}`;
 }
 
-function CycleBlock({ items }: { items: [string, string][] }) {
+type Calibration = 'yes' | 'partial' | 'no' | null;
+
+function CalibrateBlock({ storageKey }: { storageKey: string }) {
+  const [val, setVal] = useState<Calibration>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) setVal(raw as Calibration);
+    } catch {}
+  }, [storageKey]);
+
+  const pick = (v: Calibration) => {
+    setVal(v);
+    try { localStorage.setItem(storageKey, v!); } catch {}
+  };
+
+  const opts: { key: Calibration; label: string }[] = [
+    { key: 'yes', label: 'نعم' },
+    { key: 'partial', label: 'جزئيًا' },
+    { key: 'no', label: 'لا' },
+  ];
+
   return (
     <div className="mx-5 mt-[18px] p-3.5 bg-white rounded-xl" style={{ border: '1px solid #E8E2D2' }}>
-      <div className="text-xs text-ink-muted font-semibold tracking-wide">الدورات</div>
-      <div className="mt-2 flex flex-col gap-2">
-        {items.map(([k, v]) => (
-          <div key={k} className="flex justify-between">
-            <span className="text-[13px] text-ink-muted">{k}</span>
-            <span className="text-[13px] text-ink font-mono">{v}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function CalibrateBlock() {
-  return (
-    <div className="mx-5 mt-3.5 p-3.5 bg-white rounded-xl" style={{ border: '1px solid #E8E2D2' }}>
       <div className="text-xs text-ink-muted font-semibold tracking-wide">ينطبق؟</div>
       <div className="flex gap-2 mt-2.5">
-        {([['نعم', true], ['جزئيًا', false], ['لا', false]] as [string, boolean][]).map(([t, sel]) => (
-          <div
-            key={t}
-            className="flex-1 py-2.5 rounded-full text-center"
-            style={{ background: sel ? '#8FA084' : '#fff', border: sel ? 'none' : '1px solid #E8E2D2' }}
-          >
-            <span className="text-[13px] font-medium" style={{ color: sel ? '#fff' : '#171B3A' }}>
-              {t}
-            </span>
-          </div>
-        ))}
+        {opts.map(({ key, label }) => {
+          const sel = val === key;
+          return (
+            <button
+              key={key}
+              onClick={() => pick(key)}
+              className="flex-1 py-2.5 rounded-full text-center transition-colors"
+              style={{
+                background: sel ? '#8FA084' : '#fff',
+                border: sel ? 'none' : '1px solid #E8E2D2',
+              }}
+            >
+              <span className="text-[13px] font-medium" style={{ color: sel ? '#fff' : '#171B3A' }}>
+                {label}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -98,55 +217,97 @@ function CalibrateBlock() {
 
 export function FixedStarDetail({ slug }: { slug: string }) {
   const router = useRouter();
-  const s = STARS[slug] ?? STARS.dabaran;
+  const [chart, setChart] = useState<AstralChart | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('sukoon.primary-chart.v1');
+      if (raw) setChart(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  const star = FIXED_STARS.find((s) => fixedStarSlug(s.nameLatin) === slug) ?? FIXED_STARS[2];
+  const content = STAR_CONTENT[slug] ?? STAR_CONTENT[fixedStarSlug(star.nameLatin)];
+  const jd = chart && typeof (chart as { timestamp?: number }).timestamp === 'number'
+    ? (chart as { timestamp: number }).timestamp
+    : 2451545.0;
+  const currentLon = starLongitudeAtJD(star, jd);
+
+  const conjunctions = chart
+    ? findStarConjunctions(
+        chart as unknown as Record<string, { longitude: number; name: string }>,
+        jd,
+      ).filter((c) => fixedStarSlug(c.star.nameLatin) === slug)
+    : [];
+
+  const isActive = conjunctions.length > 0;
 
   return (
-    <div className="max-w-[430px] mx-auto w-full pb-28 relative">
+    <div className="max-w-[430px] mx-auto w-full pb-28 relative" dir="rtl">
+      {/* Header nav */}
       <div className="pt-4 px-5 flex justify-between items-center">
-        <button onClick={() => router.back()} aria-label="إغلاق" className="text-ink">
+        <button onClick={() => router.back()} aria-label="رجوع" className="text-ink">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-            <path d="M6 6l12 12M18 6l-12 12" />
+            <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
-        <div className="flex gap-3.5 text-ink">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M12 21s-7-4.5-9.5-9.5C.5 7 4 3 7.5 3c2 0 3.5 1 4.5 2.5C13 4 14.5 3 16.5 3 20 3 23.5 7 21.5 11.5 19 16.5 12 21 12 21z" />
-          </svg>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="5" cy="12" r="1.6" fill="#171B3A" />
-            <circle cx="12" cy="12" r="1.6" fill="#171B3A" />
-            <circle cx="19" cy="12" r="1.6" fill="#171B3A" />
-          </svg>
-        </div>
+        <div className="text-xs text-ink-muted">النجوم الثابتة</div>
+        <div className="w-[22px]" />
       </div>
 
-      <div className="px-5 mt-3.5 flex items-center gap-3.5">
-        <div className="w-14 h-14 rounded-[28px] bg-cream-soft flex items-center justify-center shrink-0">
-          <span className="text-2xl text-coral">✦</span>
+      {/* Star identity */}
+      <div className="px-5 mt-4 flex items-center gap-3.5">
+        <div className="w-14 h-14 rounded-[28px] flex items-center justify-center shrink-0"
+          style={{ background: isActive ? '#E9785E' : '#F0EDE6' }}>
+          <span className="text-2xl" style={{ color: isActive ? '#fff' : '#5C5C7A' }}>✦</span>
         </div>
         <div>
-          <div className="font-serif text-2xl text-ink">{s.name}</div>
-          <div className="text-xs text-ink-muted mt-1 italic">{s.sub}</div>
+          <div className="font-serif text-2xl text-ink">{star.nameAr}</div>
+          <div className="text-xs text-ink-muted mt-1">{star.translitAr} · {star.bayer}</div>
         </div>
       </div>
 
-      {s.activeNote && (
-        <div className="mx-5 mt-3.5 p-2.5 bg-coral rounded-xl text-cream text-xs font-medium text-center">
-          {s.activeNote}
+      {/* Position & active badge */}
+      <div className="px-5 mt-3 flex gap-2 flex-wrap">
+        <div className="px-3 py-1.5 bg-cream-soft rounded-full text-xs text-ink">
+          {lonToSignDeg(currentLon)} · قدر {star.mag.toFixed(1)}
+        </div>
+        {isActive && (
+          <div className="px-3 py-1.5 rounded-full text-xs font-medium text-cream" style={{ background: '#E9785E' }}>
+            {conjunctions.map(c => `تلاقٍ مع ${c.natalPlanetName} · ${c.orb}°`).join(' · ')}
+          </div>
+        )}
+      </div>
+
+      {/* Lineage */}
+      <div className="mx-5 mt-4 p-3.5 bg-white rounded-xl" style={{ border: '1px solid #E8E2D2' }}>
+        <div className="text-[11px] text-ink-muted font-semibold tracking-wide mb-2">السلالة العلميّة</div>
+        <div className="text-[13px] text-ink leading-[1.7]">{content?.lineage ?? star.robsonKeyword}</div>
+      </div>
+
+      {/* Voice arc */}
+      {content && (
+        <div className="px-5 mt-[18px] flex flex-col gap-4">
+          {([['الملاحظة', content.obs], ['المعنى', content.mean], ['الظل', content.shadow]] as [string, string][]).map(([k, t]) => (
+            <div key={k}>
+              <div className="text-[11px] text-ink-muted tracking-wide font-semibold">{k}</div>
+              <div className="text-[15px] text-ink mt-1.5 leading-[1.7]">{t}</div>
+            </div>
+          ))}
+          <div>
+            <div className="text-[11px] text-ink-muted tracking-wide font-semibold">سؤال الروح</div>
+            <div className="font-serif text-[17px] text-ink mt-1.5 leading-[1.5]">{content.q}</div>
+          </div>
         </div>
       )}
 
-      <div className="mx-5 mt-3.5 p-3.5 bg-white rounded-xl" style={{ border: '1px solid #E8E2D2' }}>
-        <div className="text-[11px] text-ink-muted font-semibold tracking-wide">السلالة العلميّة</div>
-        <div className="text-[13px] text-ink mt-2 leading-[1.7]">{s.lineage}</div>
-      </div>
-
-      <VoiceArc obs={s.obs} mean={s.mean} shadow={s.shadow} q={s.q} />
-      <CycleBlock items={s.cycles} />
-      <CalibrateBlock />
+      <CalibrateBlock storageKey={`sukoon.star.${slug}`} />
 
       <div className="px-5 mt-5">
-        <button className="w-full h-[52px] rounded-[26px] bg-ink text-cream text-base font-medium">
+        <button
+          onClick={() => router.push(`/log?type=star&key=${encodeURIComponent(slug)}`)}
+          className="w-full h-[52px] rounded-[26px] bg-ink text-cream text-base font-medium"
+        >
           سجّل حدثًا مرتبطًا
         </button>
       </div>

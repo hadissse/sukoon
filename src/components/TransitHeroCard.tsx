@@ -12,25 +12,25 @@ import { SIGN_SLUGS, getPlacementContent } from '@/content/placements';
 
 // Felt-experience of an aspect — what the geometry tends to feel like in life.
 const ASPECT_FEEL: Record<string, string> = {
-  اقتران: 'يلتقيان في نقطة واحدة — تتكثّف طاقتهما معًا وتطلب انتباهك.',
+  اقتران: 'يلتقيان في نقطة واحدة، تتكثّف طاقتهما وتطلب انتباهك.',
   سُداس: 'زاوية ميسّرة تفتح فرصةً لطيفة إن بادرت إليها.',
-  تربيع: 'توتّرٌ يطلب فعلًا — احتكاكٌ يدفعك إلى النمو لا إلى الجمود.',
-  تثليث: 'انسجامٌ يسري بسهولة — وقتٌ ملائم للثقة بما تحمله دون أن تحكم عليه.',
-  تقابل: 'قطبان يتواجهان — يدعوك إلى التوازن بين طرفين فيك.',
+  تربيع: 'توتّرٌ يطلب فعلًا، احتكاكٌ يدفعك إلى النمو لا إلى الجمود.',
+  تثليث: 'انسجامٌ يسري بسهولة، وقتٌ ملائم للثقة بما تحمله دون أن تحكم عليه.',
+  تقابل: 'قطبان يتواجهان، يدعوك إلى التوازن بين طرفين فيك.',
 };
 
 // Voice of each transiting body — what its visit tends to ask of you.
 const TRANSIT_FLAVOR: Record<string, string> = {
-  sun: 'التفاتٌ نحو ما تُضيئه — هويّةٌ تُسأَل أن تحضر.',
-  mercury: 'حركةٌ في الذهن واللسان — أفكارٌ تطلب أن تُقال أو تُكتب.',
-  venus: 'لمسةٌ من القيمة والرفق — يدعوك إلى ما يستحقّ.',
-  mars: 'شرارةٌ في الإرادة — طاقةٌ تبحث عن مَخرج.',
-  jupiter: 'توسعةٌ ودعوةٌ لمعنى أكبر — البابُ مفتوحٌ على رحابة.',
-  saturn: 'امتحانُ ما بُني — يُسأَل البناءُ إن كان حقيقيًّا.',
-  uranus: 'كسرٌ يطلب نمطًا جديدًا — حركةٌ مفاجئة لا تستأذن.',
-  neptune: 'ذوبانٌ في الحدود — صفاءٌ أو ضباب، حسب ما تختار.',
-  pluto: 'عمقٌ يدعو إلى تحوّلٍ جذري — لا يُخفى ما يُكشَف هنا.',
-  chiron: 'لمسٌ على الجرح القديم — مكانٌ يطلب الرفق والاعتراف.',
+  sun: 'التفاتٌ نحو ما تُضيئه، هويّةٌ تُسأَل أن تحضر.',
+  mercury: 'حركةٌ في الذهن واللسان، أفكارٌ تطلب أن تُقال أو تُكتب.',
+  venus: 'لمسةٌ من القيمة والرفق، يدعوك إلى ما يستحقّ.',
+  mars: 'شرارةٌ في الإرادة، دفعٌ نحو الفعل.',
+  jupiter: 'توسعةٌ ودعوةٌ لمعنى أكبر، البابُ مفتوحٌ على رحابة.',
+  saturn: 'امتحانُ ما بُني، يُسأَل البناءُ إن كان حقيقيًّا.',
+  uranus: 'كسرٌ يطلب نمطًا جديدًا، حركةٌ مفاجئة لا تستأذن.',
+  neptune: 'ذوبانٌ في الحدود، صفاءٌ أو ضباب، حسب ما تختار.',
+  pluto: 'عمقٌ يدعو إلى تحوّلٍ جذري، لا يُخفى ما يُكشَف هنا.',
+  chiron: 'لمسٌ على الجرح القديم، مكانٌ يطلب الرفق والاعتراف.',
 };
 
 // Possessive name of the natal planet — "your Sun", "your Moon".
@@ -56,6 +56,7 @@ export function TransitHeroCard() {
   const [transit, setTransit] = useState<Transit | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [vote, setVote] = useState<string | null>(null);
+  const [showReading, setShowReading] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
   const voteKey = `sukoon.vote.transit.${today}`;
@@ -125,20 +126,28 @@ export function TransitHeroCard() {
             {transit.aspectSymbol} {orbLabel(transit.orb)}
           </span>
         </div>
-
         <Headline size="sm">
           {transit.transitName} {transit.aspectName} {possessive}
         </Headline>
 
-        <Body>{flavor}</Body>
-
-        {natalVoice && (
-          <div className="rounded-[14px] bg-cream-soft px-4 py-3 text-[14px] text-ink leading-[1.7] font-serif">
-            {natalVoice.obs}
-          </div>
+        {!showReading ? (
+          <button
+            onClick={() => setShowReading(true)}
+            className="text-xs text-coral font-medium mt-1 text-right"
+          >
+            اقرأ القراءة ←
+          </button>
+        ) : (
+          <>
+            <Body>{flavor}</Body>
+            {natalVoice && (
+              <div className="rounded-[14px] bg-cream-soft px-4 py-3 text-[14px] text-ink leading-[1.7] font-serif">
+                {natalVoice.obs}
+              </div>
+            )}
+            {feel && <Body muted>{feel}</Body>}
+          </>
         )}
-
-        {feel && <Body muted>{feel}</Body>}
 
         <div className="flex gap-2 mt-1">
           {VOTES.map((v) => (

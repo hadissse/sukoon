@@ -1,4 +1,5 @@
 import React from 'react';
+import { planetSvgKey as _planetSvgKey } from '@/lib/planetMeta';
 
 interface GlyphProps {
   name: string;

@@ -13,6 +13,7 @@ import {
   ORGAN_SIGNAL,
   HD_CENTRE_MEANING,
 } from '@/content/traitsMeaning';
+import { FrameworkLabel } from '@/components/FrameworkLabel';
 
 type TabKey = 'elements' | 'minerals' | 'organs' | 'hd';
 
@@ -103,6 +104,7 @@ export default function TraitsPage() {
         {/* Minerals tab */}
         {tab === 'minerals' && (
           <div className="flex flex-col gap-3">
+            <FrameworkLabel label="قراءة هرمسية تقليدية" />
             {traits.minerals.map((m) => (
               <Card key={m.planet}>
                 <div className="flex items-start gap-3">
@@ -123,25 +125,31 @@ export default function TraitsPage() {
         )}
 
         {/* Organs tab */}
-        {tab === 'organs' && traits.organs.map((o) => (
-          <Card key={o.planet}>
-            <div className="flex flex-col gap-2">
-              <div>
-                <div className="font-serif text-base text-ink">{o.organ}</div>
-                <div className="text-xs text-ink-muted mt-1">{o.planet} · {o.theme}</div>
-              </div>
-              {ORGAN_SIGNAL[o.organ] && (
-                <div className="text-sm text-ink-muted leading-[1.7] mt-1">
-                  {ORGAN_SIGNAL[o.organ]}
+        {tab === 'organs' && (
+          <>
+            <FrameworkLabel label="قراءة هرمسية تقليدية" />
+            {traits.organs.map((o) => (
+              <Card key={o.planet}>
+                <div className="flex flex-col gap-2">
+                  <div>
+                    <div className="font-serif text-base text-ink">{o.organ}</div>
+                    <div className="text-xs text-ink-muted mt-1">{o.planet} · {o.theme}</div>
+                  </div>
+                  {ORGAN_SIGNAL[o.organ] && (
+                    <div className="text-sm text-ink-muted leading-[1.7] mt-1">
+                      {ORGAN_SIGNAL[o.organ]}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </Card>
-        ))}
+              </Card>
+            ))}
+          </>
+        )}
 
         {/* HD Centres tab */}
         {tab === 'hd' && (
           <>
+            <FrameworkLabel label="قراءة تصميم إنساني (Human Design)" />
             <div className="text-xs text-ink-muted mb-1 leading-[1.7]">
               المراكز المُعرَّفة تحمل طاقة ثابتة — غير المُعرَّفة مرنة ومتأثّرة بالمحيط.
             </div>
