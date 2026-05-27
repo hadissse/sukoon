@@ -182,7 +182,7 @@ export default function WelcomePage() {
           <style>{`@keyframes breatheIn{from{transform:scale(0.55)}to{transform:scale(1)}}`}</style>
           <div className="flex-1 flex items-center justify-center">
             <div style={{ animation: 'breatheIn 2.4s cubic-bezier(0.4,0,0.2,1) forwards' }}>
-              <img src="/media/cloud-smoke.webp" alt="" width={180} height={180} className="rounded-full object-cover" style={{ width: 180, height: 180 }} />
+              <Orb variant="ember" size={180} />
             </div>
           </div>
         </>
@@ -207,13 +207,12 @@ export default function WelcomePage() {
             <Orb variant="dusk" size={150} />
             <Logo height={90} color="#171B3A" />
           </div>
-          <div className="px-6 pb-14 flex flex-col relative overflow-hidden">
-            <img src="/media/blob-purple.webp" alt="" aria-hidden="true" className="absolute -bottom-8 -left-8 w-[200px] h-[200px] object-cover pointer-events-none opacity-60" />
-            <h2 className="font-serif text-[22px] text-ink mb-1 relative">أنشئ حسابًا</h2>
-            <p className="text-sm text-ink-muted mb-6 leading-[1.7] relative">
+          <div className="px-6 pb-14 flex flex-col">
+            <h2 className="font-serif text-[22px] text-ink mb-1">أنشئ حسابًا</h2>
+            <p className="text-sm text-ink-muted mb-6 leading-[1.7]">
               زامن تقدّمك عبر أجهزتك واحفظ نسخة من ممارستك.
             </p>
-            <div className="flex flex-col gap-2.5 relative">
+            <div className="flex flex-col gap-2.5">
               <button
                 type="button"
                 onClick={() => signInWithGoogle()}
@@ -355,6 +354,20 @@ export default function WelcomePage() {
   );
 }
 
+const SLIDE_BG: Record<string, string> = {
+  dawn:  '#F0E4D5',
+  sage:  '#D8E3D4',
+  lake:  '#CCDBE8',
+  ember: '#F0D8B8',
+  night: '#0F1228',
+  dusk:  '#DDD0E8',
+};
+
+const MEDIA_BG: Record<string, string> = {
+  '/media/crowd.jpg':        '#5C4530',
+  '/media/color-wheel.webp': '#1C1030',
+};
+
 function IntroCarousel({
   slide,
   progress,
@@ -368,16 +381,35 @@ function IntroCarousel({
   onSkip: () => void;
   onNext: () => void;
 }) {
-  const dark = slide.dark ?? false;
+  const hasMedia = !!slide.media;
+  const dark = slide.dark ?? hasMedia;
   const txt = dark ? PALETTE.cream : PALETTE.ink;
   const mute = dark ? 'rgba(241,236,222,0.65)' : PALETTE.inkMuted;
 
+  const slideBg = hasMedia
+    ? (MEDIA_BG[slide.media!] ?? '#1a1025')
+    : (slide.dark ? PALETTE.midnight : (SLIDE_BG[slide.orb] ?? '#F5F2EA'));
+
   return (
     <div
-      className="flex-1 flex flex-col"
-      style={{ background: dark ? PALETTE.midnight : undefined, marginInline: dark ? -1 : 0 }}
+      className="flex-1 flex flex-col relative overflow-hidden"
+      style={{ background: slideBg }}
     >
-      <div className="flex-1 px-6 pt-[60px]">
+      {hasMedia && (
+        <>
+          <img
+            src={slide.media!}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.68) 100%)' }}
+          />
+        </>
+      )}
+
+      <div className="relative flex-1 px-6 pt-[60px] flex flex-col">
         <div className="flex items-center justify-between h-11">
           <button type="button" onClick={onBack} aria-label="رجوع">
             <IconBack color={txt} />
@@ -387,21 +419,24 @@ function IntroCarousel({
             تخطّي
           </button>
         </div>
-        <div className="relative h-[280px] mt-[30px] flex items-center justify-center">
-          {slide.media ? (
-            <img src={slide.media} alt="" className="w-[220px] h-[220px] object-cover rounded-2xl" />
-          ) : (
+
+        {!hasMedia && (
+          <div className="h-[280px] mt-[30px] flex items-center justify-center">
             <Orb variant={slide.orb} size={220} />
-          )}
+          </div>
+        )}
+
+        <div className={hasMedia ? 'mt-auto pb-4' : 'mt-6'}>
+          <h1 className="font-serif text-[30px] leading-[1.3]" style={{ color: txt }}>
+            {slide.title}
+          </h1>
+          <p className="text-[15px] mt-3 leading-[1.7]" style={{ color: mute }}>
+            {slide.subtitle}
+          </p>
         </div>
-        <h1 className="font-serif text-[30px] mt-6 leading-[1.3]" style={{ color: txt }}>
-          {slide.title}
-        </h1>
-        <p className="text-[15px] mt-3 leading-[1.7]" style={{ color: mute }}>
-          {slide.subtitle}
-        </p>
       </div>
-      <div className="px-5 pb-14">
+
+      <div className="relative px-5 pb-14">
         <PrimaryBtn dark={dark} onClick={onNext}>
           {slide.cta ?? 'متابعة'}
         </PrimaryBtn>
