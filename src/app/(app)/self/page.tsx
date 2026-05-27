@@ -1126,7 +1126,7 @@ function SelfPageInner() {
       <div className="pt-6">
         {/* Main tabs — fixed bottom bar */}
         <div
-          className="fixed bottom-20 left-0 right-0 flex gap-2 justify-center px-5 py-3 overflow-x-auto"
+          className="fixed bottom-20 left-0 right-0 z-40 flex gap-2 justify-center px-5 py-3 overflow-x-auto"
           style={{ scrollbarWidth: 'none', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'transparent' }}
         >
           {[
