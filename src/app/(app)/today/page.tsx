@@ -145,46 +145,51 @@ export default function TodayPage() {
 
         <Rule />
 
-        {/* Body + moon — lake/blue box */}
+        {/* Body + moon — square full-bleed */}
         <Link href="/self" className="block">
-          <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #C2D3E2 0%, #A8C0D6 100%)' }}>
-            <img src="/media/moon-water.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-40" />
-            <div className="relative">
-              <div className="text-[11px] text-ink/60 font-semibold tracking-wider mb-2">الجسد والقمر</div>
-              <div className="font-serif text-[17px] text-ink">
-                {stamp ? `القمر في ${stamp.moonPhase.split(' في ')[1] ?? 'السماء'}` : 'القمر والجسد'}
-              </div>
-              <div className="text-xs text-ink/60 mt-1.5">انتبه إلى ما يحتاجه جسدك اليوم</div>
-              <div className="text-xs text-ink/50 mt-3 font-medium">افتح خريطتك ←</div>
-            </div>
-          </div>
-        </Link>
-
-        {/* Teaching — ember/amber box */}
-        <Link href="/learn" className="block">
-          <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #F0C8A0 0%, #E0B080 100%)' }}>
-            <img src="/media/match-flame.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-35" style={{ mixBlendMode: 'multiply' }} />
-            <div className="relative">
-              <div className="text-[11px] text-ink/60 font-semibold tracking-wider mb-2">تعلّم</div>
-              <div className="font-serif text-[17px] text-ink">كيف تقرأ عبورك اليومي؟</div>
-              <div className="text-xs text-ink/60 mt-1.5">ربط السماء بلحظتك الحياتية</div>
-              <div className="text-xs text-ink/50 mt-3 font-medium">استكشف الدروس ←</div>
-            </div>
-          </div>
-        </Link>
-
-        {/* Evening reflection — dark box */}
-        <Link href="/evening" className="block">
-          <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: '#0F1228' }}>
-            <img src="/media/moon-flames.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-55" style={{ mixBlendMode: 'screen' }} />
-            <div className="relative flex items-center gap-4">
+          <div className="relative w-full aspect-square overflow-hidden rounded-[20px]" style={{ background: '#0D1B2A' }}>
+            <img src="/media/moon-water.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0) 42%, rgba(0,0,0,0.74) 100%)' }} />
+            <div className="absolute inset-0 flex flex-col justify-between p-6">
+              <div className="text-[11px] text-cream/60 font-semibold tracking-wider">الجسد والقمر</div>
               <div>
-                <div className="text-[11px] text-cream/50 font-semibold tracking-wider mb-2">قبل النوم</div>
-                <div className="font-serif text-[17px] text-cream">المراجعة المسائية</div>
-                <div className="text-xs text-cream/55 mt-1.5">ثلاث لحظات من يومك</div>
+                <div className="font-serif text-2xl text-cream leading-snug">
+                  {stamp ? `القمر في ${stamp.moonPhase.split(' في ')[1] ?? 'السماء'}` : 'القمر والجسد'}
+                </div>
+                <div className="text-sm text-cream/70 mt-2">انتبه إلى ما يحتاجه جسدك اليوم</div>
+                <div className="text-xs text-coral font-medium mt-3">افتح خريطتك ←</div>
               </div>
-              <div className="mr-auto">
-                <span className="text-coral text-sm">←</span>
+            </div>
+          </div>
+        </Link>
+
+        {/* Teaching — square full-bleed */}
+        <Link href="/learn" className="block">
+          <div className="relative w-full aspect-square overflow-hidden rounded-[20px]" style={{ background: '#1A0C00' }}>
+            <img src="/media/match-flame.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0) 42%, rgba(0,0,0,0.74) 100%)' }} />
+            <div className="absolute inset-0 flex flex-col justify-between p-6">
+              <div className="text-[11px] text-cream/60 font-semibold tracking-wider">تعلّم</div>
+              <div>
+                <div className="font-serif text-2xl text-cream leading-snug">كيف تقرأ عبورك اليومي؟</div>
+                <div className="text-sm text-cream/70 mt-2">ربط السماء بلحظتك الحياتية</div>
+                <div className="text-xs text-coral font-medium mt-3">استكشف الدروس ←</div>
+              </div>
+            </div>
+          </div>
+        </Link>
+
+        {/* Evening reflection — square full-bleed */}
+        <Link href="/evening" className="block">
+          <div className="relative w-full aspect-square overflow-hidden rounded-[20px]" style={{ background: '#0F1228' }}>
+            <img src="/media/moon-flames.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0) 42%, rgba(0,0,0,0.74) 100%)' }} />
+            <div className="absolute inset-0 flex flex-col justify-between p-6">
+              <div className="text-[11px] text-cream/60 font-semibold tracking-wider">قبل النوم</div>
+              <div>
+                <div className="font-serif text-2xl text-cream leading-snug">المراجعة المسائية</div>
+                <div className="text-sm text-cream/70 mt-2">ثلاث لحظات من يومك</div>
+                <div className="text-xs text-coral font-medium mt-3">ابدأ المراجعة ←</div>
               </div>
             </div>
           </div>
