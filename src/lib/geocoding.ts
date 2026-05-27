@@ -41,11 +41,16 @@ function setCachedLocation(query: string, location: Location): void {
   localStorage.setItem(cacheKey, JSON.stringify(data));
 }
 
+function detectLang(query: string): string {
+  return /[؀-ۿ]/.test(query) ? 'ar' : 'en';
+}
+
 async function searchOpenCage(query: string): Promise<Location[]> {
   const key = process.env.NEXT_PUBLIC_OPENCAGE_KEY;
   if (!key) return [];
 
-  const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${key}&limit=10&language=ar&no_annotations=0`;
+  const lang = detectLang(query);
+  const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${key}&limit=10&language=${lang}&no_annotations=0`;
   const response = await fetch(url);
   if (!response.ok) throw new Error('OpenCage request failed');
 
@@ -67,7 +72,8 @@ async function searchOpenCage(query: string): Promise<Location[]> {
 }
 
 async function searchOpenMeteo(query: string): Promise<Location[]> {
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=ar`;
+  const lang = detectLang(query);
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=${lang}`;
   const response = await fetch(url);
   if (!response.ok) throw new Error('Open-Meteo geocoding failed');
 
@@ -97,7 +103,7 @@ async function searchViaEdgeFn(query: string): Promise<Location[]> {
 
   try {
     const { data, error } = await sb.functions.invoke('geocode', {
-      body: { q: query, count: 10, locale: 'ar' },
+      body: { q: query, count: 10, locale: detectLang(query) },
     });
     if (error || !data?.results) throw error ?? new Error('no results');
 

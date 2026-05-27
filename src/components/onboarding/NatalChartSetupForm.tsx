@@ -10,17 +10,25 @@ interface NatalChartSetupFormProps {
   onComplete: (chart: AstralChart) => void;
 }
 
+function to24h(h: number, ampm: 'AM' | 'PM'): number {
+  if (ampm === 'AM') return h === 12 ? 0 : h;
+  return h === 12 ? 12 : h + 12;
+}
+
+const fieldCls =
+  'w-full px-3 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink text-sm text-center focus:outline-none focus:ring-1 focus:ring-coral/20';
+
 export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
   const [name, setName] = useState('');
-  const [year, setYear] = useState('');
-  const [month, setMonth] = useState('');
-  const [day, setDay] = useState('');
+  const [day, setDay] = useState('15');
+  const [month, setMonth] = useState('6');
+  const [year, setYear] = useState('1990');
   const [timeUnknown, setTimeUnknown] = useState(false);
   const [hour, setHour] = useState('12');
   const [minute, setMinute] = useState('00');
+  const [amPm, setAmPm] = useState<'AM' | 'PM'>('PM');
   const [locationQuery, setLocationQuery] = useState('');
   const [locationResults, setLocationResults] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -46,22 +54,23 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
     return () => clearTimeout(t);
   }, [locationQuery]);
 
-  const canSubmit =
-    !!name.trim() && !!year && !!month && !!day && !!selectedLocation && !isSubmitting;
+  const canSubmit = !!name.trim() && !!year && !!month && !!day && !!selectedLocation && !isSubmitting;
 
   const handleSubmit = async () => {
     if (!canSubmit || !selectedLocation) return;
     setIsSubmitting(true);
     setError('');
     try {
+      const h = timeUnknown ? 12 : to24h(parseInt(hour, 10) || 12, amPm);
+      const m = timeUnknown ? 0 : (parseInt(minute, 10) || 0);
       const offset = await getTimezoneOffset(selectedLocation.timezone);
       const birthData = {
         name: name.trim(),
         year: parseInt(year, 10),
         month: parseInt(month, 10),
         day: parseInt(day, 10),
-        hour: timeUnknown ? 12 : parseInt(hour, 10),
-        minute: timeUnknown ? 0 : parseInt(minute, 10),
+        hour: h,
+        minute: m,
         latitude: selectedLocation.latitude,
         longitude: selectedLocation.longitude,
         utcOffsetHours: offset,
@@ -106,43 +115,49 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
         <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">تاريخ الميلاد</span>
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="block text-xs text-ink-muted mb-1">اليوم</label>
-            <select
+            <label className="block text-xs text-ink-muted mb-1 text-center">اليوم</label>
+            <input
+              type="number"
+              min="1"
+              max="31"
               value={day}
               onChange={(e) => setDay(e.target.value)}
-              className="w-full px-3 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink text-sm focus:outline-none focus:ring-1 focus:ring-coral/20"
-            >
-              <option value="">—</option>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+              onBlur={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (!isNaN(v)) setDay(String(Math.min(31, Math.max(1, v))));
+              }}
+              className={fieldCls}
+            />
           </div>
           <div>
-            <label className="block text-xs text-ink-muted mb-1">الشهر</label>
-            <select
+            <label className="block text-xs text-ink-muted mb-1 text-center">الشهر</label>
+            <input
+              type="number"
+              min="1"
+              max="12"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
-              className="w-full px-3 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink text-sm focus:outline-none focus:ring-1 focus:ring-coral/20"
-            >
-              <option value="">—</option>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+              onBlur={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (!isNaN(v)) setMonth(String(Math.min(12, Math.max(1, v))));
+              }}
+              className={fieldCls}
+            />
           </div>
           <div>
-            <label className="block text-xs text-ink-muted mb-1">السنة</label>
-            <select
+            <label className="block text-xs text-ink-muted mb-1 text-center">السنة</label>
+            <input
+              type="number"
+              min="1900"
+              max={currentYear}
               value={year}
               onChange={(e) => setYear(e.target.value)}
-              className="w-full px-3 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink text-sm focus:outline-none focus:ring-1 focus:ring-coral/20"
-            >
-              <option value="">—</option>
-              {years.map((y) => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
+              onBlur={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (!isNaN(v)) setYear(String(Math.min(currentYear, Math.max(1900, v))));
+              }}
+              className={fieldCls}
+            />
           </div>
         </div>
       </div>
@@ -162,34 +177,53 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
           لا أعرف وقت ميلادي
         </button>
         {!timeUnknown && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-ink-muted mb-1">الساعة (٠–٢٣)</label>
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <label className="block text-xs text-ink-muted mb-1 text-center">الساعة</label>
               <input
                 type="number"
-                min="0"
-                max="23"
+                min="1"
+                max="12"
                 value={hour}
-                onChange={(e) => {
+                onChange={(e) => setHour(e.target.value)}
+                onBlur={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 0 && v <= 23) setHour(String(v).padStart(2, '0'));
+                  if (!isNaN(v)) setHour(String(Math.min(12, Math.max(1, v))));
                 }}
-                className="w-full px-4 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink text-sm text-center focus:outline-none focus:ring-1 focus:ring-coral/20"
+                className={fieldCls}
               />
             </div>
-            <div>
-              <label className="block text-xs text-ink-muted mb-1">الدقيقة</label>
+            <div className="flex-1">
+              <label className="block text-xs text-ink-muted mb-1 text-center">الدقيقة</label>
               <input
                 type="number"
                 min="0"
                 max="59"
                 value={minute}
-                onChange={(e) => {
+                onChange={(e) => setMinute(e.target.value)}
+                onBlur={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 0 && v <= 59) setMinute(String(v).padStart(2, '0'));
+                  if (!isNaN(v)) setMinute(String(v).padStart(2, '0'));
                 }}
-                className="w-full px-4 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink text-sm text-center focus:outline-none focus:ring-1 focus:ring-coral/20"
+                className={fieldCls}
               />
+            </div>
+            <div>
+              <label className="block text-xs text-ink-muted mb-1 text-center opacity-0 select-none">—</label>
+              <div className="flex rounded-[14px] overflow-hidden border border-rule-soft">
+                {(['AM', 'PM'] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setAmPm(p)}
+                    className={`px-4 py-3 text-sm font-medium transition-colors ${
+                      amPm === p ? 'bg-ink text-cream' : 'bg-cream-soft text-ink-muted'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -200,7 +234,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
         <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">مكان الميلاد</span>
         <input
           type="text"
-          placeholder="ابحث عن مدينتك..."
+          placeholder="اكتب اسم المدينة بالعربي أو الإنجليزي"
           value={locationQuery}
           onChange={(e) => {
             setLocationQuery(e.target.value);
