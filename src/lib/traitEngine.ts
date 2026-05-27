@@ -51,14 +51,15 @@ const MINERALS: Record<string, { mineral: string; color: string }> = {
   uranus:  { mineral: 'الأورانيوم',   color: '#7E97B8' },
   neptune: { mineral: 'حجر الأعماق', color: '#BDAA82' },
   pluto:   { mineral: 'الأوبسيديان', color: '#4A3520' },
-  chiron:  { mineral: 'الشاروايت',    color: '#A8A8A8' },
-  lilith:  { mineral: 'اللابرادوريت', color: '#6B5B7B' },
+  chiron:    { mineral: 'الشاروايت',    color: '#A8A8A8' },
+  northNode: { mineral: 'الفيروز',     color: '#4A7FB5' },
+  southNode: { mineral: 'العقيق',      color: '#C0392B' },
 };
 
 const PLANET_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة',
   mars: 'المريخ', jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس',
-  neptune: 'نبتون', pluto: 'بلوتو', chiron: 'كيرون', lilith: 'الجزء الأسود',
+  neptune: 'نبتون', pluto: 'بلوتو', chiron: 'كيرون', northNode: 'الرأس', southNode: 'الذيل',
 };
 
 const ORGANS: Record<string, { organ: string; theme: string }> = {
@@ -71,7 +72,7 @@ const ORGANS: Record<string, { organ: string; theme: string }> = {
   saturn:  { organ: 'الطحال', theme: 'التمييز والبنية' },
 };
 
-const PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','lilith'] as const;
+const PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','northNode','southNode'] as const;
 
 // Derive HD centre definition from chart positions (simplified).
 // A centre is "defined" if 2+ planets occupy activating signs for it.

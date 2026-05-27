@@ -6,8 +6,10 @@ import { Meta } from '@/components/Meta';
 import { Rule } from '@/components/Rule';
 import { TodayHeader } from '@/components/TodayHeader';
 import { TransitHeroCard } from '@/components/TransitHeroCard';
+import { ReflectionInsights } from '@/components/ReflectionInsights';
 import { GradientOrb } from '@/components/GradientOrb';
 import { getCosmicStamp, type CosmicStamp } from '@/lib/cosmicStamp';
+import { findPhase as findLunarPhase } from '@/content/lunarJourney';
 
 // Daily rotating question — advances each day
 const DAILY_QUESTIONS = [
@@ -86,9 +88,7 @@ export default function TodayPage() {
         {/* Daily question — coral-tinted box */}
         <Link href="/log" className="block">
           <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #F8D6BE 0%, #F0C0A0 100%)' }}>
-            <div className="absolute -top-8 -right-8 opacity-30">
-              <GradientOrb variant="dawn" size={120} />
-            </div>
+            <img src="/media/sun-rings.gif" alt="" loading="lazy" aria-hidden="true" className="absolute -bottom-4 -left-4 w-[120px] h-[110px] object-cover pointer-events-none opacity-55" style={{ mixBlendMode: 'multiply' }} />
             <div className="relative">
               <div className="text-[11px] text-coral font-semibold tracking-wider mb-2">سؤال اليوم</div>
               <div className="font-serif text-[17px] text-ink leading-[1.6]">{question}</div>
@@ -130,14 +130,37 @@ export default function TodayPage() {
           </div>
         </Link>
 
+        {/* Lunar journey — current moon phase prompt */}
+        {stamp && (() => {
+          const phase = findLunarPhase(stamp.moonPhase);
+          return (
+            <Link href="/journey-lunar" className="block">
+              <div
+                className="relative rounded-[20px] overflow-hidden p-5"
+                style={{ background: phase.accent + '18', borderColor: phase.accent + '44', borderWidth: 1 }}
+              >
+                <div className="relative flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ background: phase.accent }} />
+                    <div className="text-[11px] font-semibold tracking-wider" style={{ color: phase.accent }}>
+                      الرحلة القمريّة · {phase.name}
+                    </div>
+                  </div>
+                  <div className="font-serif text-[16px] text-ink leading-[1.7]">{phase.arcTitle}</div>
+                  <div className="text-xs text-ink-muted leading-[1.7]">{phase.essence}</div>
+                  <div className="text-xs font-medium mt-1" style={{ color: phase.accent }}>تابع المرحلة ←</div>
+                </div>
+              </div>
+            </Link>
+          );
+        })()}
+
         <Rule />
 
         {/* Body + moon — lake/blue box */}
         <Link href="/self" className="block">
           <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #C2D3E2 0%, #A8C0D6 100%)' }}>
-            <div className="absolute -top-6 -right-6 opacity-40">
-              <GradientOrb variant="lake" size={110} />
-            </div>
+            <img src="/media/moon-water.gif" alt="" loading="lazy" aria-hidden="true" className="absolute -top-4 -left-4 w-[120px] h-[120px] object-cover pointer-events-none opacity-50 rounded-xl" />
             <div className="relative">
               <div className="text-[11px] text-ink/60 font-semibold tracking-wider mb-2">الجسد والقمر</div>
               <div className="font-serif text-[17px] text-ink">
@@ -152,9 +175,7 @@ export default function TodayPage() {
         {/* Teaching — ember/amber box */}
         <Link href="/learn" className="block">
           <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #F0C8A0 0%, #E0B080 100%)' }}>
-            <div className="absolute -bottom-6 -right-6 opacity-30">
-              <GradientOrb variant="ember" size={100} />
-            </div>
+            <img src="/media/match-flame.gif" alt="" loading="lazy" aria-hidden="true" className="absolute -bottom-4 -left-4 w-[110px] h-[110px] object-cover pointer-events-none opacity-65 rounded-xl" style={{ mixBlendMode: 'multiply' }} />
             <div className="relative">
               <div className="text-[11px] text-ink/60 font-semibold tracking-wider mb-2">تعلّم</div>
               <div className="font-serif text-[17px] text-ink">كيف تقرأ عبورك اليومي؟</div>
@@ -164,12 +185,13 @@ export default function TodayPage() {
           </div>
         </Link>
 
+        {/* Reflection insights — pattern from logged events */}
+        <ReflectionInsights />
+
         {/* Evening reflection — dark box */}
         <Link href="/evening" className="block">
           <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: '#0F1228' }}>
-            <div className="absolute -top-6 -right-6 opacity-40 pointer-events-none">
-              <GradientOrb variant="night" size={100} />
-            </div>
+            <img src="/media/moon-flames.gif" alt="" loading="lazy" aria-hidden="true" className="absolute top-0 left-0 h-full w-[110px] object-cover pointer-events-none opacity-60" style={{ mixBlendMode: 'screen' }} />
             <div className="relative flex items-center gap-4">
               <div>
                 <div className="text-[11px] text-cream/50 font-semibold tracking-wider mb-2">قبل النوم</div>

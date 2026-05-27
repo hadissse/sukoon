@@ -4,6 +4,7 @@ import type { AstralChart } from './chartCalculator';
 const PLANET_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
   jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
+  chiron: 'كيرون', northNode: 'الرأس', southNode: 'الذيل',
 };
 
 const PLANET_GLYPH: Record<string, string> = {
@@ -25,14 +26,14 @@ const TRANSIT_BODIES: { key: string; body: Astronomy.Body }[] = [
 ];
 
 const ASPECTS = [
-  { angle: 0, name: 'اقتران', symbol: '·', orb: 6 },
-  { angle: 60, name: 'سُداس', symbol: '×', orb: 4 },
-  { angle: 90, name: 'تربيع', symbol: '▫', orb: 5 },
-  { angle: 120, name: 'تثليث', symbol: '△', orb: 5 },
-  { angle: 180, name: 'تقابل', symbol: '—', orb: 6 },
+  { angle: 0,   name: 'اقتران', symbol: '·', orb: 6, color: '#5C5C7A' },
+  { angle: 60,  name: 'سُداس',  symbol: '×', orb: 4, color: '#4A7FB5' },
+  { angle: 90,  name: 'تربيع',  symbol: '▫', orb: 5, color: '#C0392B' },
+  { angle: 120, name: 'تثليث',  symbol: '△', orb: 5, color: '#27AE60' },
+  { angle: 180, name: 'تقابل',  symbol: '—', orb: 6, color: '#C0392B' },
 ];
 
-const NATAL_KEYS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'] as const;
+const NATAL_KEYS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'northNode', 'southNode'] as const;
 
 export interface Transit {
   id: string;
@@ -43,6 +44,7 @@ export interface Transit {
   natalName: string;
   aspectName: string;
   aspectSymbol: string;
+  aspectColor: string;
   orb: number; // degrees from exact
   label: string; // "زحل ☌ شمسك"
 }
@@ -92,6 +94,7 @@ export function calculateTransits(natal: AstralChart, date: Date = new Date()): 
             natalName: PLANET_AR[natalKey],
             aspectName: asp.name,
             aspectSymbol: asp.symbol,
+            aspectColor: asp.color,
             orb,
             label: `${PLANET_AR[key]} ${asp.symbol} ${PLANET_AR[natalKey]}`,
           });

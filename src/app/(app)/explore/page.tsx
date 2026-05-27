@@ -9,25 +9,6 @@ import { ZoomableWheel } from '@/components/ZoomableWheel';
 import { getCurrentSky } from '@/lib/currentSky';
 import type { AstralChart } from '@/lib/chartCalculator';
 
-const lifeArcPhases = [
-  { years: '٠-٧', name: 'الطفولة', status: 'past' },
-  { years: '٧-١٤', name: 'تشكّل الأنا', status: 'past' },
-  { years: '١٤-٢١', name: 'تسمية الذات', status: 'past' },
-  { years: '٢١-٢٨', name: 'الاستقلال الأول', status: 'past' },
-  { years: '٢٨-٣٥', name: 'بناء الشكل', status: 'current' },
-  { years: '٣٥-٤٢', name: 'إرث العمل', status: 'next' },
-  { years: '٤٢-٤٩', name: 'منتصف الحياة', status: 'later' },
-  { years: '٤٩-٥٦', name: 'حصاد المعنى', status: 'later' },
-];
-
-const grandTransits = [
-  { name: 'عودة المشتري الأولى', age: 'حوالي عمر ١٢', status: 'past' },
-  { name: 'تقابل زحل', age: 'حوالي عمر ١٤٫٥', status: 'past' },
-  { name: 'عودة زحل الأولى', age: 'حوالي عمر ٢٩٫٥', status: 'current' },
-  { name: 'تقابل أورانوس', age: 'حوالي عمر ٤٢', status: 'next' },
-  { name: 'عودة زحل الثانية', age: 'حوالي عمر ٥٩', status: 'later' },
-];
-
 const PLANET_KEYS_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
   jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
@@ -51,19 +32,7 @@ function SkySection() {
 
   return (
     <div style={{ background: '#0F1228' }} className="min-h-screen pb-8">
-      {/* Stars */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 h-52 pointer-events-none">
-          {Array.from({ length: 30 }).map((_, i) => {
-            const x = (i * 37) % 380;
-            const y = ((i * 53) % 200) + 10;
-            const s = (i % 3) + 1;
-            return (
-              <div key={i} className="absolute rounded-full" style={{ left: x, top: y, width: s, height: s, background: `rgba(255,255,255,${0.3 + (i % 4) * 0.15})` }} />
-            );
-          })}
-        </div>
-
         <div className="relative px-5 pt-6">
           <div className="text-[11px] text-cream/50 font-semibold tracking-wider mb-1">{dateStr}</div>
           <h1 className="font-serif text-2xl text-cream mb-0.5">السماء الآن</h1>
@@ -126,106 +95,8 @@ function SkySection() {
           )}
         </div>
 
-        {/* Transit calendar link */}
-        <Link href="/explore/calendar" className="mt-4 flex items-center justify-between px-4 py-3.5 rounded-[14px]" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div>
-            <div className="text-sm text-cream font-medium">تقويم العبورات</div>
-            <div className="text-xs text-cream/50 mt-0.5">مسار الكواكب · شهريًا</div>
-          </div>
-          <span className="text-coral text-sm">←</span>
-        </Link>
       </div>
-    </div>
-  );
-}
 
-function LifeArcSection() {
-  return (
-    <div className="px-5 py-6 flex flex-col gap-3">
-      <h1 className="font-serif text-2xl text-ink -tracking-0.5">القوس الحياتي</h1>
-      <p className="text-sm text-ink-muted mb-3">
-        سبع سنوات في كل طور — حياتك مَبنيّة من فصول.
-      </p>
-      <div className="flex flex-col gap-2">
-        {lifeArcPhases.map((phase) => (
-          <div
-            key={phase.years}
-            className={`bg-white rounded-[14px] p-3.5 border border-rule-soft transition-opacity ${
-              phase.status === 'past' ? 'opacity-55' : 'opacity-100'
-            }`}
-          >
-            <div className="flex justify-between items-start mb-1.5">
-              <span className="text-xs text-coral font-semibold font-serif">{phase.years}</span>
-              <span className="text-xs text-ink-muted font-semibold tracking-wide">
-                {phase.status === 'current'
-                  ? 'الآن'
-                  : phase.status === 'next'
-                    ? 'التالي'
-                    : phase.status === 'past'
-                      ? 'مضى'
-                      : 'لاحقًا'}
-              </span>
-            </div>
-            <div className="font-serif text-base text-ink">{phase.name}</div>
-            {phase.status === 'current' && (
-              <div className="flex gap-1 mt-2">
-                {['#C2D3E2', '#D4A04C', '#E9785E', '#D4A04C', '#C2D3E2'].map((color, i) => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <Link href="/explore/biography" className="mt-3 flex items-center justify-between p-3.5 rounded-[14px] bg-cream-soft border border-rule-soft">
-        <span className="text-sm font-serif text-ink">السيرة البانورامية الكاملة</span>
-        <span className="text-coral text-sm">←</span>
-      </Link>
-    </div>
-  );
-}
-
-function GrandTransitsSection() {
-  return (
-    <div className="px-5 py-6 flex flex-col gap-3">
-      <h1 className="font-serif text-2xl text-ink -tracking-0.5">العبورات الكبرى</h1>
-      <p className="text-sm text-ink-muted mb-3 leading-relaxed">
-        خمس عتباتٍ تَحدُث في كل حياة. متى وصلتَ إلى عتبتك؟
-      </p>
-      <div className="flex flex-col gap-2.5">
-        {grandTransits.map((transit) => (
-          <div
-            key={transit.name}
-            className={`rounded-[14px] p-3.5 border transition-all ${
-              transit.status === 'current'
-                ? 'bg-cream-soft border-coral border-1.5'
-                : 'bg-white border-rule-soft'
-            } ${transit.status === 'past' ? 'opacity-55' : 'opacity-100'}`}
-          >
-            <div className="flex justify-between items-baseline gap-2 mb-1">
-              <span className="font-serif text-base text-ink">{transit.name}</span>
-              <span
-                className={`text-xs font-semibold whitespace-nowrap ${
-                  transit.status === 'current' ? 'text-coral' : 'text-ink-muted'
-                }`}
-              >
-                {transit.status === 'current'
-                  ? 'الآن'
-                  : transit.status === 'next'
-                    ? 'القادم'
-                    : transit.status === 'past'
-                      ? 'مضى'
-                      : 'لاحقًا'}
-              </span>
-            </div>
-            <div className="text-xs text-ink-muted">{transit.age}</div>
-          </div>
-        ))}
-      </div>
-      <Link href="/explore/great-transits" className="mt-3 flex items-center justify-between p-3.5 rounded-[14px] bg-cream-soft border border-rule-soft">
-        <span className="text-sm font-serif text-ink">العبورات الكونية الكبرى</span>
-        <span className="text-coral text-sm">←</span>
-      </Link>
     </div>
   );
 }
@@ -295,7 +166,7 @@ function KnowledgeSection() {
 }
 
 export default function ExplorePage() {
-  const [view, setView] = useState<'sky' | 'arc' | 'transits' | 'knowledge'>('sky');
+  const [view, setView] = useState<'sky' | 'knowledge'>('sky');
 
   return (
     <div className="pb-24">
@@ -317,16 +188,12 @@ export default function ExplorePage() {
       </div>
 
       {view === 'sky' && <SkySection />}
-      {view === 'arc' && <LifeArcSection />}
-      {view === 'transits' && <GrandTransitsSection />}
       {view === 'knowledge' && <KnowledgeSection />}
 
       {/* Navigation buttons */}
       <div className="fixed bottom-20 left-0 right-0 px-5 py-4 flex gap-2 justify-center overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
         {([
           ['sky', 'السماء'],
-          ['arc', 'القوس'],
-          ['transits', 'العبورات'],
           ['knowledge', 'المعرفة'],
         ] as const).map(([key, label]) => (
           <button

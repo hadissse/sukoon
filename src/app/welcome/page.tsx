@@ -4,13 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   IconBack,
-  IconClose,
   Orb,
   PALETTE,
   PrimaryBtn,
   ProgressBar,
-  SecondaryBtn,
-  Topo,
 } from '@/components/onboarding/PreAppUI';
 import { Logo } from '@/components/Logo';
 import { signInWithGoogle, signInWithApple, signInWithEmail, signUpWithEmail, resetPassword } from '@/lib/auth';
@@ -22,8 +19,7 @@ import { signInWithGoogle, signInWithApple, signInWithEmail, signUpWithEmail, re
  *   splash       Scr01      logo
  *   breathe-in   Scr02      استنشِق + large orb
  *   breathe-out  Scr03      ازفِر + small orb
- *   welcome      Scr04/05   welcome + account / sign-in CTAs
- *   auth: create Scr06      provider list (create account)
+ *   welcome      Scr04/05   single circle + logo + auth providers inline
  *   auth: signin Scr07      email sign-in form
  *   auth: signup Scr08      sign-up form
  *   auth: reset  Scr09      password reset
@@ -39,7 +35,6 @@ type Phase =
   | 'breathe-in'
   | 'breathe-out'
   | 'welcome'
-  | 'create'
   | 'signin'
   | 'signup'
   | 'reset'
@@ -48,6 +43,7 @@ type Phase =
 
 interface IntroSlide {
   orb: 'dawn' | 'sage' | 'lake' | 'ember' | 'night' | 'dusk';
+  media?: string;
   title: string;
   subtitle: string;
   cta?: string;
@@ -89,11 +85,13 @@ const INTRO_SLIDES: IntroSlide[] = [
   },
   {
     orb: 'sage',
+    media: '/media/crowd.jpg',
     title: 'لستَ وحدك',
     subtitle: 'أكثر من 80 مليون شخص يمارسون مع سُكون — في كل منطقة زمنية.',
   },
   {
     orb: 'dawn',
+    media: '/media/color-wheel.gif',
     title: 'لنبدأ',
     subtitle: 'بضعة أسئلة سريعة لنرسم ممارستك.',
     cta: 'ابدأ الآن',
@@ -136,8 +134,7 @@ export default function WelcomePage() {
     const { error } = await signInWithEmail(email, password);
     setAuthLoading(false);
     if (error) { setAuthError('بيانات الدخول غير صحيحة'); return; }
-    const hasChart = !!localStorage.getItem('sukoon.primary-chart.v1');
-    router.push(hasChart ? '/today' : '/onboarding');
+    router.push('/today');
   };
 
   const handleSignUp = async () => {
@@ -159,7 +156,7 @@ export default function WelcomePage() {
 
   const advanceIntro = () => {
     if (introStep >= INTRO_SLIDES.length - 1) {
-      router.push('/quiz');
+      router.push('/onboarding');
     } else {
       setIntroStep((s) => s + 1);
     }
@@ -172,111 +169,94 @@ export default function WelcomePage() {
         <button
           type="button"
           onClick={() => setPhase('breathe-in')}
-          className="flex-1 flex items-center justify-center"
+          className="flex-1 flex items-center justify-center px-8"
           aria-label="سُكون"
         >
-          <Logo height={40} color="#171B3A" />
+          <Logo height={90} color="#171B3A" />
         </button>
       )}
 
       {/* ── Scr02: Breathe in ── */}
       {phase === 'breathe-in' && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-[50px]">
-          <span className="font-serif italic text-[36px] text-ink">استنشِق</span>
-          <Orb variant="sage" size={180} />
-        </div>
+        <>
+          <style>{`@keyframes breatheIn{from{transform:scale(0.55)}to{transform:scale(1)}}`}</style>
+          <div className="flex-1 flex items-center justify-center">
+            <div style={{ animation: 'breatheIn 2.4s cubic-bezier(0.4,0,0.2,1) forwards' }}>
+              <img src="/media/cloud-smoke.gif" alt="" width={180} height={180} className="rounded-full object-cover" style={{ width: 180, height: 180 }} />
+            </div>
+          </div>
+        </>
       )}
 
       {/* ── Scr03: Breathe out ── */}
       {phase === 'breathe-out' && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-[50px]">
-          <span className="font-serif italic text-[36px] text-ink">ازفِر</span>
-          <Orb variant="sage" size={110} />
-        </div>
+        <>
+          <style>{`@keyframes breatheOut{from{transform:scale(1)}to{transform:scale(0.55)}}`}</style>
+          <div className="flex-1 flex items-center justify-center">
+            <div style={{ animation: 'breatheOut 2.4s cubic-bezier(0.4,0,0.2,1) forwards' }}>
+              <Orb variant="lake" size={180} />
+            </div>
+          </div>
+        </>
       )}
 
-      {/* ── Scr04/05: Welcome ── */}
+      {/* ── Scr04/05: Welcome — circle + logo + auth ── */}
       {phase === 'welcome' && (
         <div className="flex-1 flex flex-col">
-          <div className="flex-1 flex flex-col items-center pt-[100px] px-5">
-            <div className="relative w-[320px] h-[320px] mt-5">
-              <Topo color={PALETTE.coral} opacity={0.18} style={{ position: 'absolute', inset: 0 }} />
-              <div className="absolute top-20 left-20">
-                <Orb variant="dawn" size={160} />
-              </div>
-              <div className="absolute top-[50px] right-10">
-                <Orb variant="ember" size={42} />
-              </div>
-              <div className="absolute bottom-[30px] left-5">
-                <Orb variant="sage" size={28} />
-              </div>
+          <div className="flex flex-col items-center pt-14 pb-6 px-8 gap-5">
+            <Orb variant="dusk" size={150} />
+            <Logo height={90} color="#171B3A" />
+          </div>
+          <div className="px-6 pb-14 flex flex-col relative overflow-hidden">
+            <img src="/media/blob-purple.gif" alt="" aria-hidden="true" className="absolute -bottom-8 -left-8 w-[200px] h-[200px] object-cover pointer-events-none opacity-60" />
+            <h2 className="font-serif text-[22px] text-ink mb-1 relative">أنشئ حسابًا</h2>
+            <p className="text-sm text-ink-muted mb-6 leading-[1.7] relative">
+              زامن تقدّمك عبر أجهزتك واحفظ نسخة من ممارستك.
+            </p>
+            <div className="flex flex-col gap-2.5 relative">
+              <button
+                type="button"
+                onClick={() => signInWithGoogle()}
+                className="h-14 rounded-2xl bg-white border flex items-center px-5 gap-3.5"
+                style={{ borderColor: '#E8E2D2' }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" className="shrink-0">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <span className="font-medium text-base text-ink">المتابعة عبر جوجل</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => signInWithApple()}
+                className="h-14 rounded-2xl bg-white border flex items-center px-5 gap-3.5"
+                style={{ borderColor: '#E8E2D2' }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="shrink-0 text-ink">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                </svg>
+                <span className="font-medium text-base text-ink">المتابعة عبر Apple</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPhase('signup')}
+                className="h-14 rounded-2xl bg-white border flex items-center px-5 gap-3.5"
+                style={{ borderColor: '#E8E2D2' }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-ink-muted">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span className="font-medium text-base text-ink">المتابعة بالبريد الإلكتروني</span>
+              </button>
             </div>
-            <h1 className="font-serif text-[34px] text-ink mt-5 text-center">أهلًا بك في سُكون</h1>
-            <p className="text-sm text-ink-muted mt-1.5">نرافق أكثر من 80 مليون عقل</p>
-          </div>
-          <div className="px-5 pb-14 flex flex-col gap-2.5">
-            <div className="text-center mb-1.5 text-[13px] text-ink-muted">
-              بالمتابعة فإنك توافق على <span className="underline">شروطنا</span>
+            <div className="mt-7 text-center text-[13px] text-ink-muted">
+              عضو من قبل؟{' '}
+              <button type="button" onClick={() => setPhase('signin')} className="text-ink font-medium">
+                سجّل الدخول
+              </button>
             </div>
-            <PrimaryBtn onClick={() => setPhase('create')}>أنشئ حسابًا</PrimaryBtn>
-            <SecondaryBtn onClick={() => setPhase('signin')}>تسجيل الدخول</SecondaryBtn>
-          </div>
-        </div>
-      )}
-
-      {/* ── Scr06: Create account (providers) ── */}
-      {phase === 'create' && (
-        <div className="flex-1 px-6 pt-[60px]">
-          <button type="button" onClick={() => setPhase('welcome')} aria-label="إغلاق" className="flex items-center h-11">
-            <IconClose />
-          </button>
-          <h1 className="font-serif text-[30px] text-ink mt-[30px]">أنشئ حسابًا</h1>
-          <p className="text-sm text-ink-muted mt-2 leading-[1.7]">
-            زامن تقدّمك عبر أجهزتك واحفظ نسخة من ممارستك.
-          </p>
-          <div className="flex flex-col gap-2.5 mt-7">
-            <button
-              type="button"
-              onClick={() => signInWithGoogle()}
-              className="h-14 rounded-2xl bg-white border flex items-center px-5 gap-3.5"
-              style={{ borderColor: '#E8E2D2' }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" className="shrink-0">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              <span className="font-medium text-base text-ink">المتابعة عبر جوجل</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => signInWithApple()}
-              className="h-14 rounded-2xl bg-white border flex items-center px-5 gap-3.5"
-              style={{ borderColor: '#E8E2D2' }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="shrink-0 text-ink">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-              </svg>
-              <span className="font-medium text-base text-ink">المتابعة عبر Apple</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setPhase('signup')}
-              className="h-14 rounded-2xl bg-white border flex items-center px-5 gap-3.5"
-              style={{ borderColor: '#E8E2D2' }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-ink-muted">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-              </svg>
-              <span className="font-medium text-base text-ink">المتابعة بالبريد الإلكتروني</span>
-            </button>
-          </div>
-          <div className="mt-10 text-center text-[13px] text-ink-muted">
-            عضو من قبل؟{' '}
-            <button type="button" onClick={() => setPhase('signin')} className="text-ink font-medium">
-              سجّل الدخول
-            </button>
           </div>
         </div>
       )}
@@ -313,7 +293,7 @@ export default function WelcomePage() {
       {/* ── Scr08: Sign-up form ── */}
       {phase === 'signup' && (
         <div className="flex-1 px-6 pt-[60px]">
-          <button type="button" onClick={() => setPhase('create')} aria-label="رجوع" className="flex items-center h-11">
+          <button type="button" onClick={() => setPhase('welcome')} aria-label="رجوع" className="flex items-center h-11">
             <IconBack />
           </button>
           <h1 className="font-serif text-[28px] text-ink mt-6">أنشئ حسابك</h1>
@@ -367,7 +347,7 @@ export default function WelcomePage() {
           slide={INTRO_SLIDES[introStep]}
           progress={Math.round(((introStep + 1) / INTRO_SLIDES.length) * 100)}
           onBack={() => (introStep === 0 ? setPhase('welcome') : setIntroStep((s) => s - 1))}
-          onSkip={() => router.push('/quiz')}
+          onSkip={() => setPhase('welcome')}
           onNext={advanceIntro}
         />
       )}
@@ -408,7 +388,11 @@ function IntroCarousel({
           </button>
         </div>
         <div className="relative h-[280px] mt-[30px] flex items-center justify-center">
-          <Orb variant={slide.orb} size={220} />
+          {slide.media ? (
+            <img src={slide.media} alt="" className="w-[220px] h-[220px] object-cover rounded-2xl" />
+          ) : (
+            <Orb variant={slide.orb} size={220} />
+          )}
         </div>
         <h1 className="font-serif text-[30px] mt-6 leading-[1.3]" style={{ color: txt }}>
           {slide.title}

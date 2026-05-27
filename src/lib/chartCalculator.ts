@@ -45,7 +45,8 @@ export interface AstralChart {
   neptune: PlanetPosition;
   pluto: PlanetPosition;
   chiron: PlanetPosition;
-  lilith: PlanetPosition;
+  northNode: PlanetPosition;
+  southNode: PlanetPosition;
   houses: HousePosition[];
   timestamp: number;
 }
@@ -59,7 +60,7 @@ const ZODIAC_NAMES_AR = [
 const PLANET_GLYPHS = {
   sun: '☉', moon: '☽', mercury: '☿', venus: '♀', mars: '♂',
   jupiter: '♃', saturn: '♄', uranus: '♅', neptune: '♆', pluto: '♇',
-  chiron: '⚷', lilith: '⚛',
+  chiron: '⚷', northNode: '☊', southNode: '☋',
 };
 
 // ── Math helpers ──────────────────────────────────────────────────────────────
@@ -258,9 +259,10 @@ export function calculateChart(birthData: BirthData): AstralChart {
   const chiron = chironsLongitude(jd, birthTime);
   planets.chiron = makePlanetPosition('كيرون', PLANET_GLYPHS.chiron, chiron.lon, chiron.lat);
 
-  // ── Mean Lilith (Mean Lunar Apogee) ───────────────────────────────────────
-  const lilithLon = meanLilithLongitude(T);
-  planets.lilith = makePlanetPosition('الجزء الأسود', PLANET_GLYPHS.lilith, lilithLon, 0);
+  // ── Mean North Node (Mean Lunar Node) ────────────────────────────────────
+  const northNodeLon = norm360(125.0445479 - 1934.1362608 * T + 0.0020762 * T * T);
+  planets.northNode = makePlanetPosition('الرأس', PLANET_GLYPHS.northNode, northNodeLon, 0);
+  planets.southNode = makePlanetPosition('الذيل', PLANET_GLYPHS.southNode, norm360(northNodeLon + 180), 0);
 
   // ── RAMC → MC → ASC (Placidus) ───────────────────────────────────────────
   const eps = meanObliquity(T);
@@ -323,7 +325,8 @@ export function calculateChart(birthData: BirthData): AstralChart {
     neptune: planets.neptune,
     pluto: planets.pluto,
     chiron: planets.chiron,
-    lilith: planets.lilith,
+    northNode: planets.northNode,
+    southNode: planets.southNode,
     houses,
     timestamp: birthTime.ut,
   };

@@ -7,6 +7,12 @@ import { Chip } from '@/components/Chip';
 import { Card } from '@/components/Card';
 import { Headline } from '@/components/Headline';
 import { Body } from '@/components/Body';
+import {
+  ELEMENT_MEANING,
+  MINERAL_MEANING,
+  ORGAN_SIGNAL,
+  HD_CENTRE_MEANING,
+} from '@/content/traitsMeaning';
 
 type TabKey = 'elements' | 'minerals' | 'organs' | 'hd';
 
@@ -62,8 +68,14 @@ export default function TraitsPage() {
         {/* Elements tab */}
         {tab === 'elements' && (
           <>
-            <div className="text-xs text-ink-muted mb-1">
-              العنصر السائد: <span className="font-semibold text-ink">{ELEMENT_AR[traits.elements.dominant]}</span>
+            <div className="rounded-[18px] p-4 mb-1" style={{ background: ELEMENT_COLORS[traits.elements.dominant] + '22' }}>
+              <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-2">
+                عنصرك السائد · {ELEMENT_AR[traits.elements.dominant]}
+              </div>
+              <div className="font-serif text-[15px] text-ink leading-[1.75] mb-2">
+                {ELEMENT_MEANING[traits.elements.dominant].essence}
+              </div>
+              <Body muted>{ELEMENT_MEANING[traits.elements.dominant].lesson}</Body>
             </div>
             {(['fire', 'earth', 'air', 'water'] as const).map((el) => (
               <Card key={el}>
@@ -90,14 +102,19 @@ export default function TraitsPage() {
 
         {/* Minerals tab */}
         {tab === 'minerals' && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             {traits.minerals.map((m) => (
               <Card key={m.planet}>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
-                  <div>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: m.color }} />
+                  <div className="flex-1 min-w-0">
                     <div className="text-xs text-ink-muted">{m.planet}</div>
-                    <div className="font-serif text-sm text-ink mt-0.5">{m.mineral}</div>
+                    <div className="font-serif text-base text-ink mt-0.5">{m.mineral}</div>
+                    {MINERAL_MEANING[m.mineral] && (
+                      <div className="text-sm text-ink-muted mt-2 leading-[1.7]">
+                        {MINERAL_MEANING[m.mineral]}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -108,11 +125,16 @@ export default function TraitsPage() {
         {/* Organs tab */}
         {tab === 'organs' && traits.organs.map((o) => (
           <Card key={o.planet}>
-            <div className="flex gap-3 items-start">
-              <div className="flex-1">
+            <div className="flex flex-col gap-2">
+              <div>
                 <div className="font-serif text-base text-ink">{o.organ}</div>
                 <div className="text-xs text-ink-muted mt-1">{o.planet} · {o.theme}</div>
               </div>
+              {ORGAN_SIGNAL[o.organ] && (
+                <div className="text-sm text-ink-muted leading-[1.7] mt-1">
+                  {ORGAN_SIGNAL[o.organ]}
+                </div>
+              )}
             </div>
           </Card>
         ))}
@@ -120,28 +142,38 @@ export default function TraitsPage() {
         {/* HD Centres tab */}
         {tab === 'hd' && (
           <>
-            <div className="text-xs text-ink-muted mb-1">
+            <div className="text-xs text-ink-muted mb-1 leading-[1.7]">
               المراكز المُعرَّفة تحمل طاقة ثابتة — غير المُعرَّفة مرنة ومتأثّرة بالمحيط.
             </div>
-            {traits.hdCentres.map((c) => (
-              <Card key={c.name}>
-                <div className="flex justify-between items-center gap-3">
-                  <div>
-                    <div className="font-serif text-base text-ink">{c.name}</div>
-                    <div className="text-xs text-ink-muted mt-1">{c.keywords}</div>
+            {traits.hdCentres.map((c) => {
+              const meaning = HD_CENTRE_MEANING[c.name];
+              return (
+                <Card key={c.name}>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-serif text-base text-ink">{c.name}</div>
+                        <div className="text-xs text-ink-muted mt-1">{c.keywords}</div>
+                      </div>
+                      <span
+                        className="text-xs font-medium px-2.5 py-1 rounded-full shrink-0"
+                        style={{
+                          background: c.defined ? '#E9785E' : '#F0F0F0',
+                          color: c.defined ? '#FFFFFF' : '#5C5C7A',
+                        }}
+                      >
+                        {c.defined ? 'مُعرَّف' : 'مفتوح'}
+                      </span>
+                    </div>
+                    {meaning && (
+                      <div className="text-sm text-ink-muted leading-[1.7]">
+                        {c.defined ? meaning.defined : meaning.open}
+                      </div>
+                    )}
                   </div>
-                  <span
-                    className="text-xs font-medium px-2.5 py-1 rounded-full shrink-0"
-                    style={{
-                      background: c.defined ? '#E9785E' : '#F0F0F0',
-                      color: c.defined ? '#FFFFFF' : '#5C5C7A',
-                    }}
-                  >
-                    {c.defined ? 'مُعرَّف' : 'مفتوح'}
-                  </span>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </>
         )}
       </div>

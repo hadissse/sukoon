@@ -5,19 +5,12 @@ import type { AstralChart } from '@/lib/chartCalculator';
 
 const VB = 1000;
 const C = 500;
-const R_OUTER = 470;
 const R_ZODIAC_OUT = 440;
 const R_ZODIAC_IN = 380;
 const R_PLANET_RING = 320;
 const R_PLANET_INNER = 270;
-const R_HOUSE_NUM = 235;
 const R_CENTER = 70;
 
-const COLOR_STROKE = '#7A7A7A';
-const COLOR_LIGHT = '#C7C0AE';
-const COLOR_TICKS = '#2A2A2A';
-const COLOR_TEXT = '#3A3A3A';
-const COLOR_MUTED = '#9A9A9A';
 const COLOR_CORAL = '#E9785E';
 const COLOR_SAGE = '#8FA084';
 const COLOR_LAKE = '#7E97B8';
@@ -28,26 +21,38 @@ const ZODIAC_GLYPHS = [
   '♌'+TEXT_VS, '♍'+TEXT_VS, '♎'+TEXT_VS, '♏'+TEXT_VS,
   '♐'+TEXT_VS, '♑'+TEXT_VS, '♒'+TEXT_VS, '♓'+TEXT_VS,
 ];
-const HOUSE_LABELS = ['١','٢','٣','٤','٥','٦','٧','٨','٩','١٠','١١','١٢'];
 const GLYPH_FONT = 'Cambria, "Times New Roman", "Noto Sans Symbols 2", "Segoe UI Symbol", serif';
 
 const ASPECT_TYPES = [
   { angle: 0,   orb: 8, color: 'rgba(0,0,0,0)', opacity: 0 },
-  { angle: 60,  orb: 6, color: COLOR_SAGE,       opacity: 0.18 },
-  { angle: 90,  orb: 8, color: COLOR_LAKE,       opacity: 0.28 },
-  { angle: 120, orb: 8, color: COLOR_SAGE,       opacity: 0.30 },
-  { angle: 180, orb: 8, color: COLOR_CORAL,      opacity: 0.35 },
+  { angle: 60,  orb: 6, color: '#4A7FB5',        opacity: 0.25 },
+  { angle: 90,  orb: 8, color: '#C0392B',        opacity: 0.28 },
+  { angle: 120, orb: 8, color: '#27AE60',        opacity: 0.30 },
+  { angle: 180, orb: 8, color: '#C0392B',        opacity: 0.32 },
+];
+
+// Element color for each zodiac sign (0=Aries … 11=Pisces)
+const ZODIAC_ELEMENT_COLORS = [
+  '#E9785E', '#A07840', '#8FA084', '#7E97B8', // Aries, Taurus, Gemini, Cancer
+  '#E9785E', '#A07840', '#8FA084', '#7E97B8', // Leo, Virgo, Libra, Scorpio
+  '#E9785E', '#A07840', '#8FA084', '#7E97B8', // Sagittarius, Capricorn, Aquarius, Pisces
 ];
 
 const PLANET_SIZES: Record<string, number> = {
-  sun: 56, moon: 36, mercury: 28, venus: 28, mars: 28,
+  sun: 28, moon: 36, mercury: 28, venus: 28, mars: 28,
   jupiter: 32, saturn: 32, uranus: 28, neptune: 28, pluto: 28,
-  chiron: 24, lilith: 24,
+  chiron: 24, northNode: 26, southNode: 26,
+};
+
+// SVG filenames that differ from the planet key
+const SVG_FILE: Partial<Record<string, string>> = {
+  northNode: 'northnode',
+  southNode: 'southnode',
 };
 
 const PLANET_KEYS = [
   'sun','moon','mercury','venus','mars','jupiter',
-  'saturn','uranus','neptune','pluto','chiron','lilith',
+  'saturn','uranus','neptune','pluto','chiron','northNode','southNode',
 ] as const;
 
 // 0° Aries at 9 o'clock; longitude increases CCW visually
@@ -122,7 +127,13 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
   };
   const onPointerUp = () => { dragging.current = null; };
 
-  const bg = tone === 'paper' ? '#F8F5EF' : '#FFFFFF';
+  const isDark = tone === 'white';
+  const bg = isDark ? 'transparent' : '#F8F5EF';
+  const strokeColor = isDark ? 'rgba(255,255,255,0.28)' : '#7A7A7A';
+  const lightColor  = isDark ? 'rgba(255,255,255,0.18)' : '#C7C0AE';
+  const mutedColor  = isDark ? 'rgba(255,255,255,0.45)' : '#9A9A9A';
+  const wedgeFill   = isDark ? 'none'                   : '#FFFFFF';
+  const planetHalo  = isDark ? 'rgba(255,255,255,0.07)' : (tone === 'paper' ? '#F8F5EF' : '#FFFFFF');
 
   // Alternating zodiac wedge arcs — decorative shading
   const zodiacWedges = Array.from({ length: 12 }, (_, i) => {
@@ -142,14 +153,6 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
     return { d, alt: i % 2 === 0 };
   });
 
-  // Degree tick marks on outer ring
-  const ticks = Array.from({ length: 360 }, (_, d) => {
-    const o = toXY(d, R_OUTER);
-    const len = d % 30 === 0 ? 16 : d % 10 === 0 ? 10 : d % 5 === 0 ? 7 : 4;
-    const ii = toXY(d, R_OUTER - len);
-    return { x1: o.x, y1: o.y, x2: ii.x, y2: ii.y, d };
-  });
-
   // Aspect lines through inner ring
   const aspectLines: { x1: number; y1: number; x2: number; y2: number; color: string; opacity: number }[] = [];
   if (chart) {
@@ -157,6 +160,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
       for (let j = i + 1; j < PLANET_KEYS.length; j++) {
         const a = chart[PLANET_KEYS[i]];
         const b = chart[PLANET_KEYS[j]];
+        if (!a || !b) continue;
         const sep = Math.abs(((a.longitude - b.longitude + 180) % 360) - 180);
         for (const asp of ASPECT_TYPES) {
           if (asp.opacity === 0) continue;
@@ -173,8 +177,8 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
 
   // Planet spread positions
   const planetInputs = PLANET_KEYS.map(key => ({
-    lon: chart?.[key].longitude ?? 0,
-    angle: lonToAngleDeg(chart?.[key].longitude ?? 0),
+    lon: chart?.[key]?.longitude ?? 0,
+    angle: lonToAngleDeg(chart?.[key]?.longitude ?? 0),
   }));
   const minSep = (34 / R_PLANET_RING) * (180 / Math.PI);
   const spread = spreadAngles(planetInputs, minSep);
@@ -203,39 +207,28 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
           role="img" aria-label="الخريطة الفلكية"
           style={{ display: 'block' }}
         >
-          {/* Background fill */}
-          <circle cx={C} cy={C} r={R_OUTER} fill={bg} />
+          {/* Background fill — only inside zodiac ring (no outer degree arc) */}
+          <circle cx={C} cy={C} r={R_ZODIAC_OUT} fill={isDark ? 'rgba(255,255,255,0.04)' : '#F8F5EF'} />
 
-          {/* Alternating zodiac wedge shading */}
+          {/* Zodiac wedge backgrounds */}
           {zodiacWedges.map((w, i) => (
-            <path key={`wedge-${i}`} d={w.d}
-              fill={w.alt ? '#F5F2EA' : '#FFFFFF'} stroke="none" />
+            <path key={`wedge-${i}`} d={w.d} fill={wedgeFill} stroke="none" />
           ))}
 
-          {/* Degree tick marks */}
-          {ticks.map((t) => (
-            <line key={`tick-${t.d}`} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-              stroke={COLOR_TICKS}
-              strokeWidth={t.d % 30 === 0 ? 1.4 : t.d % 5 === 0 ? 0.9 : 0.6}
-              opacity={t.d % 5 === 0 ? 1 : 0.55}
-            />
-          ))}
+          {/* Concentric structural circles — no outer arc */}
+          <circle cx={C} cy={C} r={R_ZODIAC_OUT}  fill="none" stroke={strokeColor} strokeWidth="1.2" />
+          <circle cx={C} cy={C} r={R_ZODIAC_IN}   fill="none" stroke={strokeColor} strokeWidth="1.2" />
+          <circle cx={C} cy={C} r={R_PLANET_INNER} fill="none" stroke={lightColor} strokeWidth="1" />
+          <circle cx={C} cy={C} r={R_CENTER}       fill={isDark ? 'rgba(255,255,255,0.06)' : '#F8F5EF'} stroke={lightColor} strokeWidth="1.2" />
 
-          {/* Concentric structural circles */}
-          <circle cx={C} cy={C} r={R_OUTER}       fill="none" stroke={COLOR_STROKE} strokeWidth="1.2" />
-          <circle cx={C} cy={C} r={R_ZODIAC_OUT}  fill="none" stroke={COLOR_STROKE} strokeWidth="1.2" />
-          <circle cx={C} cy={C} r={R_ZODIAC_IN}   fill="none" stroke={COLOR_STROKE} strokeWidth="1.2" />
-          <circle cx={C} cy={C} r={R_PLANET_INNER} fill="none" stroke={COLOR_LIGHT} strokeWidth="1" />
-          <circle cx={C} cy={C} r={R_CENTER}       fill={bg}   stroke={COLOR_LIGHT} strokeWidth="1.2" />
-
-          {/* Zodiac sign glyphs */}
+          {/* Zodiac sign glyphs — colored by element */}
           {ZODIAC_GLYPHS.map((glyph, i) => {
             const midLon = i * 30 + 15;
             const { x, y } = toXY(midLon, (R_ZODIAC_OUT + R_ZODIAC_IN) / 2);
             return (
               <text key={`zodiac-${i}`} x={x} y={y}
                 textAnchor="middle" dominantBaseline="central"
-                fontSize="38" fill={COLOR_TEXT}
+                fontSize="38" fill={isDark ? 'rgba(255,255,255,0.6)' : ZODIAC_ELEMENT_COLORS[i]}
                 style={{ fontFamily: GLYPH_FONT, fontVariantEmoji: 'text' as React.CSSProperties['fontVariantEmoji'] }}>
                 {glyph}
               </text>
@@ -248,11 +241,10 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
               stroke={l.color} strokeWidth="0.8" opacity={l.opacity} />
           ))}
 
-          {/* House cusps + numbers */}
+          {/* House cusps — no numbers, AC/MC labels only */}
           {chart && chart.houses.map((house, i) => {
             const inner = toXY(house.cusp, R_CENTER);
             const outer = toXY(house.cusp, R_ZODIAC_IN);
-            const numPos = toXY(house.cusp + 15, R_HOUSE_NUM);
             const isAsc = house.num === 1;
             const isMc = house.num === 10;
             const labelPos = toXY(house.cusp, R_ZODIAC_IN - 22);
@@ -260,7 +252,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
               <g key={`house-${i}`}>
                 <line
                   x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
-                  stroke={isAsc ? COLOR_CORAL : COLOR_LIGHT}
+                  stroke={lightColor}
                   strokeWidth={isAsc || isMc ? '1.5' : '0.8'}
                   opacity={isAsc || isMc ? 0.9 : 0.6}
                 />
@@ -268,17 +260,11 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
                   <text x={labelPos.x} y={labelPos.y}
                     textAnchor="middle" dominantBaseline="central"
                     fontSize="15" fontWeight="600"
-                    fill={isAsc ? COLOR_CORAL : COLOR_MUTED}
+                    fill={mutedColor}
                     style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
                     {isAsc ? 'AC' : 'MC'}
                   </text>
                 )}
-                <text x={numPos.x} y={numPos.y}
-                  textAnchor="middle" dominantBaseline="central"
-                  fontSize="14" fill={COLOR_MUTED}
-                  style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
-                  {HOUSE_LABELS[i]}
-                </text>
               </g>
             );
           })}
@@ -286,6 +272,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
           {/* Planets: tick at true longitude + icon at spread position */}
           {chart && PLANET_KEYS.map((key, idx) => {
             const planet = chart[key];
+            if (!planet) return null;
             const glyphSize = PLANET_SIZES[key] ?? 28;
             const trueOuter = toXY(planet.longitude, R_PLANET_INNER + 8);
             const trueInner = toXY(planet.longitude, R_PLANET_INNER);
@@ -294,6 +281,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
             const sx = C + R_PLANET_RING * Math.cos(spreadRad);
             const sy = C - R_PLANET_RING * Math.sin(spreadRad);
             const isHov = hovered === key;
+            const svgFile = SVG_FILE[key] ?? key;
 
             return (
               <g key={`planet-${key}`}
@@ -303,15 +291,16 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
               >
                 {/* True-position tick */}
                 <line x1={trueOuter.x} y1={trueOuter.y} x2={trueInner.x} y2={trueInner.y}
-                  stroke={COLOR_TICKS} strokeWidth="0.9" opacity="0.7" />
+                  stroke={isDark ? 'rgba(255,255,255,0.5)' : '#2A2A2A'} strokeWidth="0.9" opacity="0.7" />
                 {/* Halo behind icon */}
-                <circle cx={sx} cy={sy} r={glyphSize / 2 + 3} fill={bg} opacity={isHov ? 1 : 0.7} />
+                <circle cx={sx} cy={sy} r={glyphSize / 2 + 3} fill={planetHalo} opacity={isHov ? 1 : 0.8} />
                 {/* Planet SVG icon */}
                 <image
-                  href={`/svg/${key}.svg`}
+                  href={`/svg/${svgFile}.svg`}
                   x={sx - glyphSize / 2} y={sy - glyphSize / 2}
                   width={glyphSize} height={glyphSize}
                   opacity={isHov ? 1 : 0.85}
+                  style={isDark ? { filter: 'invert(1)' } : undefined}
                 />
                 {/* Invisible hit target */}
                 <circle cx={sx} cy={sy} r={glyphSize / 2 + 8} fill="transparent" />
@@ -321,7 +310,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
 
           {/* Hover tooltip */}
           {hovered && chart && (() => {
-            const planet = chart[hovered as typeof PLANET_KEYS[number]];
+            const planet = chart[hovered as (typeof PLANET_KEYS)[number]];
             if (!planet) return null;
             const label = `${planet.name} · ${planet.degree}° ${planet.sign}`;
             const idx = PLANET_KEYS.indexOf(hovered as typeof PLANET_KEYS[number]);

@@ -40,7 +40,8 @@ describe('calculateChart', () => {
     expect(chart).toHaveProperty('jupiter');
     expect(chart).toHaveProperty('saturn');
     expect(chart).toHaveProperty('chiron');
-    expect(chart).toHaveProperty('lilith');
+    expect(chart).toHaveProperty('northNode');
+    expect(chart).toHaveProperty('southNode');
   });
 
   it('has 12 houses', () => {
@@ -79,7 +80,7 @@ describe('calculateChart', () => {
     const chart = calculateChart(ARIES_BIRTH);
     const bodies = [chart.sun, chart.moon, chart.mercury, chart.venus,
       chart.mars, chart.jupiter, chart.saturn, chart.uranus,
-      chart.neptune, chart.pluto, chart.chiron, chart.lilith];
+      chart.neptune, chart.pluto, chart.chiron, chart.northNode, chart.southNode];
     for (const b of bodies) {
       expect(b.longitude).toBeGreaterThanOrEqual(0);
       expect(b.longitude).toBeLessThan(360);
@@ -92,13 +93,12 @@ describe('calculateChart', () => {
     expect(Math.abs(chart.chiron.longitude - wrongChiron)).toBeGreaterThan(1);
   });
 
-  it('Lilith longitude is in 0–360 range and not equal to moon+180', () => {
+  it('North Node longitude is in 0–360 range and South Node is exactly opposite', () => {
     const chart = calculateChart(ARIES_BIRTH);
-    expect(chart.lilith.longitude).toBeGreaterThanOrEqual(0);
-    expect(chart.lilith.longitude).toBeLessThan(360);
-    const wrongLilith = ((chart.moon.longitude + 180) % 360 + 360) % 360;
-    // Mean Lilith should differ from the old moon+180 placeholder
-    expect(Math.abs(chart.lilith.longitude - wrongLilith)).toBeGreaterThan(0.1);
+    expect(chart.northNode.longitude).toBeGreaterThanOrEqual(0);
+    expect(chart.northNode.longitude).toBeLessThan(360);
+    const expectedSouth = ((chart.northNode.longitude + 180) % 360 + 360) % 360;
+    expect(chart.southNode.longitude).toBeCloseTo(expectedSouth, 1);
   });
 
   it('ASC and MC are different ecliptic points', () => {

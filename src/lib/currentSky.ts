@@ -30,9 +30,8 @@ function makePlanet(name: string, lon: number, lat: number): PlanetPosition {
   return { name, glyph: '', longitude: lon, latitude: lat, ...longitudeToSignAndDegree(lon) };
 }
 
-function meanLilithLongitude(T: number): number {
-  const perigee = norm360(83.3532465 + 40690.1357 * T - 0.0103200 * T * T);
-  return norm360(perigee + 180);
+function meanNorthNodeLongitude(T: number): number {
+  return norm360(125.0445479 - 1934.1362608 * T + 0.0020762 * T * T);
 }
 
 function chironsLongitude(now: Astronomy.AstroTime): number {
@@ -96,7 +95,9 @@ export function getCurrentSky(): AstralChart {
   }
 
   p.chiron = makePlanet('كيرون', chironsLongitude(astroNow), 0);
-  p.lilith = makePlanet('الجزء الأسود', meanLilithLongitude(T), 0);
+  const northNodeLon = meanNorthNodeLongitude(T);
+  p.northNode = makePlanet('الرأس', northNodeLon, 0);
+  p.southNode = makePlanet('الذيل', norm360(northNodeLon + 180), 0);
 
   // Empty houses — no location needed for the global sky chart
   const emptyHouses: HousePosition[] = Array.from({ length: 12 }, (_, i) => ({
@@ -108,7 +109,7 @@ export function getCurrentSky(): AstralChart {
     asc: 0, mc: 90,
     sun: p.sun, moon: p.moon, mercury: p.mercury, venus: p.venus,
     mars: p.mars, jupiter: p.jupiter, saturn: p.saturn, uranus: p.uranus,
-    neptune: p.neptune, pluto: p.pluto, chiron: p.chiron, lilith: p.lilith,
+    neptune: p.neptune, pluto: p.pluto, chiron: p.chiron, northNode: p.northNode, southNode: p.southNode,
     houses: emptyHouses,
     timestamp: now,
   };

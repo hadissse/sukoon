@@ -9,14 +9,15 @@ import { Body } from '@/components/Body';
 import { Meta } from '@/components/Meta';
 import { ZoomableWheel } from '@/components/ZoomableWheel';
 import { AstralChart } from '@/lib/chartCalculator';
-import { SIGN_SLUGS } from '@/content/placements';
+import { SIGN_SLUGS, getPlacementContent } from '@/content/placements';
 import { loadEvents, STREAM_AR, STREAM_GLYPH, type LoggedEvent } from '@/lib/events';
 import { calculateTransits, orbLabel, type Transit } from '@/lib/transits';
 import { loadTraits } from '@/lib/traitEngine';
+import { NatalChartSetupForm } from '@/components/onboarding/NatalChartSetupForm';
+import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
 
 const chartSubtabs = [
   { key: 'planets', label: 'الكواكب' },
-  { key: 'elements', label: 'العناصر' },
   { key: 'signs', label: 'الأبراج' },
   { key: 'houses', label: 'البيوت' },
   { key: 'aspects', label: 'الجوانب' },
@@ -33,7 +34,7 @@ function formatPosition(planet: any): string {
 function transformChartToPlanets(chart: AstralChart | null): any[] {
   if (!chart) return [];
   
-  const planetKeys: (keyof AstralChart)[] = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron', 'lilith'];
+  const planetKeys: (keyof AstralChart)[] = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron', 'northNode', 'southNode'];
   
   return planetKeys.map((key) => {
     const planet = chart[key];
@@ -89,14 +90,14 @@ function calculateAspects(chart: AstralChart | null): any[] {
   if (!chart) return [];
   
   const aspects = [];
-  const planetList = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+  const planetList = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'chiron', 'northNode', 'southNode'];
   
   const aspectTypes = [
-    { angle: 0, name: 'اقتران', symbol: '·', orb: 8 },
-    { angle: 60, name: 'سُداس', symbol: '·', orb: 6 },
-    { angle: 90, name: 'تربيع', symbol: '·', orb: 8 },
-    { angle: 120, name: 'تثليث', symbol: '·', orb: 8 },
-    { angle: 180, name: 'تقابل', symbol: '·', orb: 8 },
+    { angle: 0,   name: 'اقتران', symbol: '·', orb: 8, color: '#5C5C7A' },
+    { angle: 60,  name: 'سُداس',  symbol: '×', orb: 6, color: '#4A7FB5' },
+    { angle: 90,  name: 'تربيع',  symbol: '▫', orb: 8, color: '#C0392B' },
+    { angle: 120, name: 'تثليث',  symbol: '△', orb: 8, color: '#27AE60' },
+    { angle: 180, name: 'تقابل',  symbol: '—', orb: 8, color: '#C0392B' },
   ];
   
   for (let i = 0; i < planetList.length; i++) {
@@ -117,6 +118,7 @@ function calculateAspects(chart: AstralChart | null): any[] {
               aspect: `${p1.name} ${aspectType.symbol} ${p2.name}`,
               orb: `${orb.toFixed(0)}°`,
               type: aspectType.name,
+              color: aspectType.color,
               slug: `${planetList[i]}-${planetList[j]}`,
             });
           }
@@ -126,6 +128,90 @@ function calculateAspects(chart: AstralChart | null): any[] {
   }
   
   return aspects.sort((a, b) => parseFloat(a.orb) - parseFloat(b.orb)).slice(0, 5);
+}
+
+// Three-card voice intro: shows the user's Sun + Rising + Moon
+// with one line of meaning pulled from placements.ts. First-impression
+// surface for a newcomer who would otherwise face only a wheel of symbols.
+function ChartVoiceIntro({ chart }: { chart: AstralChart }) {
+  const sunSlug = SIGN_SLUGS[chart.sun.signNumber];
+  const moonSlug = SIGN_SLUGS[chart.moon.signNumber];
+  const risingSignNumber = Math.floor((chart.asc % 360) / 30);
+  const risingSlug = SIGN_SLUGS[risingSignNumber];
+  const risingName = ZODIAC_NAMES_AR[risingSignNumber];
+
+  const sunVoice = getPlacementContent('planet', `sun:${sunSlug}`);
+  const moonVoice = getPlacementContent('planet', `moon:${moonSlug}`);
+  // Rising has no planet entry — fall back to the sign's own essence.
+  const risingVoice = getPlacementContent('sign', risingSlug);
+
+  const items: Array<{ label: string; signName: string; svgKey: string; meaning: string | undefined; bg: string; accent: string }> = [
+    {
+      label: 'شمسك',
+      signName: chart.sun.sign,
+      svgKey: 'sun',
+      meaning: sunVoice?.mean,
+      bg: 'linear-gradient(135deg, #F8D6BE 0%, #F0C0A0 100%)',
+      accent: '#9A3F30',
+    },
+    {
+      label: 'طالعك',
+      signName: risingName,
+      svgKey: risingSlug,
+      meaning: risingVoice?.mean,
+      bg: 'linear-gradient(135deg, #D8DFC8 0%, #B8C4A8 100%)',
+      accent: '#475A3F',
+    },
+    {
+      label: 'قمرك',
+      signName: chart.moon.sign,
+      svgKey: 'moon',
+      meaning: moonVoice?.mean,
+      bg: 'linear-gradient(135deg, #C2D3E2 0%, #A8C0D6 100%)',
+      accent: '#33485F',
+    },
+  ];
+
+  return (
+    <div className="px-5 flex flex-col gap-3">
+      {items.map((it) => (
+        <Link
+          key={it.label}
+          href={it.svgKey === 'sun' || it.svgKey === 'moon' ? `/self/planet/${it.svgKey}` : `/self/sign/${it.svgKey}`}
+          className="block"
+        >
+          <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: it.bg }}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 flex-shrink-0 rounded-full bg-white/60 flex items-center justify-center">
+                <div
+                  className="w-7 h-7"
+                  style={{
+                    WebkitMaskImage: `url('/svg/${it.svgKey}.svg')`,
+                    maskImage: `url('/svg/${it.svgKey}.svg')`,
+                    WebkitMaskSize: 'contain',
+                    maskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    maskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskPosition: 'center',
+                    background: it.accent,
+                  }}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-semibold tracking-wider mb-1" style={{ color: it.accent }}>
+                  {it.label} · {it.signName}
+                </div>
+                <div className="font-serif text-[15px] text-ink leading-[1.55]">
+                  {it.meaning ?? 'سيظهر هنا صوت هذا المسار قريبًا.'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 function ChartView({ chart }: { chart: AstralChart | null }) {
@@ -189,6 +275,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               <span>طالع · {ZODIAC_NAMES_AR[Math.floor((chart.asc % 360) / 30)]} {Math.floor((chart.asc % 30))}°</span>
             </div>
           </div>
+          <ChartVoiceIntro chart={chart} />
         </>
       )}
 
@@ -227,44 +314,6 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
         </div>
       )}
 
-      {/* Elements subtab */}
-      {activeSubtab === 'elements' && (
-        <div className="px-5 pb-6 flex flex-col gap-4">
-          {traits?.elements ? (
-            <>
-              <div className="text-xs text-ink-muted">توازن العناصر في خريطتك النجمية:</div>
-              {(['fire', 'earth', 'air', 'water'] as const).map((el) => {
-                const pct = Math.round(traits.elements[el] * 100);
-                const color = ELEMENT_COLORS[el];
-                return (
-                  <Card key={el}>
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="font-serif text-lg text-ink">{ELEMENT_AR[el]}</div>
-                        <div className="text-xs text-ink-muted mt-1">
-                          {traits.elements.dominant === el ? 'السائد' : ''}
-                        </div>
-                      </div>
-                      <div className="font-serif text-lg" style={{ color }}>{pct}%</div>
-                    </div>
-                    <div className="h-1.5 bg-rule-soft rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
-                    </div>
-                  </Card>
-                );
-              })}
-              <Link href="/traits" className="text-xs text-coral font-medium text-center mt-1">
-                ملفّ السمات الكامل ←
-              </Link>
-            </>
-          ) : (
-            <div className="py-12 text-center">
-              <Body muted>لم يُحسب ملفّ السمات بعد — أكمل الاستبيان أولاً.</Body>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Signs list */}
       {activeSubtab === 'signs' && (
         <div className="px-5 pb-6 flex flex-col gap-3">
@@ -272,9 +321,9 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
             <Link key={sign.name} href={`/self/sign/${SIGN_SLUGS[idx]}`} className="block">
               <Card>
                 <div className="flex gap-3 items-center">
-                  <div className="w-9 h-9 rounded-full bg-cream-soft flex items-center justify-center shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-cream-soft flex items-center justify-center shrink-0">
                     <div
-                      className="w-5 h-5"
+                      className="w-6 h-6"
                       style={{
                         WebkitMaskImage: `url('/svg/${sign.svgKey}.svg')`,
                         maskImage: `url('/svg/${sign.svgKey}.svg')`,
@@ -346,7 +395,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                       <div className="font-serif text-base text-ink">{aspect.aspect}</div>
                       <div className="text-xs text-ink-muted font-mono">{aspect.orb}</div>
                     </div>
-                    <div className="text-sm text-coral font-medium">{aspect.type}</div>
+                    <div className="text-sm font-medium" style={{ color: aspect.color }}>{aspect.type}</div>
                   </Card>
                 </Link>
               ))
@@ -378,7 +427,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                       </div>
                       <div className="text-xs text-ink-muted font-mono">{orbLabel(t.orb)}</div>
                     </div>
-                    <div className="text-sm text-coral font-medium">{t.aspectName}</div>
+                    <div className="text-sm font-medium" style={{ color: t.aspectColor }}>{t.aspectName}</div>
                   </Card>
                 </Link>
               ))
@@ -444,9 +493,8 @@ function BodyView() {
       </div>
 
       {noTraits && (
-        <div className="px-5 pb-6 py-12 text-center flex flex-col gap-3">
+        <div className="px-5 pb-6 py-12 text-center">
           <Body muted>لم يُحسب ملفّ السمات بعد.</Body>
-          <Link href="/quiz" className="text-coral text-sm font-medium">أكمل الاستبيان ←</Link>
         </div>
       )}
 
@@ -483,8 +531,8 @@ function BodyView() {
           {traits.minerals?.slice(0, 1).map((m) => (
             <Card key={m.planet}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center" style={{ backgroundColor: m.color + '33' }}>
-                  <div className="w-5 h-5" style={{ WebkitMaskImage: `url('/svg/sun.svg')`, maskImage: `url('/svg/sun.svg')`, WebkitMaskSize: 'contain', maskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', background: m.color }} />
+                <div className="w-11 h-11 rounded-full shrink-0 flex items-center justify-center" style={{ backgroundColor: m.color + '33' }}>
+                  <div className="w-6 h-6" style={{ WebkitMaskImage: `url('/svg/sun.svg')`, maskImage: `url('/svg/sun.svg')`, WebkitMaskSize: 'contain', maskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', background: m.color }} />
                 </div>
                 <div className="flex-1">
                   <div className="font-serif text-base text-ink">معدن شمسك: {m.mineral}</div>
@@ -585,6 +633,107 @@ function BodyView() {
   );
 }
 
+const lifeArcPhases = [
+  { years: '٠-٧', name: 'الطفولة', status: 'past' },
+  { years: '٧-١٤', name: 'تشكّل الأنا', status: 'past' },
+  { years: '١٤-٢١', name: 'تسمية الذات', status: 'past' },
+  { years: '٢١-٢٨', name: 'الاستقلال الأول', status: 'past' },
+  { years: '٢٨-٣٥', name: 'بناء الشكل', status: 'current' },
+  { years: '٣٥-٤٢', name: 'إرث العمل', status: 'next' },
+  { years: '٤٢-٤٩', name: 'منتصف الحياة', status: 'later' },
+  { years: '٤٩-٥٦', name: 'حصاد المعنى', status: 'later' },
+];
+
+const grandTransits = [
+  { name: 'عودة المشتري الأولى', age: 'حوالي عمر ١٢', status: 'past' },
+  { name: 'تقابل زحل', age: 'حوالي عمر ١٤٫٥', status: 'past' },
+  { name: 'عودة زحل الأولى', age: 'حوالي عمر ٢٩٫٥', status: 'current' },
+  { name: 'تقابل أورانوس', age: 'حوالي عمر ٤٢', status: 'next' },
+  { name: 'عودة زحل الثانية', age: 'حوالي عمر ٥٩', status: 'later' },
+];
+
+function TransitsView() {
+  return (
+    <div className="px-5 pb-6 flex flex-col gap-4">
+      <div className="font-serif text-2xl text-ink -tracking-0.5">العبورات</div>
+      <div className="text-sm text-ink-muted">مسار الكواكب · شهريًا</div>
+      <div style={{ background: '#F8F5EF', borderRadius: 18, padding: '14px 12px' }}>
+        <CalendarMonthView />
+      </div>
+      <div className="mt-2">
+        <div className="font-serif text-lg text-ink mb-1">العبورات الكبرى</div>
+        <p className="text-sm text-ink-muted mb-3 leading-relaxed">
+          خمس عتباتٍ تَحدُث في كل حياة. متى وصلتَ إلى عتبتك؟
+        </p>
+        <div className="flex flex-col gap-2.5">
+          {grandTransits.map((transit) => (
+            <div
+              key={transit.name}
+              className={`rounded-[14px] p-3.5 border transition-all ${
+                transit.status === 'current'
+                  ? 'bg-cream-soft border-coral border-1.5'
+                  : 'bg-white border-rule-soft'
+              } ${transit.status === 'past' ? 'opacity-55' : 'opacity-100'}`}
+            >
+              <div className="flex justify-between items-baseline gap-2 mb-1">
+                <span className="font-serif text-base text-ink">{transit.name}</span>
+                <span className={`text-xs font-semibold whitespace-nowrap ${transit.status === 'current' ? 'text-coral' : 'text-ink-muted'}`}>
+                  {transit.status === 'current' ? 'الآن' : transit.status === 'next' ? 'القادم' : transit.status === 'past' ? 'مضى' : 'لاحقًا'}
+                </span>
+              </div>
+              <div className="text-xs text-ink-muted">{transit.age}</div>
+            </div>
+          ))}
+        </div>
+        <Link href="/explore/great-transits" className="mt-3 flex items-center justify-between p-3.5 rounded-[14px] bg-cream-soft border border-rule-soft">
+          <span className="text-sm font-serif text-ink">العبورات الكونية الكبرى</span>
+          <span className="text-coral text-sm">←</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function LifeArcView() {
+  return (
+    <div className="px-5 pb-6 flex flex-col gap-3">
+      <div className="font-serif text-2xl text-ink -tracking-0.5">القوس الحياتي</div>
+      <p className="text-sm text-ink-muted mb-3">
+        سبع سنوات في كل طور — حياتك مَبنيّة من فصول.
+      </p>
+      <div className="flex flex-col gap-2">
+        {lifeArcPhases.map((phase) => (
+          <div
+            key={phase.years}
+            className={`bg-white rounded-[14px] p-3.5 border border-rule-soft transition-opacity ${
+              phase.status === 'past' ? 'opacity-55' : 'opacity-100'
+            }`}
+          >
+            <div className="flex justify-between items-start mb-1.5">
+              <span className="text-xs text-coral font-semibold font-serif">{phase.years}</span>
+              <span className="text-xs text-ink-muted font-semibold tracking-wide">
+                {phase.status === 'current' ? 'الآن' : phase.status === 'next' ? 'التالي' : phase.status === 'past' ? 'مضى' : 'لاحقًا'}
+              </span>
+            </div>
+            <div className="font-serif text-base text-ink">{phase.name}</div>
+            {phase.status === 'current' && (
+              <div className="flex gap-1 mt-2">
+                {['#C2D3E2', '#D4A04C', '#E9785E', '#D4A04C', '#C2D3E2'].map((color, i) => (
+                  <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <Link href="/explore/biography" className="mt-3 flex items-center justify-between p-3.5 rounded-[14px] bg-cream-soft border border-rule-soft">
+        <span className="text-sm font-serif text-ink">السيرة البانورامية الكاملة</span>
+        <span className="text-coral text-sm">←</span>
+      </Link>
+    </div>
+  );
+}
+
 function SavedView() {
   const [events, setEvents] = useState<LoggedEvent[]>([]);
 
@@ -632,31 +781,63 @@ function SavedView() {
   );
 }
 
-const CHART_GUIDE_STEPS = [
-  {
-    title: 'خريطتك النجمية',
-    body: 'هذه الدائرة تمثّل السماء لحظة ميلادك. كل كوكب في موضعه يخبر شيئًا عنك.',
-  },
-  {
-    title: 'الشمس والقمر والطالع',
-    body: 'الشمس: جوهرك وهويّتك. القمر: حياتك العاطفية. الطالع: كيف يراك العالم.',
-  },
-  {
-    title: 'البيوت الاثنا عشر',
-    body: 'الدائرة مقسّمة إلى بيوت — كل بيت مساحة من حياتك. الكواكب فيها تُنشّطها.',
-  },
-  {
-    title: 'اقرأ بحرية',
-    body: 'اضغط على أي كوكب لتتعمّق في معناه. يمكنك التقريب أو التحريك بأصبعين.',
-  },
-];
+// First-run walkthrough: three personalized screens pulled from the user's
+// actual chart + placements.ts. Replaces the old generic "this is a natal
+// chart" intro with something that names *this* person — Sun, Rising, Moon.
+interface IntroStep {
+  label: string;     // small kicker — "شمسك"
+  signName: string;  // Arabic sign name
+  svgKey: string;    // which SVG glyph to render
+  title: string;     // "هذا مسار شمسك"
+  body: string;      // one-line meaning from placements.ts
+  accent: string;
+}
 
-function ChartIntroOverlay({ onDone }: { onDone: () => void }) {
+function buildIntroSteps(chart: AstralChart): IntroStep[] {
+  const sunSlug = SIGN_SLUGS[chart.sun.signNumber];
+  const moonSlug = SIGN_SLUGS[chart.moon.signNumber];
+  const risingSignNumber = Math.floor((chart.asc % 360) / 30);
+  const risingSlug = SIGN_SLUGS[risingSignNumber];
+
+  const sunVoice = getPlacementContent('planet', `sun:${sunSlug}`);
+  const moonVoice = getPlacementContent('planet', `moon:${moonSlug}`);
+  const risingVoice = getPlacementContent('sign', risingSlug);
+
+  return [
+    {
+      label: 'شمسك',
+      signName: chart.sun.sign,
+      svgKey: 'sun',
+      title: 'هذا مسار شمسك',
+      body: sunVoice?.mean ?? 'ضوءُك يتشكّل بطريقتك الخاصّة.',
+      accent: '#E9785E',
+    },
+    {
+      label: 'طالعك',
+      signName: ZODIAC_NAMES_AR[risingSignNumber],
+      svgKey: risingSlug,
+      title: 'هذا طالعك',
+      body: risingVoice?.mean ?? 'هذه الواجهة التي يلمسها العالم فيك أولًا.',
+      accent: '#8FA084',
+    },
+    {
+      label: 'قمرك',
+      signName: chart.moon.sign,
+      svgKey: 'moon',
+      title: 'هذا قمرك',
+      body: moonVoice?.mean ?? 'ما يتحرّك تحت سطحك يأتي بإيقاعه الخاصّ.',
+      accent: '#7E97B8',
+    },
+  ];
+}
+
+function ChartIntroOverlay({ chart, onDone }: { chart: AstralChart; onDone: () => void }) {
   const [step, setStep] = useState(0);
-  const current = CHART_GUIDE_STEPS[step];
+  const steps = buildIntroSteps(chart);
+  const current = steps[step];
 
   const next = () => {
-    if (step < CHART_GUIDE_STEPS.length - 1) setStep(step + 1);
+    if (step < steps.length - 1) setStep(step + 1);
     else onDone();
   };
 
@@ -667,24 +848,50 @@ function ChartIntroOverlay({ onDone }: { onDone: () => void }) {
         style={{ boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}
       >
         {/* Progress dots */}
-        <div className="flex gap-1.5 mb-5 justify-center">
-          {CHART_GUIDE_STEPS.map((_, i) => (
+        <div className="flex gap-1.5 mb-6 justify-center">
+          {steps.map((_, i) => (
             <div
               key={i}
               className="h-1 rounded-full transition-all"
-              style={{ width: i === step ? 24 : 6, background: i <= step ? '#E9785E' : '#E8E2D2' }}
+              style={{ width: i === step ? 24 : 6, background: i <= step ? current.accent : '#E8E2D2' }}
             />
           ))}
         </div>
 
-        <div className="font-serif text-2xl text-ink mb-2 leading-snug">{current.title}</div>
-        <div className="text-sm text-ink-muted leading-[1.7]">{current.body}</div>
+        {/* Sign glyph in a circle */}
+        <div className="flex justify-center mb-5">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center"
+            style={{ background: current.accent + '22' }}
+          >
+            <div
+              className="w-11 h-11"
+              style={{
+                WebkitMaskImage: `url('/svg/${current.svgKey}.svg')`,
+                maskImage: `url('/svg/${current.svgKey}.svg')`,
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                background: current.accent,
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="text-center text-[11px] font-semibold tracking-wider mb-1.5" style={{ color: current.accent }}>
+          {current.label} · {current.signName}
+        </div>
+        <div className="font-serif text-2xl text-ink text-center mb-3 leading-snug">{current.title}</div>
+        <div className="font-serif text-[15px] text-ink-muted leading-[1.8] text-center">{current.body}</div>
 
         <button
           onClick={next}
           className="mt-7 w-full h-[50px] rounded-[25px] bg-ink text-cream text-base font-medium"
         >
-          {step < CHART_GUIDE_STEPS.length - 1 ? 'التالي' : 'ابدأ الاستكشاف'}
+          {step < steps.length - 1 ? 'تابع' : 'ادخل خريطتك'}
         </button>
         <button onClick={onDone} className="mt-3 w-full text-center text-sm text-ink-muted py-2">
           تخطّى
@@ -703,14 +910,16 @@ export default function SelfPage() {
     const stored = localStorage.getItem('sukoon.primary-chart.v1');
     if (stored) {
       try {
-        setChart(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        setChart(parsed);
+        // Only show the personalized walkthrough once, and only when we
+        // actually have a chart to read from.
+        if (!localStorage.getItem('sukoon.chart-guide-seen')) {
+          setShowGuide(true);
+        }
       } catch (e) {
         console.error('Failed to parse chart from localStorage:', e);
       }
-    }
-    // Show guide on first visit after onboarding
-    if (!localStorage.getItem('sukoon.chart-guide-seen')) {
-      setShowGuide(true);
     }
   }, []);
 
@@ -721,13 +930,15 @@ export default function SelfPage() {
 
   return (
     <div className="pb-24">
-      {showGuide && <ChartIntroOverlay onDone={dismissGuide} />}
+      {showGuide && chart && <ChartIntroOverlay chart={chart} onDone={dismissGuide} />}
       <div className="pt-6">
         {/* Main tabs */}
         <div className="px-5 mb-6 flex gap-3">
           {[
             { key: 'chart', label: 'الخريطة' },
             { key: 'body', label: 'الجسد' },
+            { key: 'transits', label: 'العبورات' },
+            { key: 'arc', label: 'القوس' },
             { key: 'saved', label: 'ما حفظت' },
           ].map((tab) => (
             <button
@@ -746,24 +957,30 @@ export default function SelfPage() {
 
         {mainTab === 'chart' && (
           <>
-            <div className="px-5 mb-4">
-              <Headline>الخريطة</Headline>
-            </div>
-            {/* Journey 1 entry */}
-            <div className="px-5 mb-4">
-              <Link href="/journey-1" className="block">
-                <div className="flex items-center justify-between py-3 px-4 rounded-[18px] bg-ink text-cream">
-                  <div>
-                    <div className="font-serif text-base">الرحلة الأسبوعية</div>
-                    <div className="text-xs text-cream/60 mt-0.5">معالجة شخصية · خطوة في اليوم</div>
-                  </div>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
+            {!chart ? (
+              <NatalChartSetupForm onComplete={(newChart) => setChart(newChart)} />
+            ) : (
+              <>
+                <div className="px-5 mb-4">
+                  <Headline>الخريطة</Headline>
                 </div>
-              </Link>
-            </div>
-            <ChartView chart={chart} />
+                {/* Journey 1 entry */}
+                <div className="px-5 mb-4">
+                  <Link href="/journey-1" className="block">
+                    <div className="flex items-center justify-between py-3 px-4 rounded-[18px] bg-ink text-cream">
+                      <div>
+                        <div className="font-serif text-base">الرحلة الأسبوعية</div>
+                        <div className="text-xs text-cream/60 mt-0.5">معالجة شخصية · خطوة في اليوم</div>
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </Link>
+                </div>
+                <ChartView chart={chart} />
+              </>
+            )}
           </>
         )}
 
@@ -787,6 +1004,24 @@ export default function SelfPage() {
               </Link>
             </div>
             <BodyView />
+          </>
+        )}
+
+        {mainTab === 'transits' && (
+          <>
+            <div className="px-5 mb-4">
+              <Headline>العبورات</Headline>
+            </div>
+            <TransitsView />
+          </>
+        )}
+
+        {mainTab === 'arc' && (
+          <>
+            <div className="px-5 mb-4">
+              <Headline>القوس الحياتي</Headline>
+            </div>
+            <LifeArcView />
           </>
         )}
 
