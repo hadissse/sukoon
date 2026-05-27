@@ -1134,7 +1134,6 @@ function SelfPageInner() {
             { key: 'body', label: 'الجسد' },
             { key: 'transits', label: 'العبورات' },
             { key: 'arc', label: 'القوس' },
-            { key: 'saved', label: 'ما حفظت' },
           ].map((tab) => (
             <button
               key={tab.key}
