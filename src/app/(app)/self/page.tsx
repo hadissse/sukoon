@@ -932,6 +932,23 @@ export default function SelfPage() {
     <div className="pb-24">
       {showGuide && chart && <ChartIntroOverlay chart={chart} onDone={dismissGuide} />}
       <div className="pt-6">
+        {/* Daily tracking entry */}
+        <div className="px-5 mb-4">
+          <Link href="/journey-2" className="block">
+            <Card>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-serif text-base text-ink">التتبّع اليومي</div>
+                  <div className="text-xs text-ink-muted mt-0.5">لحظاتك · السماء الآن · التسجيل</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5C5C7A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Card>
+          </Link>
+        </div>
+
         {/* Main tabs */}
         <div className="px-5 mb-6 flex gap-3">
           {[
