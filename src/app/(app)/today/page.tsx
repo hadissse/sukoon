@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Meta } from '@/components/Meta';
 import { Rule } from '@/components/Rule';
-import { TodayHeader } from '@/components/TodayHeader';
 import { TransitHeroCard } from '@/components/TransitHeroCard';
 import { GradientOrb } from '@/components/GradientOrb';
 import { getCosmicStamp, type CosmicStamp } from '@/lib/cosmicStamp';
@@ -44,20 +43,23 @@ export default function TodayPage() {
   }, []);
 
   const question = getDailyQuestion();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'مساء الخير';
 
   return (
     <div className="pb-24 flex flex-col gap-0">
-      {/* ── Sky hero banner ── */}
-      <div className="relative overflow-hidden px-5 pt-6 pb-5" style={{ background: '#0F1228' }}>
-        <img src="/media/blob-purple.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-70" style={{ mixBlendMode: 'screen' }} />
-        <div className="relative">
-          <TodayHeader />
+      {/* ── Sky hero — square full-bleed ── */}
+      <div className="relative w-full aspect-square overflow-hidden" style={{ background: '#0F1228' }}>
+        <img src="/media/blob-purple.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(15,18,40,0.60) 0%, rgba(15,18,40,0) 42%, rgba(15,18,40,0.78) 100%)' }} />
+        <div className="absolute inset-0 flex flex-col justify-between p-6">
+          <h1 className="font-serif text-3xl text-cream">{greeting}</h1>
           {stamp && (
-            <div className="mt-4">
-              <div className="text-[11px] text-cream/50 font-semibold tracking-wider mb-1.5">السماء الآن</div>
-              <div className="font-serif text-xl text-cream leading-snug">{stamp.moonPhase}</div>
-              <div className="text-xs text-cream/60 mt-1">{stamp.sunPosition} · {stamp.dayRuler}</div>
-              <Link href="/explore" className="inline-block mt-3 text-xs text-coral font-medium">
+            <div>
+              <div className="text-[11px] text-cream/55 font-semibold tracking-wider mb-2">السماء الآن</div>
+              <div className="font-serif text-2xl text-cream leading-snug">{stamp.moonPhase}</div>
+              <div className="text-sm text-cream/70 mt-1.5">{stamp.sunPosition} · {stamp.dayRuler}</div>
+              <Link href="/explore" className="inline-block mt-4 text-xs text-coral font-medium">
                 استكشف السماء ←
               </Link>
             </div>
