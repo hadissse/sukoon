@@ -14,6 +14,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
+  const [name, setName] = useState('');
   const [year, setYear] = useState('');
   const [month, setMonth] = useState('');
   const [day, setDay] = useState('');
@@ -46,7 +47,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
   }, [locationQuery]);
 
   const canSubmit =
-    !!year && !!month && !!day && !!selectedLocation && !isSubmitting;
+    !!name.trim() && !!year && !!month && !!day && !!selectedLocation && !isSubmitting;
 
   const handleSubmit = async () => {
     if (!canSubmit || !selectedLocation) return;
@@ -55,6 +56,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
     try {
       const offset = await getTimezoneOffset(selectedLocation.timezone);
       const birthData = {
+        name: name.trim(),
         year: parseInt(year, 10),
         month: parseInt(month, 10),
         day: parseInt(day, 10),
@@ -67,6 +69,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
       };
       const chart = calculateChart(birthData);
       localStorage.setItem('sukoon.birth-data', JSON.stringify(birthData));
+      localStorage.setItem('sukoon.user-name', name.trim());
       localStorage.setItem('sukoon.primary-chart.v1', JSON.stringify(chart));
       calculateTraits(chart, {});
       syncChart();
@@ -83,6 +86,19 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
       <div>
         <h2 className="font-serif text-2xl text-ink mb-1">خريطتك النجمية</h2>
         <p className="text-sm text-ink-muted">أدخل بيانات ميلادك لتوليد خريطتك</p>
+      </div>
+
+      {/* ── Name ── */}
+      <div className="flex flex-col gap-2">
+        <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">الاسم</span>
+        <input
+          type="text"
+          placeholder="اسمك"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full px-4 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink placeholder:text-ink-muted text-sm focus:outline-none focus:ring-1 focus:ring-coral/20"
+          dir="rtl"
+        />
       </div>
 
       {/* ── Birth date ── */}

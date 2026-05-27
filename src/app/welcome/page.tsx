@@ -156,7 +156,7 @@ export default function WelcomePage() {
 
   const advanceIntro = () => {
     if (introStep >= INTRO_SLIDES.length - 1) {
-      router.push('/onboarding');
+      router.push('/today');
     } else {
       setIntroStep((s) => s + 1);
     }

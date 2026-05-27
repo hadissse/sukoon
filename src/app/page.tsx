@@ -35,8 +35,8 @@ export default function Home() {
       }
 
       // Logged in but no local chart (new device / cleared cache) → restore from Supabase
-      const { hasChart } = await loadAllRemote();
-      router.replace(hasChart ? '/today' : '/onboarding');
+      await loadAllRemote();
+      router.replace('/today');
     }
 
     redirect();
