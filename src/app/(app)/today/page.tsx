@@ -6,8 +6,6 @@ import { Meta } from '@/components/Meta';
 import { Rule } from '@/components/Rule';
 import { TodayHeader } from '@/components/TodayHeader';
 import { TransitHeroCard } from '@/components/TransitHeroCard';
-import { ReflectionInsights } from '@/components/ReflectionInsights';
-import { GradientOrb } from '@/components/GradientOrb';
 import { getCosmicStamp, type CosmicStamp } from '@/lib/cosmicStamp';
 import { findPhase as findLunarPhase } from '@/content/lunarJourney';
 
@@ -50,20 +48,7 @@ export default function TodayPage() {
     <div className="pb-24 flex flex-col gap-0">
       {/* ── Sky hero banner ── */}
       <div className="relative overflow-hidden px-5 pt-6 pb-5" style={{ background: '#0F1228' }}>
-        {/* Stars */}
-        <div className="absolute inset-0 pointer-events-none">
-          {Array.from({ length: 24 }).map((_, i) => {
-            const x = (i * 41) % 380;
-            const y = ((i * 57) % 160) + 10;
-            const s = (i % 3) + 1;
-            return (
-              <div key={i} className="absolute rounded-full" style={{ left: x, top: y, width: s, height: s, background: `rgba(255,255,255,${0.3 + (i % 3) * 0.2})` }} />
-            );
-          })}
-        </div>
-        <div className="absolute -top-12 -left-12 opacity-50 pointer-events-none">
-          <GradientOrb variant="night" size={180} />
-        </div>
+        <img src="/media/blob-purple.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-70" style={{ mixBlendMode: 'screen' }} />
         <div className="relative">
           <TodayHeader />
           {stamp && (
@@ -184,9 +169,6 @@ export default function TodayPage() {
             </div>
           </div>
         </Link>
-
-        {/* Reflection insights — pattern from logged events */}
-        <ReflectionInsights />
 
         {/* Evening reflection — dark box */}
         <Link href="/evening" className="block">
