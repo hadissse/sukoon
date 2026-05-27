@@ -3,7 +3,6 @@ import type { NextRequest } from 'next/server';
 
 // Orphaned self/* pages — redirect back to /self
 const SELF_REDIRECTS = [
-  '/self/fixed-stars',
   '/self/planetary-speed',
   '/self/positions',
   '/self/wheel',

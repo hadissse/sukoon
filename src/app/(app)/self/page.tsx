@@ -1127,7 +1127,7 @@ function SelfPageInner() {
         {/* Main tabs — fixed bottom bar */}
         <div
           className="fixed bottom-20 left-0 right-0 flex gap-2 justify-center px-5 py-3 overflow-x-auto"
-          style={{ scrollbarWidth: 'none', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'rgba(245,242,234,0.72)' }}
+          style={{ scrollbarWidth: 'none', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'transparent' }}
         >
           {[
             { key: 'chart', label: 'الخريطة' },
