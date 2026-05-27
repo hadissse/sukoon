@@ -6,6 +6,7 @@ import { Meta } from '@/components/Meta';
 import { Rule } from '@/components/Rule';
 import { TodayHeader } from '@/components/TodayHeader';
 import { TransitHeroCard } from '@/components/TransitHeroCard';
+import { GradientOrb } from '@/components/GradientOrb';
 import { getCosmicStamp, type CosmicStamp } from '@/lib/cosmicStamp';
 import { findPhase as findLunarPhase } from '@/content/lunarJourney';
 
