@@ -114,11 +114,11 @@ export default function WelcomePage() {
       return () => clearTimeout(t);
     }
     if (phase === 'breathe-in') {
-      const t = setTimeout(() => setPhase('breathe-out'), 2600);
+      const t = setTimeout(() => setPhase('breathe-out'), 1200);
       return () => clearTimeout(t);
     }
     if (phase === 'breathe-out') {
-      const t = setTimeout(() => setPhase('welcome'), 2600);
+      const t = setTimeout(() => setPhase('welcome'), 1200);
       return () => clearTimeout(t);
     }
   }, [phase]);
@@ -172,7 +172,7 @@ export default function WelcomePage() {
           className="flex-1 flex items-center justify-center px-8"
           aria-label="سُكون"
         >
-          <Logo height={90} color="#171B3A" />
+          <Logo height={360} color="#171B3A" />
         </button>
       )}
 
@@ -181,7 +181,7 @@ export default function WelcomePage() {
         <>
           <style>{`@keyframes breatheIn{from{transform:scale(0.55)}to{transform:scale(1)}}`}</style>
           <div className="flex-1 flex items-center justify-center">
-            <div style={{ animation: 'breatheIn 2.4s cubic-bezier(0.4,0,0.2,1) forwards' }}>
+            <div style={{ animation: 'breatheIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards' }}>
               <Orb variant="ember" size={180} />
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function WelcomePage() {
         <>
           <style>{`@keyframes breatheOut{from{transform:scale(1)}to{transform:scale(0.55)}}`}</style>
           <div className="flex-1 flex items-center justify-center">
-            <div style={{ animation: 'breatheOut 2.4s cubic-bezier(0.4,0,0.2,1) forwards' }}>
+            <div style={{ animation: 'breatheOut 0.9s cubic-bezier(0.16,1,0.3,1) forwards' }}>
               <Orb variant="lake" size={180} />
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function WelcomePage() {
         <div className="flex-1 flex flex-col">
           <div className="flex flex-col items-center pt-14 pb-6 px-8 gap-5">
             <Orb variant="dusk" size={150} />
-            <Logo height={90} color="#171B3A" />
+            <Logo height={360} color="#171B3A" />
           </div>
           <div className="px-6 pb-14 flex flex-col">
             <h2 className="font-serif text-[22px] text-ink mb-1">أنشئ حسابًا</h2>
