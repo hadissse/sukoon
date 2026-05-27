@@ -91,7 +91,7 @@ const INTRO_SLIDES: IntroSlide[] = [
   },
   {
     orb: 'dawn',
-    media: '/media/color-wheel.gif',
+    media: '/media/color-wheel.webp',
     title: 'لنبدأ',
     subtitle: 'بضعة أسئلة سريعة لنرسم ممارستك.',
     cta: 'ابدأ الآن',
@@ -182,7 +182,7 @@ export default function WelcomePage() {
           <style>{`@keyframes breatheIn{from{transform:scale(0.55)}to{transform:scale(1)}}`}</style>
           <div className="flex-1 flex items-center justify-center">
             <div style={{ animation: 'breatheIn 2.4s cubic-bezier(0.4,0,0.2,1) forwards' }}>
-              <img src="/media/cloud-smoke.gif" alt="" width={180} height={180} className="rounded-full object-cover" style={{ width: 180, height: 180 }} />
+              <img src="/media/cloud-smoke.webp" alt="" width={180} height={180} className="rounded-full object-cover" style={{ width: 180, height: 180 }} />
             </div>
           </div>
         </>
@@ -208,7 +208,7 @@ export default function WelcomePage() {
             <Logo height={90} color="#171B3A" />
           </div>
           <div className="px-6 pb-14 flex flex-col relative overflow-hidden">
-            <img src="/media/blob-purple.gif" alt="" aria-hidden="true" className="absolute -bottom-8 -left-8 w-[200px] h-[200px] object-cover pointer-events-none opacity-60" />
+            <img src="/media/blob-purple.webp" alt="" aria-hidden="true" className="absolute -bottom-8 -left-8 w-[200px] h-[200px] object-cover pointer-events-none opacity-60" />
             <h2 className="font-serif text-[22px] text-ink mb-1 relative">أنشئ حسابًا</h2>
             <p className="text-sm text-ink-muted mb-6 leading-[1.7] relative">
               زامن تقدّمك عبر أجهزتك واحفظ نسخة من ممارستك.
