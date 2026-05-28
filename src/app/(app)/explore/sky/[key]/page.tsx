@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentSky } from '@/lib/currentSky';
 import { SIGN_SLUGS, getPlacementContent } from '@/content/placements';
@@ -20,9 +20,9 @@ function toArabicDigits(n: number): string {
   return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
 }
 
-export default function SkyPlanetPage({ params }: { params: { key: string } }) {
+export default function SkyPlanetPage({ params }: { params: Promise<{ key: string }> }) {
   const router = useRouter();
-  const planetKey = params.key;
+  const { key: planetKey } = use(params);
   const [sky, setSky] = useState<AstralChart | null>(null);
 
   useEffect(() => {
