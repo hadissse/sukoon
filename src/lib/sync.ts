@@ -402,8 +402,10 @@ export async function syncProfile(): Promise<void> {
     if (!raw) return;
     const chart = JSON.parse(raw);
 
+    const displayName = typeof window !== 'undefined' ? (localStorage.getItem('sukoon.user-name') ?? null) : null;
     await sb.from('profiles').upsert({
       id: user.id,
+      display_name: displayName,
       birth_date: chart.birthDate ?? null,
       birth_time: chart.birthTime ?? null,
       birth_place: chart.birthPlace ?? null,
@@ -446,6 +448,46 @@ export async function syncVote(args: {
 
 // ─── Load All (called on auth restore) ───────────────────────────────────────
 
+export async function syncAllLocalData(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  if (localStorage.getItem('sukoon.cloud-sync-consent') !== 'true') return;
+
+  const promises: Promise<unknown>[] = [syncChart(), syncProfile(), syncQuiz()];
+
+  // Sync all events
+  try {
+    const raw = localStorage.getItem('sukoon.events');
+    if (raw) {
+      const events: LoggedEvent[] = JSON.parse(raw);
+      events.forEach((e) => promises.push(syncEvent(e)));
+    }
+  } catch {}
+
+  // Sync traits if present
+  try {
+    const raw = localStorage.getItem('sukoon.traits.v1');
+    if (raw) promises.push(syncTraits(JSON.parse(raw)));
+  } catch {}
+
+  await Promise.allSettled(promises);
+}
+
+export async function loadRemoteProfile(): Promise<void> {
+  const sb = getSupabase();
+  const user = await getUser();
+  if (!sb || !user) return;
+  try {
+    const { data } = await sb.from('profiles').select('display_name').eq('id', user.id).single();
+    if (data?.display_name && typeof window !== 'undefined') {
+      if (!localStorage.getItem('sukoon.user-name')) {
+        localStorage.setItem('sukoon.user-name', data.display_name);
+      }
+    }
+  } catch (e) {
+    if (process.env.NODE_ENV === 'development') console.error('loadRemoteProfile:', e);
+  }
+}
+
 export async function loadAllRemote(): Promise<{ hasChart: boolean }> {
   const [chartRestored] = await Promise.all([
     loadRemoteChart(),
@@ -463,6 +505,7 @@ export async function loadAllRemote(): Promise<{ hasChart: boolean }> {
     loadRemoteTraits(),
     loadRemoteCalibrations(),
     loadRemotePreferences(),
+    loadRemoteProfile(),
     syncProfile(),
   ]);
 

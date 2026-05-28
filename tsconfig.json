@@ -39,6 +39,7 @@
   "exclude": [
     "node_modules",
     "Sukoon - 1",
-    "context"
+    "context",
+    "templates"
   ]
 }

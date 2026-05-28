@@ -7,6 +7,57 @@ import { Rule } from '@/components/Rule';
 import { TransitHeroCard } from '@/components/TransitHeroCard';
 import { GradientOrb } from '@/components/GradientOrb';
 import { getCosmicStamp, type CosmicStamp } from '@/lib/cosmicStamp';
+import { syncAllLocalData } from '@/lib/sync';
+
+function SyncPrompt() {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const consent = localStorage.getItem('sukoon.cloud-sync-consent');
+    const dismissed = localStorage.getItem('sukoon.sync-prompt-dismissed');
+    if (!consent && !dismissed) setShow(true);
+  }, []);
+
+  if (!show) return null;
+
+  const enable = async () => {
+    localStorage.setItem('sukoon.cloud-sync-consent', 'true');
+    setShow(false);
+    // Immediately push all local data to Supabase
+    await syncAllLocalData();
+  };
+
+  const dismiss = () => {
+    localStorage.setItem('sukoon.sync-prompt-dismissed', 'true');
+    setShow(false);
+  };
+
+  return (
+    <div className="mx-5 mt-4 p-4 rounded-[16px] border border-rule-soft bg-white flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-ink">احفظ خريطتك سحابيًّا</div>
+          <div className="text-xs text-ink-muted mt-1 leading-[1.6]">
+            فعّل المزامنة للوصول إلى بياناتك من أي جهاز.
+          </div>
+        </div>
+        <button onClick={dismiss} className="text-ink-muted p-1 -m-1 shrink-0" aria-label="إغلاق">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={enable} className="flex-1 py-2 rounded-full bg-coral text-cream text-xs font-semibold">
+          تفعيل المزامنة
+        </button>
+        <Link href="/settings/privacy" onClick={dismiss} className="flex-1 py-2 rounded-full border border-rule-soft text-ink-muted text-xs font-semibold text-center">
+          مزيد من المعلومات
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 // Daily rotating question — advances each day
 const DAILY_QUESTIONS = [
@@ -65,6 +116,8 @@ export default function TodayPage() {
           )}
         </div>
       </div>
+
+      <SyncPrompt />
 
       <div className="px-5 flex flex-col gap-4 pt-5">
         {/* Active transit */}

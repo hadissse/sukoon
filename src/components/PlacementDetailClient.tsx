@@ -7,7 +7,12 @@ import { loadEvents } from '@/lib/events';
 import type { AstralChart } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
 import { getPlacementContent, SIGN_SLUGS, type VoiceContent } from '@/content/placements';
+import { getExtendedContent } from '@/content/placements-extended';
 import { syncCalibration } from '@/lib/sync';
+
+function getContent(type: string, key: string): VoiceContent | null {
+  return getPlacementContent(type, key) ?? getExtendedContent(type, key);
+}
 
 const ZODIAC_SVG_KEYS = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sag', 'cap', 'aqua', 'pisces'];
 const ZODIAC_AR = ['الحمل', 'الثور', 'الجوزاء', 'السرطان', 'الأسد', 'العذراء', 'الميزان', 'العقرب', 'القوس', 'الجدي', 'الدلو', 'الحوت'];
@@ -52,7 +57,7 @@ function buildHeaderAndContent(
   type: string,
   key: string,
   chart: AstralChart | null,
-): { header: HeaderData; content: VoiceContent | null } {
+): { header: HeaderData; content: VoiceContent | null; houseContent?: VoiceContent | null } {
   const coral = '#E9785E';
   const lake = '#7E97B8';
 
@@ -69,7 +74,8 @@ function buildHeaderAndContent(
           meta: `البيت ${HOUSE_ORDINALS[houseNum - 1]} · ${HOUSE_THEMES[houseNum - 1]}`,
           color: coral,
         },
-        content: getPlacementContent('planet', `${key}:${slug}`),
+        content: getContent('planet', `${key}:${slug}`),
+        houseContent: getContent('planet-house', `${key}:${houseNum}`),
       };
     }
   }
@@ -85,7 +91,7 @@ function buildHeaderAndContent(
           meta: `البرج ${HOUSE_ORDINALS[idx]} · ${SIGN_ELEMENT_AR[idx]}`,
           color: coral,
         },
-        content: getPlacementContent('sign', key),
+        content: getContent('sign', key),
       };
     }
   }
@@ -101,7 +107,7 @@ function buildHeaderAndContent(
           meta: cusp ? `${HOUSE_THEMES[num - 1]} · ${cusp.sign} ${toArabicDigits(cusp.degree)}°` : HOUSE_THEMES[num - 1],
           color: lake,
         },
-        content: getPlacementContent('house', key),
+        content: getContent('house', key),
       };
     }
   }
@@ -118,6 +124,10 @@ function buildHeaderAndContent(
         const orb = Math.abs(sep - angle);
         if (orb <= def.orb && orb < best.orb) best = { ...def, orb, angle };
       }
+      const ANGLE_TYPE: Record<number, string> = { 0: 'conjunction', 60: 'sextile', 90: 'square', 120: 'trine', 180: 'opposition' };
+      const aspectType = ANGLE_TYPE[best.angle] ?? '';
+      const aspectContent = (aspectType ? getContent('aspect', `${key}:${aspectType}`) : null)
+        ?? getContent('aspect', key);
       return {
         header: {
           glyph: best.symbol,
@@ -125,7 +135,7 @@ function buildHeaderAndContent(
           meta: best.name ? `${best.name} · فرق ${toArabicDigits(best.orb.toFixed(0))}°` : 'جانب',
           color: coral,
         },
-        content: getPlacementContent('aspect', key),
+        content: aspectContent,
       };
     }
   }
@@ -135,7 +145,7 @@ function buildHeaderAndContent(
     if (el) {
       return {
         header: { glyph: el.glyph, title: el.name, meta: 'عنصر في خريطتك', color: coral },
-        content: getPlacementContent('element', key),
+        content: getContent('element', key),
       };
     }
   }
@@ -225,7 +235,7 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
     setHasEvent(events.some((e) => e.placement?.type === type && e.placement?.key === decodedKey));
   }, [type, decodedKey]);
 
-  const { header, content } = buildHeaderAndContent(type, decodedKey, chart);
+  const { header, content, houseContent } = buildHeaderAndContent(type, decodedKey, chart);
 
   return (
     <div className="pb-32">
@@ -309,6 +319,31 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
                     <span className="text-[13px] text-ink font-mono">{v}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {houseContent && (
+            <div className="px-5 mt-6 flex flex-col gap-4">
+              <div className="h-px bg-rule-soft" />
+              <div className="text-[11px] text-ink-muted tracking-wide font-semibold">الكوكب في البيت</div>
+              {[
+                ['الملاحظة', houseContent.obs],
+                ['المعنى', houseContent.mean],
+                ['الظل', houseContent.shadow],
+              ].map(([k, t]) => (
+                <div key={k}>
+                  <div className="text-[11px] text-ink-muted tracking-wide font-semibold">{k}</div>
+                  <div className="flex flex-col gap-2 mt-1.5">
+                    {(t as string).split('\n\n').map((para, i) => (
+                      <p key={i} className="text-[15px] text-ink leading-[1.7] m-0">{para}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div>
+                <div className="text-[11px] text-ink-muted tracking-wide font-semibold">سؤال الروح</div>
+                <div className="font-serif text-[17px] text-ink mt-1.5 leading-[1.5]">{houseContent.q}</div>
               </div>
             </div>
           )}
