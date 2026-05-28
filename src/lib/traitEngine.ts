@@ -59,7 +59,7 @@ const MINERALS: Record<string, { mineral: string; color: string }> = {
 const PLANET_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة',
   mars: 'المريخ', jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس',
-  neptune: 'نبتون', pluto: 'بلوتو', chiron: 'كيرون', northNode: 'الرأس', southNode: 'الذيل',
+  neptune: 'نبتون', pluto: 'بلوتو', chiron: 'كيرون', northNode: 'شمال القمر', southNode: 'جنوب القمر',
 };
 
 const ORGANS: Record<string, { organ: string; theme: string }> = {

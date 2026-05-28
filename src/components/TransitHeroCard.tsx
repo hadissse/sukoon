@@ -45,8 +45,8 @@ const NATAL_POSSESSIVE: Record<string, string> = {
   uranus: 'أورانوس في خريطتك',
   neptune: 'نبتون في خريطتك',
   pluto: 'بلوتو في خريطتك',
-  northNode: 'رأسك القمري',
-  southNode: 'ذيلك القمري',
+  northNode: 'شمال القمر',
+  southNode: 'جنوب القمر',
 };
 
 const VOTES = ['دافئ', 'هادئ', 'محرّك', 'ساكن'];

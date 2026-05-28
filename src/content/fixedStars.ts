@@ -290,7 +290,7 @@ const PLANET_KEYS = [
 const PLANET_NAMES_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
   jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
-  chiron: 'كيرون', northNode: 'الرأس', southNode: 'الذيل',
+  chiron: 'كيرون', northNode: 'شمال القمر', southNode: 'جنوب القمر',
 };
 
 /**

@@ -4,7 +4,7 @@ import type { AstralChart } from './chartCalculator';
 const PLANET_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
   jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
-  chiron: 'كيرون', northNode: 'الرأس', southNode: 'الذيل',
+  chiron: 'كيرون', northNode: 'شمال القمر', southNode: 'جنوب القمر',
 };
 
 const PLANET_GLYPH: Record<string, string> = {

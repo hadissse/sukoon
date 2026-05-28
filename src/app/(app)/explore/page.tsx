@@ -8,13 +8,13 @@ import { ASTRO_KNOWLEDGE, ASTRO_COURSES } from '@/content/courses';
 import { ZoomableWheel } from '@/components/ZoomableWheel';
 import { getCurrentSky } from '@/lib/currentSky';
 import type { AstralChart } from '@/lib/chartCalculator';
-
 import { planetSvgKey } from '@/lib/planetMeta';
+import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
 
 const PLANET_KEYS_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
   jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
-  chiron: 'كيرون', northNode: 'الرأس', southNode: 'الذيل',
+  chiron: 'كيرون', northNode: 'شمال القمر', southNode: 'جنوب القمر',
 };
 
 const ALL_PLANETS = [
@@ -40,7 +40,7 @@ function SkySection() {
     <div className="bg-cream min-h-screen pb-8">
       <div className="px-5 pt-6 flex items-baseline justify-between">
         <h1 className="font-serif text-2xl text-ink">السماء الآن</h1>
-        <div className="text-[11px] text-ink-muted font-mono">{timeStr}</div>
+        <div className="text-[11px] text-ink-muted font-mono" dir="ltr">{timeStr}</div>
       </div>
       <div className="text-[11px] text-ink-muted px-5 mb-4">{dateStr} · تحديث كل دقيقة</div>
 
@@ -59,23 +59,28 @@ function SkySection() {
               const planet = (sky as AstralChart & Record<string, { sign: string; degree: number; minute: number; retrograde?: boolean }>)[key];
               if (!planet) return null;
               return (
-                <div key={key} className="bg-white rounded-[12px] px-3 py-2.5 flex items-center gap-2.5" style={{ border: '1px solid #F0EDE6' }}>
-                  <div
-                    className="w-5 h-5 shrink-0"
-                    style={{
-                      WebkitMaskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
-                      maskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
-                      WebkitMaskSize: 'contain', maskSize: 'contain',
-                      WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-                      WebkitMaskPosition: 'center', maskPosition: 'center',
-                      background: '#E9785E',
-                    }}
-                  />
-                  <div className="min-w-0">
-                    <div className="text-[12px] font-semibold text-ink truncate">{PLANET_KEYS_AR[key]}{planet.retrograde ? ' ℞' : ''}</div>
-                    <div className="text-[11px] text-ink-muted truncate">{planet.sign} · {planet.degree}°{planet.minute > 0 ? `${planet.minute}′` : ''}</div>
+                <Link key={key} href={`/explore/sky/${key}`} className="block">
+                  <div className="bg-white rounded-[12px] px-3 py-2.5 flex items-center gap-2.5" style={{ border: '1px solid #F0EDE6' }}>
+                    <div
+                      className="w-5 h-5 shrink-0"
+                      style={{
+                        WebkitMaskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
+                        maskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
+                        WebkitMaskSize: 'contain', maskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center', maskPosition: 'center',
+                        background: '#E9785E',
+                      }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[12px] font-semibold text-ink truncate">{PLANET_KEYS_AR[key]}{planet.retrograde ? ' ℞' : ''}</div>
+                      <div className="text-[11px] text-ink-muted truncate">
+                        {planet.sign} · <span dir="ltr" className="inline-block">{planet.degree}°{planet.minute > 0 ? `${planet.minute}′` : ''}</span>
+                      </div>
+                    </div>
+                    <div className="text-ink-muted text-xs shrink-0">›</div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -149,18 +154,32 @@ function KnowledgeSection() {
   );
 }
 
+function CalendarSection() {
+  return (
+    <div className="px-5 py-6 flex flex-col gap-4">
+      <div>
+        <h1 className="font-serif text-2xl text-ink -tracking-0.5">تقويم العبورات</h1>
+        <p className="text-sm text-ink-muted mt-1">الأحداث الكونية الجماعية للشهر.</p>
+      </div>
+      <CalendarMonthView />
+    </div>
+  );
+}
+
 export default function ExplorePage() {
-  const [view, setView] = useState<'sky' | 'knowledge'>('sky');
+  const [view, setView] = useState<'sky' | 'knowledge' | 'calendar'>('sky');
 
   return (
     <div className="pb-24">
       {view === 'sky' && <SkySection />}
       {view === 'knowledge' && <KnowledgeSection />}
+      {view === 'calendar' && <CalendarSection />}
 
       {/* Navigation buttons */}
-      <div className="fixed bottom-20 left-0 right-0 px-5 py-4 flex gap-2 justify-center overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+      <div className="fixed bottom-20 left-0 right-0 px-5 py-4 flex gap-2 justify-center overflow-x-auto z-40" style={{ scrollbarWidth: 'none' }}>
         {([
           ['sky', 'السماء'],
+          ['calendar', 'التقويم'],
           ['knowledge', 'المعرفة'],
         ] as const).map(([key, label]) => (
           <button

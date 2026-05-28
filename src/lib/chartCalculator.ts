@@ -275,8 +275,8 @@ export function calculateChart(birthData: BirthData): AstralChart {
 
   // ── Mean North Node (Mean Lunar Node) ────────────────────────────────────
   const northNodeLon = norm360(125.0445479 - 1934.1362608 * T + 0.0020762 * T * T);
-  planets.northNode = makePlanetPosition('الرأس', PLANET_GLYPHS.northNode, northNodeLon, 0);
-  planets.southNode = makePlanetPosition('الذيل', PLANET_GLYPHS.southNode, norm360(northNodeLon + 180), 0);
+  planets.northNode = makePlanetPosition('شمال القمر', PLANET_GLYPHS.northNode, northNodeLon, 0);
+  planets.southNode = makePlanetPosition('جنوب القمر', PLANET_GLYPHS.southNode, norm360(northNodeLon + 180), 0);
 
   // ── RAMC → MC → ASC (Placidus) ───────────────────────────────────────────
   const eps = meanObliquity(T);

@@ -96,8 +96,8 @@ export function getCurrentSky(): AstralChart {
 
   p.chiron = makePlanet('كيرون', chironsLongitude(astroNow), 0);
   const northNodeLon = meanNorthNodeLongitude(T);
-  p.northNode = makePlanet('الرأس', northNodeLon, 0);
-  p.southNode = makePlanet('الذيل', norm360(northNodeLon + 180), 0);
+  p.northNode = makePlanet('شمال القمر', northNodeLon, 0);
+  p.southNode = makePlanet('جنوب القمر', norm360(northNodeLon + 180), 0);
 
   // Empty houses — no location needed for the global sky chart
   const emptyHouses: HousePosition[] = Array.from({ length: 12 }, (_, i) => ({

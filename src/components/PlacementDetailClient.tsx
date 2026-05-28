@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { AstralChart } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
@@ -16,7 +17,7 @@ const HOUSE_THEMES = ['الذات · الجسد', 'المورد · الميدا�
 const PLANET_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
   jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
-  chiron: 'كيرون', northNode: 'الرأس', southNode: 'الذيل',
+  chiron: 'كيرون', northNode: 'شمال القمر', southNode: 'جنوب القمر',
 };
 
 const ELEMENT_AR: Record<string, { name: string; glyph: string }> = {
@@ -187,6 +188,7 @@ function CalibrateBlock({ storageKey }: { storageKey: string }) {
 }
 
 export function PlacementDetailClient({ type, decodedKey }: { type: string; decodedKey: string }) {
+  const router = useRouter();
   const [chart, setChart] = useState<AstralChart | null>(null);
 
   useEffect(() => {
@@ -207,11 +209,12 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
       {/* Header */}
       <div className="px-5 pt-4 flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <Link href="/self" className="text-ink-muted hover:text-ink transition-colors" aria-label="إغلاق">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6L6 18M6 6l12 12" />
+          <button onClick={() => router.back()} className="text-ink-muted hover:text-ink transition-colors flex items-center gap-1.5 text-sm" aria-label="رجوع">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-          </Link>
+            رجوع
+          </button>
         </div>
         <div className="flex gap-3.5 items-center mt-3">
           <div
@@ -297,15 +300,6 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
 
       <CalibrateBlock storageKey={`sukoon.calibration.${type}:${decodedKey}`} />
 
-      {/* CTA */}
-      <div className="px-5 mt-5">
-        <Link
-          href={`/log?type=${type}&key=${encodeURIComponent(decodedKey)}`}
-          className="block w-full text-center py-3.5 rounded-[14px] bg-ink text-cream text-sm font-medium hover:bg-ink-soft transition-colors"
-        >
-          سجّل حدثًا مرتبطًا
-        </Link>
-      </div>
     </div>
   );
 }
