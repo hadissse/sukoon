@@ -70,12 +70,14 @@ function transformChartToPlanets(chart: AstralChart | null): any[] {
   return planetKeys.map((key) => {
     const planet = chart[key];
     if (typeof planet === 'object' && planet !== null && 'name' in planet) {
+      // North Node always moves retrograde by definition
+      const retrograde = key === 'northNode' ? true : !!(planet as any).retrograde;
       return {
         name: PLANET_DISPLAY_AR[key as string] ?? planet.name,
         position: formatPosition(planet),
         key,
         svgKey: planetSvgKey(key as string),
-        retrograde: !!(planet as any).retrograde,
+        retrograde,
       };
     }
     return null;
@@ -504,6 +506,40 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               </Card>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Angles (AC/IC/DC/MC) */}
+      {activeSubtab === 'planets' && chart && (
+        <div className="px-5 pb-6 flex flex-col gap-3">
+          <div className="text-[11px] font-semibold tracking-wider text-ink-muted px-1">الأوتاد الأربعة</div>
+          {[
+            { abbr: 'AC', nameAr: 'الطالع',      lon: chart.asc,           houseNum: 1 },
+            { abbr: 'IC', nameAr: 'القاع',        lon: chart.houses[3].cusp, houseNum: 4 },
+            { abbr: 'DC', nameAr: 'الغارب',       lon: chart.houses[6].cusp, houseNum: 7 },
+            { abbr: 'MC', nameAr: 'وسط السماء',   lon: chart.mc,            houseNum: 10 },
+          ].map(({ abbr, nameAr, lon, houseNum }) => {
+            const norm = ((lon % 360) + 360) % 360;
+            const signIdx = Math.floor(norm / 30);
+            const deg = Math.floor(norm % 30);
+            const position = `${ZODIAC_NAMES_AR[signIdx]} ${toAr(deg)}°`;
+            return (
+              <Link key={abbr} href={`/self/house/${houseNum}`} className="block" onClick={saveNavState}>
+                <Card>
+                  <div className="flex gap-4 items-center">
+                    <div className="w-11 h-11 flex-shrink-0 rounded-full bg-cream-soft flex items-center justify-center">
+                      <span className="text-[11px] font-bold" style={{ color: '#E9785E' }}>{abbr}</span>
+                    </div>
+                    <div className="flex-1">
+                      <span className="font-serif text-base text-ink">{nameAr}</span>
+                      <div className="text-sm text-ink-muted mt-1">{position}</div>
+                    </div>
+                    <div className="text-lg text-ink-muted">›</div>
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
 

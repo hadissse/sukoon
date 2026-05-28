@@ -57,7 +57,7 @@ export default function ProfilePage() {
       {stats.hasChart && (
         <div className="mx-5 mt-4">
           <Link
-            href="/onboarding"
+            href="/settings/edit-birth"
             className="flex items-center justify-between p-4 rounded-[14px] bg-white border border-rule-soft"
           >
             <span className="text-sm text-ink">تعديل بيانات الميلاد</span>
