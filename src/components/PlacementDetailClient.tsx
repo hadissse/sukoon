@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { loadEvents } from '@/lib/events';
 import type { AstralChart } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
 import { getPlacementContent, SIGN_SLUGS, type VoiceContent } from '@/content/placements';
@@ -152,10 +153,12 @@ function CalibrateBlock({ storageKey }: { storageKey: string }) {
     setSelected(localStorage.getItem(storageKey));
   }, [storageKey]);
 
+  const locked = selected !== null;
+
   const choose = (v: string) => {
+    if (locked) return;
     setSelected(v);
     localStorage.setItem(storageKey, v);
-    // storageKey = "sukoon.calibration.{type}:{key}"
     const raw = storageKey.replace('sukoon.calibration.', '');
     const colonIdx = raw.indexOf(':');
     if (colonIdx > -1) {
@@ -165,7 +168,18 @@ function CalibrateBlock({ storageKey }: { storageKey: string }) {
 
   return (
     <div className="mx-5 mt-3.5 p-3.5 rounded-[12px] bg-white border border-rule-soft">
-      <div className="text-xs text-ink-muted font-semibold tracking-wide">ينطبق؟</div>
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-ink-muted font-semibold tracking-wide">ينطبق؟</div>
+        {locked && (
+          <div className="flex items-center gap-1 text-[10px] text-[#8FA084] font-medium">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            مُثبَّت
+          </div>
+        )}
+      </div>
       <div className="flex gap-2 mt-2.5">
         {[['نعم', 'yes'], ['جزئيًا', 'partial'], ['لا', 'no']].map(([label, v]) => {
           const sel = selected === v;
@@ -174,9 +188,14 @@ function CalibrateBlock({ storageKey }: { storageKey: string }) {
               key={v}
               onClick={() => choose(v)}
               className={`flex-1 py-2.5 rounded-full text-center text-[13px] font-medium transition-colors ${
-                sel ? 'text-cream' : 'text-ink border border-rule-soft bg-white'
+                sel
+                  ? 'text-cream'
+                  : locked
+                  ? 'text-ink-muted border border-rule-soft bg-white opacity-35'
+                  : 'text-ink border border-rule-soft bg-white'
               }`}
               style={sel ? { backgroundColor: '#8FA084' } : undefined}
+              disabled={locked && !sel}
             >
               {label}
             </button>
@@ -190,6 +209,7 @@ function CalibrateBlock({ storageKey }: { storageKey: string }) {
 export function PlacementDetailClient({ type, decodedKey }: { type: string; decodedKey: string }) {
   const router = useRouter();
   const [chart, setChart] = useState<AstralChart | null>(null);
+  const [hasEvent, setHasEvent] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('sukoon.primary-chart.v1');
@@ -200,7 +220,10 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
         if (process.env.NODE_ENV === 'development') console.error('Failed to parse chart:', e);
       }
     }
-  }, []);
+    const events = loadEvents();
+    const slug = `${type}:${decodedKey}`;
+    setHasEvent(events.some((e) => e.placement?.type === type && e.placement?.key === decodedKey));
+  }, [type, decodedKey]);
 
   const { header, content } = buildHeaderAndContent(type, decodedKey, chart);
 
@@ -299,6 +322,31 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
       )}
 
       <CalibrateBlock storageKey={`sukoon.calibration.${type}:${decodedKey}`} />
+
+      {/* Track event */}
+      <div className="mx-5 mt-3">
+        <Link
+          href={`/log?type=${type}&key=${encodeURIComponent(decodedKey)}&label=${encodeURIComponent(header.title)}`}
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-[12px] border border-rule-soft bg-white text-sm text-ink hover:bg-cream-soft transition-colors"
+        >
+          {hasEvent ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+                <circle cx="6" cy="6" r="5.5" stroke="#8FA084" />
+                <path d="M3.5 6l1.8 1.8L8.5 4.5" stroke="#8FA084" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span style={{ color: '#8FA084' }}>مُدوَّن · سجّل مرّة أخرى</span>
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              سجّل حدثًا مرتبطًا
+            </>
+          )}
+        </Link>
+      </div>
 
     </div>
   );

@@ -121,15 +121,26 @@ function LogFlow() {
   const suggestions = useMemo(() => {
     const aspects = topAspectSuggestions(chart);
     const planets = planetPlacementSuggestions(chart);
-    // Merge: aspects first, then planet placements (deduplicated by key)
     const base = [...aspects, ...planets];
     const qType = searchParams.get('type');
     const qKey = searchParams.get('key');
+    const qLabel = searchParams.get('label');
     if (qType && qKey && !base.some((s) => s.type === qType && s.key === qKey)) {
-      base.unshift({ type: qType, key: qKey, label: `${qKey}`, when: 'من الموضع' });
+      base.unshift({ type: qType, key: qKey, label: qLabel ?? qKey, when: 'من التأثيرات النشطة' });
     }
     return base;
   }, [chart, searchParams]);
+
+  // Auto-select placement from query params on first load
+  useEffect(() => {
+    const qType = searchParams.get('type');
+    const qKey = searchParams.get('key');
+    const qLabel = searchParams.get('label');
+    if (qType && qKey && selected === null) {
+      setSelected({ type: qType, key: qKey, label: qLabel ?? qKey, when: 'من التأثيرات النشطة' });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const dateLabel = new Intl.DateTimeFormat('ar', { weekday: 'long', day: 'numeric', month: 'long' }).format(date);
 
