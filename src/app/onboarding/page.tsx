@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { BirthDateStep } from '@/components/onboarding/BirthDateStep';
 import { BirthTimeStep } from '@/components/onboarding/BirthTimeStep';
 import { LocationStep } from '@/components/onboarding/LocationStep';
-import { calculateChartViaAPI } from '@/lib/chartCalculator';
+import { calculateChart } from '@/lib/chartCalculator';
 import { calculateTraits } from '@/lib/traitEngine';
 import { syncChart } from '@/lib/sync';
 
@@ -62,7 +62,7 @@ export default function OnboardingPage() {
     setBirthData(completeBirthData);
 
     try {
-      const chart = await calculateChartViaAPI(completeBirthData);
+      const chart = calculateChart(completeBirthData);
       localStorage.setItem('sukoon.birth-data', JSON.stringify(completeBirthData));
       localStorage.setItem('sukoon.primary-chart.v1', JSON.stringify(chart));
 

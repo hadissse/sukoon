@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { searchLocation, getTimezoneOffset, type Location } from '@/lib/geocoding';
-import { calculateChartViaAPI, type AstralChart } from '@/lib/chartCalculator';
+import { calculateChart, type AstralChart } from '@/lib/chartCalculator';
 import { calculateTraits } from '@/lib/traitEngine';
 import { syncChart } from '@/lib/sync';
 
@@ -76,7 +76,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
         utcOffsetHours: offset,
         timeUnknown,
       };
-      const chart = await calculateChartViaAPI(birthData);
+      const chart = calculateChart(birthData);
       localStorage.setItem('sukoon.birth-data', JSON.stringify(birthData));
       localStorage.setItem('sukoon.user-name', name.trim());
       localStorage.setItem('sukoon.primary-chart.v1', JSON.stringify(chart));

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cf": "npx @cloudflare/next-on-pages",
+    "preview:cf": "npx wrangler pages dev",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
@@ -19,6 +21,7 @@
     "sweph": "^2.10.3-5"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -27,6 +30,7 @@
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.7",
+    "wrangler": "^4.86.0"
   }
 }
