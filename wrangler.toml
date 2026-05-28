@@ -2,6 +2,9 @@ name = "sukoon"
 compatibility_date = "2025-05-01"
 compatibility_flags = ["nodejs_compat"]
 main = ".open-next/worker.js"
+routes = [
+  { pattern = "sukoon.arabic-astro.com/*", zone_name = "arabic-astro.com" }
+]
 
 [assets]
 directory = ".open-next/assets"
