@@ -1,0 +1,6 @@
+template_num,template_name,category,body_a,body_b_or_sign,house_or_aspect,placement_id,focus_theme,traditional_meaning_ar,evolutionary_meaning_ar,developmental_task_ar,key_references,status,content_file
+36,Synastry Planet x Planet,Relational,الشمس,القمر,,T36_general,How charts aspect each other — see general framework,,,,,pending,
+36,Synastry Planet x Planet,Relational,,,,T36_Synastry,Framework: planet-to-planet inter-aspects between two charts,,,,,pending,
+37,Synastry Planet x Angle,Relational,,,,T37_PlanetAngle,Planet falling on partner's ASC/MC/IC/DSC,,,,,pending,
+38,Composite Chart,Relational,,,,T38_Composite,The relationship as a third entity,,,,,pending,
+39,Draconic Synastry,Relational,,,,T39_Draconic,Soul-level / pre-natal karmic synastry,,,,,pending,
