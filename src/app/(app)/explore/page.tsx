@@ -11,6 +11,10 @@ import type { AstralChart } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
 import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
 
+function toAr(n: number | string): string {
+  return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+}
+
 const PLANET_KEYS_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
   jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
@@ -75,7 +79,7 @@ function SkySection() {
                     <div className="min-w-0 flex-1">
                       <div className="text-[12px] font-semibold text-ink truncate">{PLANET_KEYS_AR[key]}{planet.retrograde ? ' ℞' : ''}</div>
                       <div className="text-[11px] text-ink-muted truncate">
-                        {planet.sign} · <span dir="ltr" className="inline-block">{planet.degree}°{planet.minute > 0 ? `${planet.minute}′` : ''}</span>
+                        {planet.sign} · {toAr(planet.degree)}°{planet.minute > 0 ? `${toAr(planet.minute)}′` : ''}
                       </div>
                     </div>
                     <div className="text-ink-muted text-xs shrink-0">›</div>

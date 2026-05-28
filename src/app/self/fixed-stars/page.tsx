@@ -8,12 +8,16 @@ import { FrameworkLabel } from '@/components/FrameworkLabel';
 
 const ZODIAC_SIGNS_AR = ['الحمل', 'الثور', 'الجوزاء', 'السرطان', 'الأسد', 'العذراء', 'الميزان', 'العقرب', 'القوس', 'الجدي', 'الدلو', 'الحوت'];
 
+function toAr(n: number | string): string {
+  return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+}
+
 function lonToSignDeg(lon: number): string {
   const n = ((lon % 360) + 360) % 360;
   const sign = Math.floor(n / 30);
   const deg = Math.floor(n % 30);
   const min = Math.round((n % 1) * 60);
-  return `${ZODIAC_SIGNS_AR[sign]} ${deg}°${min > 0 ? ` ${min}′` : ''}`;
+  return `${ZODIAC_SIGNS_AR[sign]} ${toAr(deg)}°${min > 0 ? ` ${toAr(min)}′` : ''}`;
 }
 
 type FilterKey = 'active' | 'all';
@@ -141,12 +145,7 @@ export default function FixedStarsPage() {
         })}
       </div>
 
-      <p className="text-[11px] text-ink-muted px-5 pt-5 pb-2 leading-[1.7]">
-        المصدر الرئيسي: Vivian Robson, <em>The Fixed Stars and Constellations in Astrology</em> (1923).
-        الأسماء العربية مستقاة من تراث علم الفلك العربي (الصوفي، البتاني، قطيبة).
-      </p>
-
-      <Link href="/self" className="flex items-center gap-2 px-5 pb-6 text-sm text-coral font-medium">
+<Link href="/self" className="flex items-center gap-2 px-5 pb-6 text-sm text-coral font-medium">
         ← العودة للخريطة
       </Link>
     </div>

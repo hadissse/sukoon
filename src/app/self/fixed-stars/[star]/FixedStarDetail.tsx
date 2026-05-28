@@ -156,13 +156,17 @@ const STAR_CONTENT: Record<string, StarContent> = {
   },
 };
 
+function toAr(n: number | string): string {
+  return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+}
+
 function lonToSignDeg(lon: number): string {
   const ZODIAC = ['الحمل', 'الثور', 'الجوزاء', 'السرطان', 'الأسد', 'العذراء', 'الميزان', 'العقرب', 'القوس', 'الجدي', 'الدلو', 'الحوت'];
   const n = ((lon % 360) + 360) % 360;
   const sign = Math.floor(n / 30);
   const deg = Math.floor(n % 30);
   const min = Math.round((n % 1) * 60);
-  return `${ZODIAC[sign]} ${deg}°${min > 0 ? ` ${min}′` : ''}`;
+  return `${ZODIAC[sign]} ${toAr(deg)}°${min > 0 ? ` ${toAr(min)}′` : ''}`;
 }
 
 type Calibration = 'yes' | 'partial' | 'no' | null;
@@ -270,11 +274,11 @@ export function FixedStarDetail({ slug }: { slug: string }) {
       {/* Position & active badge */}
       <div className="px-5 mt-3 flex gap-2 flex-wrap">
         <div className="px-3 py-1.5 bg-cream-soft rounded-full text-xs text-ink">
-          {lonToSignDeg(currentLon)} · قدر {star.mag.toFixed(1)}
+          {lonToSignDeg(currentLon)} · قدر {toAr(star.mag.toFixed(1))}
         </div>
         {isActive && (
           <div className="px-3 py-1.5 rounded-full text-xs font-medium text-cream" style={{ background: '#E9785E' }}>
-            {conjunctions.map(c => `تلاقٍ مع ${c.natalPlanetName} · ${c.orb}°`).join(' · ')}
+            {conjunctions.map(c => `تلاقٍ مع ${c.natalPlanetName} · ${toAr(c.orb)}°`).join(' · ')}
           </div>
         )}
       </div>

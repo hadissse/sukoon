@@ -28,12 +28,16 @@ import { planetSvgKey } from '@/lib/planetMeta';
 import { FIXED_STARS, findStarConjunctions, starLongitudeAtJD, fixedStarSlug, type StarConjunction } from '@/content/fixedStars';
 
 const ZODIAC_SIGNS_AR_FS = ['الحمل', 'الثور', 'الجوزاء', 'السرطان', 'الأسد', 'العذراء', 'الميزان', 'العقرب', 'القوس', 'الجدي', 'الدلو', 'الحوت'];
+function toAr(n: number | string): string {
+  return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+}
+
 function lonToSignDeg(lon: number): string {
   const n = ((lon % 360) + 360) % 360;
   const sign = Math.floor(n / 30);
   const deg = Math.floor(n % 30);
   const min = Math.round((n % 1) * 60);
-  return `${ZODIAC_SIGNS_AR_FS[sign]} ${deg}°${min > 0 ? ` ${min}′` : ''}`;
+  return `${ZODIAC_SIGNS_AR_FS[sign]} ${toAr(deg)}°${min > 0 ? ` ${toAr(min)}′` : ''}`;
 }
 
 const chartSubtabs = [
@@ -49,7 +53,7 @@ const ZODIAC_SVG_KEYS = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 
 const ZODIAC_NAMES_AR = ['الحمل', 'الثور', 'الجوزاء', 'السرطان', 'الأسد', 'العذراء', 'الميزان', 'العقرب', 'القوس', 'الجدي', 'الدلو', 'الحوت'];
 
 function formatPosition(planet: any): string {
-  return `${planet.sign} ${planet.degree}°${planet.minute > 0 ? ` ${planet.minute}′` : ''}`;
+  return `${planet.sign} ${toAr(planet.degree)}°${planet.minute > 0 ? ` ${toAr(planet.minute)}′` : ''}`;
 }
 
 const PLANET_DISPLAY_AR: Record<string, string> = {
@@ -111,7 +115,7 @@ function transformChartToHouses(chart: AstralChart | null): any[] {
   return chart.houses.slice(0, 8).map((house, idx) => ({
     num: houseNumbers[idx],
     theme: houseThemes[idx],
-    cusp: `${house.sign} ${house.degree}°`,
+    cusp: `${house.sign} ${toAr(house.degree)}°`,
   }));
 }
 
@@ -145,7 +149,7 @@ function calculateAspects(chart: AstralChart | null): any[] {
           if (orb <= aspectType.orb) {
             aspects.push({
               aspect: `${p1.name} ${aspectType.symbol} ${p2.name}`,
-              orb: `${orb.toFixed(0)}°`,
+              orb: `${toAr(orb.toFixed(0))}°`,
               orbDeg: orb,
               type: aspectType.name,
               color: aspectType.color,
@@ -373,10 +377,6 @@ function FixedStarsView({ chart, onNavigate }: { chart: AstralChart | null; onNa
         );
       })}
 
-      <p className="text-[11px] text-ink-muted pt-2 leading-[1.7]">
-        المصدر: Vivian Robson, <em>The Fixed Stars and Constellations in Astrology</em> (1923).
-        الأسماء العربية من تراث الصوفي والبتاني.
-      </p>
     </div>
   );
 }
