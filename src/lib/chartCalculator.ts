@@ -209,15 +209,18 @@ function placidusUpperCusp(ramc: number, fraction: number, eps: number, phi: num
 }
 
 function placidusLowerCusp(ramc: number, fraction: number, eps: number, phi: number): number {
-  // Houses 2 (fraction=1/3) and 3 (fraction=2/3): use nocturnal semi-arc
+  // Houses 2 (fraction=1/3) and 3 (fraction=2/3) lie between the ASC and the IC,
+  // below the horizon. They are measured back from the IC toward the ASC (i.e.
+  // RA decreasing from the IC), spanning (1 - fraction) of the nocturnal arc.
   const ic = norm360(ramc + 180);
-  let lambda = norm360(ic + fraction * 90);
+  const f = 1 - fraction;
+  let lambda = norm360(ic - f * 90);
   for (let i = 0; i < 40; i++) {
     const dec = eclToDec(lambda, eps);
     const sinAD = Math.tan(toRad(dec)) * Math.tan(toRad(phi));
     const ad = Math.abs(sinAD) >= 1 ? 90 * Math.sign(sinAD) : toDeg(Math.asin(sinAD));
     const nsa = 90 - ad;
-    const targetRA = norm360(ic + nsa * fraction);
+    const targetRA = norm360(ic - nsa * f);
     const newLambda = raToEcl(targetRA, eps);
     const diff = norm180(newLambda - lambda);
     lambda = norm360(lambda + diff * 0.5);
@@ -322,17 +325,18 @@ export function calculateChart(birthData: BirthData): AstralChart {
   const h2 = placidusLowerCusp(ramc, 1 / 3, eps, phi);
   const h3 = placidusLowerCusp(ramc, 2 / 3, eps, phi);
 
-  // All 12 cusps: 1=ASC, 4=IC, 7=DSC, 10=MC; interpolated for 2,3,5,6,8,9,11,12
+  // All 12 cusps: 1=ASC, 4=IC, 7=DSC, 10=MC. Opposite cusps are 180° apart,
+  // so 5↔11, 6↔12, 8↔2, 9↔3.
   const cuspLons = [
     asc,                       // 1
     h2,                        // 2
     h3,                        // 3
     norm360(mc + 180),         // 4 (IC)
-    norm360(h3 + 180),         // 5
-    norm360(h2 + 180),         // 6
+    norm360(h11 + 180),        // 5  (opposite 11)
+    norm360(h12 + 180),        // 6  (opposite 12)
     norm360(asc + 180),        // 7 (DSC)
-    norm360(h12 + 180),        // 8
-    norm360(h11 + 180),        // 9
+    norm360(h2 + 180),         // 8  (opposite 2)
+    norm360(h3 + 180),         // 9  (opposite 3)
     mc,                        // 10
     h11,                       // 11
     h12,                       // 12

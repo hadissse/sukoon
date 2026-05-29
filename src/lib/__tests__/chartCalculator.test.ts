@@ -68,6 +68,36 @@ describe('calculateChart', () => {
     expect(chart.houses[6].cusp).toBeCloseTo(dsc, 3);
   });
 
+  it('house 4 cusp is IC (MC + 180)', () => {
+    const chart = calculateChart(ARIES_BIRTH);
+    const ic = ((chart.mc + 180) % 360 + 360) % 360;
+    expect(chart.houses[3].cusp).toBeCloseTo(ic, 3);
+  });
+
+  // Regression: the intermediate Placidus cusps (2,3,5,6,8,9,11,12) were once
+  // computed on the wrong side of the IC and with mismatched opposite pairs,
+  // producing cusps out of sequence (e.g. house 2 past the IC). Every house
+  // must advance forward by a positive arc < 180°, across both hemispheres.
+  it('all 12 house cusps advance in order with sane spans', () => {
+    const norm = (d: number) => ((d % 360) + 360) % 360;
+    for (const birth of [
+      ARIES_BIRTH,
+      { year: 1985, month: 1, day: 15, hour: 23, minute: 5, latitude: 51.5, longitude: -0.12, utcOffsetHours: 0 },
+      { year: 2001, month: 11, day: 3, hour: 6, minute: 45, latitude: -33.87, longitude: 151.21, utcOffsetHours: 11 },
+    ]) {
+      const cusps = calculateChart(birth).houses.map((h) => h.cusp);
+      for (let i = 0; i < 12; i++) {
+        const span = norm(cusps[(i + 1) % 12] - cusps[i]);
+        expect(span).toBeGreaterThan(0);
+        expect(span).toBeLessThan(180);
+      }
+      // Opposite cusps are exactly 180° apart.
+      for (let i = 0; i < 6; i++) {
+        expect(norm(cusps[i + 6] - cusps[i])).toBeCloseTo(180, 3);
+      }
+    }
+  });
+
   it('Sun is in Aries on Apr 5 2000', () => {
     const chart = calculateChart(ARIES_BIRTH);
     // Around Apr 5 sun should be ~15° Aries

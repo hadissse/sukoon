@@ -44,14 +44,6 @@ const PLANET_KEYS = [
   'saturn','uranus','neptune','pluto','chiron','northNode','southNode',
 ] as const;
 
-// 0° Aries at 9 o'clock; longitude increases CCW visually
-function toXY(lon: number, r: number): { x: number; y: number } {
-  const rad = ((lon - 180) * Math.PI) / 180;
-  return { x: C + r * Math.cos(rad), y: C - r * Math.sin(rad) };
-}
-
-function lonToAngleDeg(lon: number): number { return lon - 180; }
-
 // Planet collision spreading — shifts display angle to avoid overlap
 function spreadAngles(
   positions: { lon: number; angle: number }[],
@@ -130,26 +122,44 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
   const wedgeFill   = isDark ? 'none'                   : '#FFFFFF';
   const planetHalo  = isDark ? 'rgba(255,255,255,0.07)' : (tone === 'paper' ? '#F8F5EF' : '#FFFFFF');
 
-  // Rotate the whole wheel so the Ascendant sits on the left horizon (9 o'clock)
-  // and the 1st house begins there — the conventional "AC rising" chart. The
-  // location-less sky view (showHouses=false) keeps 0° Aries fixed at the left.
-  const rot = showHouses && chart ? chart.asc : 0;
-  const place = (lon: number, r: number) => toXY(lon - rot, r);
-  const angleOf = (lon: number) => lonToAngleDeg(lon - rot);
+  // Quadrant (Placidus) layout: the four angles are pinned to the cross —
+  // AC at 9 o'clock, IC at 6, DC at 3, MC at 12 — and each house fills an equal
+  // 30°-of-screen wedge, with ecliptic longitudes interpolated inside their
+  // house. The location-less sky view has no houses, so it falls back to a
+  // uniform wheel with 0° Aries fixed at the left.
+  const norm360 = (d: number) => ((d % 360) + 360) % 360;
+  const cusps = showHouses && chart ? chart.houses.map((h) => h.cusp) : null;
+  const angleOf = (lon: number): number => {
+    if (!cusps) return lon - 180;
+    for (let h = 0; h < 12; h++) {
+      const span = norm360(cusps[(h + 1) % 12] - cusps[h]) || 360;
+      const off = norm360(lon - cusps[h]);
+      if (off < span) return 180 + (h + off / span) * 30;
+    }
+    return 180;
+  };
+  const place = (lon: number, r: number) => {
+    const rad = (angleOf(lon) * Math.PI) / 180;
+    return { x: C + r * Math.cos(rad), y: C - r * Math.sin(rad) };
+  };
 
-  // Alternating zodiac wedge arcs — decorative shading (rotated with the chart)
+  // Alternating zodiac wedge arcs — decorative shading (mapped to the layout)
   const zodiacWedges = Array.from({ length: 12 }, (_, i) => {
-    const a1 = ((i * 30 - rot - 180) * Math.PI) / 180;
-    const a2 = (((i + 1) * 30 - rot - 180) * Math.PI) / 180;
+    let t1 = angleOf(i * 30);
+    let t2 = angleOf(((i + 1) * 30) % 360);
+    if (t2 <= t1) t2 += 360;
+    const a1 = (t1 * Math.PI) / 180;
+    const a2 = (t2 * Math.PI) / 180;
+    const large = t2 - t1 > 180 ? 1 : 0;
     const p1o = { x: C + R_ZODIAC_OUT * Math.cos(a1), y: C - R_ZODIAC_OUT * Math.sin(a1) };
     const p2o = { x: C + R_ZODIAC_OUT * Math.cos(a2), y: C - R_ZODIAC_OUT * Math.sin(a2) };
     const p2i = { x: C + R_ZODIAC_IN * Math.cos(a2), y: C - R_ZODIAC_IN * Math.sin(a2) };
     const p1i = { x: C + R_ZODIAC_IN * Math.cos(a1), y: C - R_ZODIAC_IN * Math.sin(a1) };
     const d = [
       `M ${p1o.x} ${p1o.y}`,
-      `A ${R_ZODIAC_OUT} ${R_ZODIAC_OUT} 0 0 0 ${p2o.x} ${p2o.y}`,
+      `A ${R_ZODIAC_OUT} ${R_ZODIAC_OUT} 0 ${large} 0 ${p2o.x} ${p2o.y}`,
       `L ${p2i.x} ${p2i.y}`,
-      `A ${R_ZODIAC_IN} ${R_ZODIAC_IN} 0 0 1 ${p1i.x} ${p1i.y}`,
+      `A ${R_ZODIAC_IN} ${R_ZODIAC_IN} 0 ${large} 1 ${p1i.x} ${p1i.y}`,
       'Z',
     ].join(' ');
     return { d, alt: i % 2 === 0 };
@@ -219,8 +229,9 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
           {showHouses && chart && chart.houses.map((house, i) => {
             const inner = place(house.cusp, R_CENTER);
             const outer = place(house.cusp, R_ZODIAC_IN);
-            const isAsc = house.num === 1;
-            const isMc = house.num === 10;
+            const angleLabel =
+              house.num === 1 ? 'AC' : house.num === 4 ? 'IC' : house.num === 7 ? 'DC' : house.num === 10 ? 'MC' : null;
+            const isAngle = angleLabel !== null;
             const labelPos = place(house.cusp, R_ZODIAC_IN - 22);
             // House number sits in the middle of the sector, near the hub.
             const nextCusp = chart.houses[(i + 1) % 12].cusp;
@@ -231,8 +242,8 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
                 <line
                   x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
                   stroke={lightColor}
-                  strokeWidth={isAsc || isMc ? '1.5' : '0.8'}
-                  opacity={isAsc || isMc ? 0.9 : 0.6}
+                  strokeWidth={isAngle ? '1.5' : '0.8'}
+                  opacity={isAngle ? 0.9 : 0.6}
                 />
                 <text x={numPos.x} y={numPos.y}
                   textAnchor="middle" dominantBaseline="central"
@@ -240,13 +251,13 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
                   style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
                   {toArabicDigits(house.num)}
                 </text>
-                {(isAsc || isMc) && (
+                {isAngle && (
                   <text x={labelPos.x} y={labelPos.y}
                     textAnchor="middle" dominantBaseline="central"
                     fontSize="15" fontWeight="600"
                     fill={mutedColor}
                     style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
-                    {isAsc ? 'AC' : 'MC'}
+                    {angleLabel}
                   </text>
                 )}
               </g>
