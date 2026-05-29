@@ -3,7 +3,9 @@
 // Scr216 — fullscreen, dark, immersive zoom of the wheel.
 
 import { useRouter } from 'next/navigation';
-import { SukoonWheel, defaultSukoonWheel } from '@/components/v2/SukoonWheel';
+import { SukoonWheel, defaultSukoonWheel, astralToWheelChart } from '@/components/v2/SukoonWheel';
+import { usePrimaryChart } from '@/lib/usePrimaryChart';
+import { formatSignDegree, formatLongitude } from '@/lib/format';
 
 function Leg({ g, name, pos, isAC }: { g: string; name: string; pos: string; isAC?: boolean }) {
   return (
@@ -28,7 +30,8 @@ function Leg({ g, name, pos, isAC }: { g: string; name: string; pos: string; isA
 
 export default function ImmersiveWheelPage() {
   const router = useRouter();
-  const chart = defaultSukoonWheel();
+  const natal = usePrimaryChart();
+  const chart = natal ? astralToWheelChart(natal) : defaultSukoonWheel();
 
   return (
     <div className="relative min-h-dvh max-w-[430px] mx-auto w-full overflow-hidden">
@@ -75,11 +78,11 @@ export default function ImmersiveWheelPage() {
         className="absolute inset-x-4 rounded-[18px] px-4 py-3.5 flex justify-between items-center z-10 backdrop-blur-md"
         style={{ bottom: 24, background: 'rgba(255,255,255,0.06)', color: '#F2EDDF' }}
       >
-        <Leg g="☉" name="الشمس" pos="الجدي ١٧°" />
+        <Leg g="☉" name="الشمس" pos={natal ? formatSignDegree(natal.sun.sign, natal.sun.degree) : 'الجدي ١٧°'} />
         <div className="w-px h-7" style={{ background: 'rgba(255,255,255,0.18)' }} />
-        <Leg g="☽" name="القمر" pos="الميزان ٢٣°" />
+        <Leg g="☽" name="القمر" pos={natal ? formatSignDegree(natal.moon.sign, natal.moon.degree) : 'الميزان ٢٣°'} />
         <div className="w-px h-7" style={{ background: 'rgba(255,255,255,0.18)' }} />
-        <Leg g="AC" name="الطالع" pos="الميزان ٢٤°" isAC />
+        <Leg g="AC" name="الطالع" pos={natal ? formatLongitude(natal.asc) : 'الميزان ٢٤°'} isAC />
       </div>
     </div>
   );

@@ -4,10 +4,16 @@
 
 import { V2Header } from '@/components/v2/V2Header';
 import { FooterTabBar } from '@/components/v2/FooterTabBar';
-import { SukoonWheel, defaultSukoonWheel } from '@/components/v2/SukoonWheel';
+import { SukoonWheel, defaultSukoonWheel, astralToWheelChart, houseOfLongitude } from '@/components/v2/SukoonWheel';
+import { usePrimaryChart } from '@/lib/usePrimaryChart';
+import { formatSignDegree, toArabicDigits } from '@/lib/format';
+import type { AstralChart } from '@/lib/chartCalculator';
 
 // [glyph, name, position, house, retrograde]
-const ROWS: [string, string, string, string, boolean][] = [
+type Row = [string, string, string, string, boolean];
+
+// Placeholder shown only until the user has saved a natal chart.
+const DEMO_ROWS: Row[] = [
   ['☉', 'الشمس', 'الجدي ١٧°', '١٠', false],
   ['☽', 'القمر', 'الميزان ٢٣°', '١', false],
   ['☿', 'عطارد', 'القوس ٢٤°', '٣', false],
@@ -20,6 +26,21 @@ const ROWS: [string, string, string, string, boolean][] = [
   ['♇', 'بلوتو', 'الميزان ٩°', '١', true],
 ];
 
+const ROW_KEYS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'] as const;
+
+function rowsFromChart(chart: AstralChart): Row[] {
+  return ROW_KEYS.map((k) => {
+    const p = chart[k];
+    return [
+      p.glyph,
+      p.name,
+      formatSignDegree(p.sign, p.degree, p.minute),
+      toArabicDigits(houseOfLongitude(chart, p.longitude)),
+      Boolean(p.retrograde),
+    ];
+  });
+}
+
 const SELF_TABS: [string, boolean][] = [
   ['الخريطة', true],
   ['الجسد', false],
@@ -27,7 +48,9 @@ const SELF_TABS: [string, boolean][] = [
 ];
 
 export default function PositionsPage() {
-  const chart = defaultSukoonWheel();
+  const natal = usePrimaryChart();
+  const chart = natal ? astralToWheelChart(natal) : defaultSukoonWheel();
+  const rows = natal ? rowsFromChart(natal) : DEMO_ROWS;
   return (
     <div className="max-w-[430px] mx-auto w-full pb-28">
       <V2Header title="الخريطة" />
@@ -61,13 +84,13 @@ export default function PositionsPage() {
           className="bg-white rounded-[14px] mt-2 overflow-y-auto"
           style={{ border: '1px solid #E8E2D2', maxHeight: 168 }}
         >
-          {ROWS.map(([g, name, pos, house, retro], i) => (
+          {rows.map(([g, name, pos, house, retro], i) => (
             <div
               key={name}
               className="grid items-center gap-2.5 px-3.5 py-[7px]"
               style={{
                 gridTemplateColumns: '28px 1fr auto 24px',
-                borderBottom: i === ROWS.length - 1 ? 'none' : '1px solid #F8F8F8',
+                borderBottom: i === rows.length - 1 ? 'none' : '1px solid #F8F8F8',
               }}
             >
               <span className="text-base text-coral">{g}</span>

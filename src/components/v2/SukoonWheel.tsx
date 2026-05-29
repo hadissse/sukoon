@@ -8,6 +8,8 @@
  * on a dark immersive background. This is a standalone SVG built for that.
  */
 
+import type { AstralChart } from '@/lib/chartCalculator';
+
 export interface WheelPlanet {
   name: string;
   glyph: string;
@@ -48,6 +50,36 @@ export function defaultSukoonWheel(): WheelChart {
       { name: 'العقدة الشمالية', glyph: '☊', lon: 124, isRetrograde: true },
     ],
   };
+}
+
+/** Planets shown on the V2 wheel: 10 classical bodies + the north node. */
+const WHEEL_KEYS = [
+  'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter',
+  'saturn', 'uranus', 'neptune', 'pluto', 'northNode',
+] as const;
+
+/** Convert a computed natal chart into the wheel's render shape. */
+export function astralToWheelChart(chart: AstralChart): WheelChart {
+  return {
+    ascLon: chart.asc,
+    planets: WHEEL_KEYS.map((k) => {
+      const p = chart[k];
+      return { name: p.name, glyph: p.glyph, lon: p.longitude, isRetrograde: p.retrograde };
+    }),
+  };
+}
+
+/** Which house (1–12) an ecliptic longitude falls in, using the chart's cusps. */
+export function houseOfLongitude(chart: AstralChart, lon: number): number {
+  const norm = (d: number) => ((d % 360) + 360) % 360;
+  const L = norm(lon);
+  for (let i = 0; i < 12; i++) {
+    const a = norm(chart.houses[i].cusp);
+    const b = norm(chart.houses[(i + 1) % 12].cusp);
+    const span = norm(b - a);
+    if (norm(L - a) < span) return i + 1;
+  }
+  return 1;
 }
 
 export function SukoonWheel({
