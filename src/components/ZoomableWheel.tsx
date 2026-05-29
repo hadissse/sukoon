@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AstralChart } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
-import { formatSignDegree } from '@/lib/format';
+import { formatSignDegree, toArabicDigits } from '@/lib/format';
 
 const VB = 1000;
 const C = 500;
@@ -24,14 +24,6 @@ const ZODIAC_GLYPHS = [
   '♐'+TEXT_VS, '♑'+TEXT_VS, '♒'+TEXT_VS, '♓'+TEXT_VS,
 ];
 const GLYPH_FONT = 'Cambria, "Times New Roman", "Noto Sans Symbols 2", "Segoe UI Symbol", serif';
-
-const ASPECT_TYPES = [
-  { angle: 0,   orb: 8, color: 'rgba(0,0,0,0)', opacity: 0 },
-  { angle: 60,  orb: 6, color: '#4A7FB5',        opacity: 0.25 },
-  { angle: 90,  orb: 8, color: '#C0392B',        opacity: 0.28 },
-  { angle: 120, orb: 8, color: '#27AE60',        opacity: 0.30 },
-  { angle: 180, orb: 8, color: '#C0392B',        opacity: 0.32 },
-];
 
 // Element color for each zodiac sign (0=Aries … 11=Pisces)
 const ZODIAC_ELEMENT_COLORS = [
@@ -138,10 +130,17 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
   const wedgeFill   = isDark ? 'none'                   : '#FFFFFF';
   const planetHalo  = isDark ? 'rgba(255,255,255,0.07)' : (tone === 'paper' ? '#F8F5EF' : '#FFFFFF');
 
-  // Alternating zodiac wedge arcs — decorative shading
+  // Rotate the whole wheel so the Ascendant sits on the left horizon (9 o'clock)
+  // and the 1st house begins there — the conventional "AC rising" chart. The
+  // location-less sky view (showHouses=false) keeps 0° Aries fixed at the left.
+  const rot = showHouses && chart ? chart.asc : 0;
+  const place = (lon: number, r: number) => toXY(lon - rot, r);
+  const angleOf = (lon: number) => lonToAngleDeg(lon - rot);
+
+  // Alternating zodiac wedge arcs — decorative shading (rotated with the chart)
   const zodiacWedges = Array.from({ length: 12 }, (_, i) => {
-    const a1 = ((i * 30 - 180) * Math.PI) / 180;
-    const a2 = (((i + 1) * 30 - 180) * Math.PI) / 180;
+    const a1 = ((i * 30 - rot - 180) * Math.PI) / 180;
+    const a2 = (((i + 1) * 30 - rot - 180) * Math.PI) / 180;
     const p1o = { x: C + R_ZODIAC_OUT * Math.cos(a1), y: C - R_ZODIAC_OUT * Math.sin(a1) };
     const p2o = { x: C + R_ZODIAC_OUT * Math.cos(a2), y: C - R_ZODIAC_OUT * Math.sin(a2) };
     const p2i = { x: C + R_ZODIAC_IN * Math.cos(a2), y: C - R_ZODIAC_IN * Math.sin(a2) };
@@ -156,32 +155,10 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
     return { d, alt: i % 2 === 0 };
   });
 
-  // Aspect lines through inner ring
-  const aspectLines: { x1: number; y1: number; x2: number; y2: number; color: string; opacity: number }[] = [];
-  if (chart) {
-    for (let i = 0; i < PLANET_KEYS.length; i++) {
-      for (let j = i + 1; j < PLANET_KEYS.length; j++) {
-        const a = chart[PLANET_KEYS[i]];
-        const b = chart[PLANET_KEYS[j]];
-        if (!a || !b) continue;
-        const sep = Math.abs(((a.longitude - b.longitude + 180) % 360) - 180);
-        for (const asp of ASPECT_TYPES) {
-          if (asp.opacity === 0) continue;
-          if (Math.abs(sep - asp.angle) <= asp.orb) {
-            const p1 = toXY(a.longitude, R_PLANET_INNER);
-            const p2 = toXY(b.longitude, R_PLANET_INNER);
-            aspectLines.push({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, color: asp.color, opacity: asp.opacity });
-            break;
-          }
-        }
-      }
-    }
-  }
-
   // Planet spread positions
   const planetInputs = PLANET_KEYS.map(key => ({
     lon: chart?.[key]?.longitude ?? 0,
-    angle: lonToAngleDeg(chart?.[key]?.longitude ?? 0),
+    angle: angleOf(chart?.[key]?.longitude ?? 0),
   }));
   const minSep = (34 / R_PLANET_RING) * (180 / Math.PI);
   const spread = spreadAngles(planetInputs, minSep);
@@ -222,12 +199,12 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
           <circle cx={C} cy={C} r={R_ZODIAC_OUT}  fill="none" stroke={strokeColor} strokeWidth="1.2" />
           <circle cx={C} cy={C} r={R_ZODIAC_IN}   fill="none" stroke={strokeColor} strokeWidth="1.2" />
           <circle cx={C} cy={C} r={R_PLANET_INNER} fill="none" stroke={lightColor} strokeWidth="1" />
-          <circle cx={C} cy={C} r={R_CENTER}       fill={isDark ? 'rgba(255,255,255,0.06)' : '#F8F5EF'} stroke={lightColor} strokeWidth="1.2" />
+          <circle cx={C} cy={C} r={R_CENTER}       fill={isDark ? 'rgba(255,255,255,0.06)' : '#FFFFFF'} stroke={lightColor} strokeWidth="1.2" />
 
           {/* Zodiac sign glyphs — colored by element */}
           {ZODIAC_GLYPHS.map((glyph, i) => {
             const midLon = i * 30 + 15;
-            const { x, y } = toXY(midLon, (R_ZODIAC_OUT + R_ZODIAC_IN) / 2);
+            const { x, y } = place(midLon, (R_ZODIAC_OUT + R_ZODIAC_IN) / 2);
             return (
               <text key={`zodiac-${i}`} x={x} y={y}
                 textAnchor="middle" dominantBaseline="central"
@@ -238,19 +215,17 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
             );
           })}
 
-          {/* Aspect lines */}
-          {aspectLines.map((l, i) => (
-            <line key={`asp-${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
-              stroke={l.color} strokeWidth="0.8" opacity={l.opacity} />
-          ))}
-
-          {/* House cusps — no numbers, AC/MC labels only */}
+          {/* House cusps + every house number, with AC/MC labels */}
           {showHouses && chart && chart.houses.map((house, i) => {
-            const inner = toXY(house.cusp, R_CENTER);
-            const outer = toXY(house.cusp, R_ZODIAC_IN);
+            const inner = place(house.cusp, R_CENTER);
+            const outer = place(house.cusp, R_ZODIAC_IN);
             const isAsc = house.num === 1;
             const isMc = house.num === 10;
-            const labelPos = toXY(house.cusp, R_ZODIAC_IN - 22);
+            const labelPos = place(house.cusp, R_ZODIAC_IN - 22);
+            // House number sits in the middle of the sector, near the hub.
+            const nextCusp = chart.houses[(i + 1) % 12].cusp;
+            const span = (((nextCusp - house.cusp) % 360) + 360) % 360;
+            const numPos = place(house.cusp + span / 2, R_CENTER + 26);
             return (
               <g key={`house-${i}`}>
                 <line
@@ -259,6 +234,12 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
                   strokeWidth={isAsc || isMc ? '1.5' : '0.8'}
                   opacity={isAsc || isMc ? 0.9 : 0.6}
                 />
+                <text x={numPos.x} y={numPos.y}
+                  textAnchor="middle" dominantBaseline="central"
+                  fontSize="13" fill={mutedColor} opacity={0.8}
+                  style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
+                  {toArabicDigits(house.num)}
+                </text>
                 {(isAsc || isMc) && (
                   <text x={labelPos.x} y={labelPos.y}
                     textAnchor="middle" dominantBaseline="central"
@@ -277,9 +258,9 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
             const planet = chart[key];
             if (!planet) return null;
             const glyphSize = PLANET_SIZES[key] ?? 28;
-            const trueOuter = toXY(planet.longitude, R_PLANET_INNER + 8);
-            const trueInner = toXY(planet.longitude, R_PLANET_INNER);
-            const spreadAngle = spread[idx]?.angle ?? lonToAngleDeg(planet.longitude);
+            const trueOuter = place(planet.longitude, R_PLANET_INNER + 8);
+            const trueInner = place(planet.longitude, R_PLANET_INNER);
+            const spreadAngle = spread[idx]?.angle ?? angleOf(planet.longitude);
             const spreadRad = (spreadAngle * Math.PI) / 180;
             const sx = C + R_PLANET_RING * Math.cos(spreadRad);
             const sy = C - R_PLANET_RING * Math.sin(spreadRad);
@@ -317,7 +298,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
             if (!planet) return null;
             const label = `${planet.name} · ${formatSignDegree(planet.sign, planet.degree, planet.minute)}`;
             const idx = PLANET_KEYS.indexOf(hovered as typeof PLANET_KEYS[number]);
-            const spreadAngle = spread[idx]?.angle ?? lonToAngleDeg(planet.longitude);
+            const spreadAngle = spread[idx]?.angle ?? angleOf(planet.longitude);
             const spreadRad = (spreadAngle * Math.PI) / 180;
             const px = C + R_PLANET_RING * Math.cos(spreadRad);
             const py = C - R_PLANET_RING * Math.sin(spreadRad);

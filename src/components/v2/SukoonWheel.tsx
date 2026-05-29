@@ -24,14 +24,6 @@ export interface WheelChart {
 
 const ZODIAC_SIGNS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 
-const ASPECT_TYPES = [
-  { angle: 0, orb: 8, color: '#9C8AB8' },
-  { angle: 60, orb: 5, color: '#7E97B8' },
-  { angle: 90, orb: 7, color: '#E9785E' },
-  { angle: 120, orb: 7, color: '#8FA084' },
-  { angle: 180, orb: 8, color: '#5A3E7A' },
-];
-
 /** Fixed demo chart matching the design's defaultSukoonChart(). */
 export function defaultSukoonWheel(): WheelChart {
   return {
@@ -102,30 +94,13 @@ export function SukoonWheel({
   const signColor = dark ? '#F2EDDF' : '#171B3A';
   const spoke = dark ? 'rgba(242,237,223,0.12)' : '#E5E1D8';
 
-  // Same convention as the shared ZoomableWheel: 0° Aries at 9 o'clock (left),
-  // ecliptic longitude increasing counter-clockwise. Keeps every chart in the
-  // app spinning the same way.
+  // Same convention as the shared ZoomableWheel: rotate so the Ascendant sits on
+  // the left horizon (9 o'clock) and longitude increases counter-clockwise.
+  const rot = chart.ascLon;
   const toXY = (lon: number, r: number) => {
-    const a = (lon - 180) * (Math.PI / 180);
+    const a = (lon - rot - 180) * (Math.PI / 180);
     return { x: center + r * Math.cos(a), y: center - r * Math.sin(a) };
   };
-
-  // Aspect lines between the 10 main planets (exclude the lunar node).
-  const main = chart.planets.filter((p) => p.glyph !== '☊');
-  const aspectLines: { x1: number; y1: number; x2: number; y2: number; color: string }[] = [];
-  for (let i = 0; i < main.length; i++) {
-    for (let j = i + 1; j < main.length; j++) {
-      const sep = Math.abs(((main[i].lon - main[j].lon + 180) % 360) - 180);
-      for (const a of ASPECT_TYPES) {
-        if (Math.abs(sep - a.angle) <= a.orb) {
-          const p1 = toXY(main[i].lon, planetRadius);
-          const p2 = toXY(main[j].lon, planetRadius);
-          aspectLines.push({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, color: a.color });
-          break;
-        }
-      }
-    }
-  }
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
@@ -156,13 +131,6 @@ export function SukoonWheel({
           </g>
         );
       })}
-
-      {/* Aspect lines */}
-      <g opacity={dark ? 0.45 : 0.5}>
-        {aspectLines.map((l, i) => (
-          <line key={`asp-${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={l.color} strokeWidth="1" />
-        ))}
-      </g>
 
       {/* Planets */}
       {chart.planets.map((p, i) => {

@@ -102,11 +102,15 @@ function transformChartToHouses(chart: AstralChart | null): any[] {
     'العمل · اليومي',
     'الآخر · المرآة',
     'الأعماق · المشترك',
+    'المعنى · البعيد',
+    'الذروة · العمل',
+    'الجماعة · المستقبل',
+    'الخفاء · الانحلال',
   ];
-  
-  const houseNumbers = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
-  
-  return chart.houses.slice(0, 8).map((house, idx) => ({
+
+  const houseNumbers = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'];
+
+  return chart.houses.map((house, idx) => ({
     num: houseNumbers[idx],
     theme: houseThemes[idx],
     cusp: formatSignDegree(house.sign, house.degree),
@@ -586,7 +590,6 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               </Card>
             </Link>
           ))}
-          <div className="text-center text-sm text-coral font-medium mt-2">اعرض الاثني عشر ←</div>
         </div>
       )}
 
