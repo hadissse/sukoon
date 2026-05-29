@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { calculateChart, getSignNumber, getSignName, getSignGlyph } from '../chartCalculator';
+import { calculateChart, computeAscendant, chironLongitude, getSignNumber, getSignName, getSignGlyph } from '../chartCalculator';
+import * as Astronomy from 'astronomy-engine';
 
 // Known reference: Sun at ~15° Aries for Apr 5, 2000 UTC
 const ARIES_BIRTH: Parameters<typeof calculateChart>[0] = {
@@ -104,5 +105,42 @@ describe('calculateChart', () => {
   it('ASC and MC are different ecliptic points', () => {
     const chart = calculateChart(ARIES_BIRTH);
     expect(Math.abs(chart.asc - chart.mc)).toBeGreaterThan(5);
+  });
+});
+
+describe('computeAscendant (rising point, not the descendant)', () => {
+  // Obliquity at J2000 ≈ 23.4393°. At the equator with RAMC=0 the vernal point
+  // culminates, so 0° Cancer (90°) rises — NOT 270° (the descendant).
+  const EPS = 23.4392911;
+  it('equator, RAMC=0 → 90° (0° Cancer), not 270°', () => {
+    expect(computeAscendant(0, EPS, 0)).toBeCloseTo(90, 4);
+  });
+  it('equator, RAMC=90 → 180° (0° Libra)', () => {
+    expect(computeAscendant(90, EPS, 0)).toBeCloseTo(180, 4);
+  });
+  it('northern latitude stays ~90° ahead of the MC region (rising, not setting)', () => {
+    // RAMC=0, MC≈0° Aries; the ascendant must be in the rising quadrant (~90–180°).
+    const asc = computeAscendant(0, EPS, 40);
+    expect(asc).toBeGreaterThan(90);
+    expect(asc).toBeLessThan(180);
+  });
+});
+
+describe('Chiron accuracy (calibrated osculating elements)', () => {
+  function chironLonAt(y: number, m: number, d: number): number {
+    const t = new Astronomy.AstroTime(new Date(Date.UTC(y, m - 1, d, 12, 0, 0)));
+    return chironLongitude(t.tt + 2451545.0, t).lon;
+  }
+  // Known tropical sign-ingress dates — Chiron should be within ~1.5° of the cusp.
+  it('is near 0° Aquarius (300°) at the Feb 2005 ingress', () => {
+    expect(Math.abs(((chironLonAt(2005, 2, 21) - 300 + 540) % 360) - 180)).toBeLessThan(1.5);
+  });
+  it('is near 0° Aries (0°/360°) at the Apr 2018 ingress', () => {
+    expect(Math.abs(((chironLonAt(2018, 4, 17) - 0 + 540) % 360) - 180)).toBeLessThan(1.5);
+  });
+  it('is NOT near the old buggy value (~0° Virgo) on 2024-01-01', () => {
+    // The mislabeled node previously put Chiron at ~150° (0° Virgo); true ≈ 15° Aries.
+    const lon = chironLonAt(2024, 1, 1);
+    expect(Math.abs(((lon - 150 + 540) % 360) - 180)).toBeGreaterThan(100);
   });
 });

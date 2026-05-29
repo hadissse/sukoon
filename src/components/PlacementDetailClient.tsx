@@ -9,6 +9,7 @@ import { planetSvgKey } from '@/lib/planetMeta';
 import { getPlacementContent, SIGN_SLUGS, type VoiceContent } from '@/content/placements';
 import { getExtendedContent } from '@/content/placements-extended';
 import { syncCalibration } from '@/lib/sync';
+import { formatDegree, formatSignDegree } from '@/lib/format';
 
 function getContent(type: string, key: string): VoiceContent | null {
   return getPlacementContent(type, key) ?? getExtendedContent(type, key);
@@ -70,7 +71,7 @@ function buildHeaderAndContent(
         header: {
           glyph: '',
           svgKey: planetSvgKey(key),
-          title: `${PLANET_AR[key] ?? p.name} في ${ZODIAC_AR[p.signNumber]} · ${toArabicDigits(p.degree)}°`,
+          title: `${PLANET_AR[key] ?? p.name} في ${ZODIAC_AR[p.signNumber]} · ${formatDegree(p.degree)}`,
           meta: `البيت ${HOUSE_ORDINALS[houseNum - 1]} · ${HOUSE_THEMES[houseNum - 1]}`,
           color: coral,
         },
@@ -104,7 +105,7 @@ function buildHeaderAndContent(
         header: {
           glyph: toArabicDigits(num),
           title: `البيت ${HOUSE_ORDINALS[num - 1]}`,
-          meta: cusp ? `${HOUSE_THEMES[num - 1]} · ${cusp.sign} ${toArabicDigits(cusp.degree)}°` : HOUSE_THEMES[num - 1],
+          meta: cusp ? `${HOUSE_THEMES[num - 1]} · ${formatSignDegree(cusp.sign, cusp.degree)}` : HOUSE_THEMES[num - 1],
           color: lake,
         },
         content: getContent('house', key),
@@ -132,7 +133,7 @@ function buildHeaderAndContent(
         header: {
           glyph: best.symbol,
           title: `${PLANET_AR[a] ?? a} ${best.symbol} ${PLANET_AR[b] ?? b}`,
-          meta: best.name ? `${best.name} · فرق ${toArabicDigits(best.orb.toFixed(0))}°` : 'جانب',
+          meta: best.name ? `${best.name} · فرق ${formatDegree(best.orb.toFixed(0))}` : 'جانب',
           color: coral,
         },
         content: aspectContent,

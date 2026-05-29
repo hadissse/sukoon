@@ -1,5 +1,6 @@
 import * as Astronomy from 'astronomy-engine';
 import type { AstralChart } from './chartCalculator';
+import { toArabicDigits, ltrIsolate } from './format';
 
 const PLANET_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
@@ -49,14 +50,11 @@ export interface Transit {
   label: string; // "زحل ☌ شمسك"
 }
 
-function toArabicDigits(input: string | number): string {
-  return String(input).replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
-}
-
 export function orbLabel(orb: number): string {
   const deg = Math.floor(orb);
   const min = Math.round((orb - deg) * 60);
-  return `${toArabicDigits(deg)}°${toArabicDigits(String(min).padStart(2, '0'))}′`;
+  // Bidi-isolated so "deg°min′" never reorders inside RTL text.
+  return ltrIsolate(`${toArabicDigits(deg)}°${toArabicDigits(String(min).padStart(2, '0'))}′`);
 }
 
 export function calculateTransits(natal: AstralChart, date: Date = new Date()): Transit[] {

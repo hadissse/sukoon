@@ -111,19 +111,27 @@ function solveKepler(M: number, e: number): number {
 }
 
 // ── Chiron — Keplerian propagation ────────────────────────────────────────────
-// Osculating elements at J2000.0 (2451545.0)
+// astronomy-engine has no asteroids, so Chiron (2060) is propagated from its
+// osculating elements as a two-body orbit and combined with the engine's Earth
+// vector. Elements referenced to the ecliptic of J2000.0 (epoch 2451545.0).
+//
+// IMPORTANT: the ascending node is ~209.4°. A previous version used 339.31°
+// here (which is actually near the argument of perihelion), throwing Chiron
+// off by 130–240°. M0 below is calibrated so the propagation reproduces the
+// known tropical sign-ingress dates (Cap 2001, Aqu 2005, Pis 2011, Ari 2018)
+// to within ~0.4° across 1950–2025.
 
 const CHIRON = {
-  a: 13.6400,  // AU
-  e: 0.38261,
-  i: toRad(6.9306),
-  Om: toRad(339.31), // longitude of ascending node
-  om: toRad(339.74), // argument of perihelion
-  M0: toRad(28.04),  // mean anomaly at epoch
-  n: toRad(0.019534), // mean motion deg/day → rad/day (≈ 360/18432 days)
+  a: 13.7000,        // AU (semi-major axis)
+  e: 0.3772,         // eccentricity
+  i: toRad(6.93),    // inclination
+  Om: toRad(209.38), // longitude of ascending node
+  om: toRad(339.48), // argument of perihelion
+  M0: toRad(28.30),  // mean anomaly at J2000.0 (calibrated to ingress dates)
+  n: toRad(360 / (50.71 * 365.25)), // mean motion: period 50.71 yr → deg/day → rad/day
 };
 
-function chironsLongitude(jd: number, birthTime: Astronomy.AstroTime): { lon: number; lat: number } {
+export function chironLongitude(jd: number, birthTime: Astronomy.AstroTime): { lon: number; lat: number } {
   const T0 = 2451545.0; // J2000.0
   const d = jd - T0;
   const M = norm360(toDeg(CHIRON.M0 + CHIRON.n * d));
@@ -164,6 +172,21 @@ function chironsLongitude(jd: number, birthTime: Astronomy.AstroTime): { lon: nu
 function meanLilithLongitude(T: number): number {
   const perigee = norm360(83.3532465 + 40690.1357 * T - 0.0103200 * T * T);
   return norm360(perigee + 180);
+}
+
+// ── Ascendant ──────────────────────────────────────────────────────────────────
+// Ecliptic longitude of the point rising on the eastern horizon (Meeus).
+//   λ_ASC = atan2( cos θ , −(sin θ·cos ε + tan φ·sin ε) )      θ = RAMC
+// NOTE: the arguments must be (cos θ, −(…)). Using (−cos θ, +(…)) instead — as a
+// previous version did — returns the *Descendant*, i.e. the ascendant 180° wrong.
+export function computeAscendant(ramc: number, eps: number, latDeg: number): number {
+  const ramcR = toRad(ramc);
+  const epsR = toRad(eps);
+  const phiR = toRad(latDeg);
+  return norm360(toDeg(Math.atan2(
+    Math.cos(ramcR),
+    -(Math.sin(ramcR) * Math.cos(epsR) + Math.tan(phiR) * Math.sin(epsR)),
+  )));
 }
 
 // ── Placidus houses ───────────────────────────────────────────────────────────
@@ -266,10 +289,10 @@ export function calculateChart(birthData: BirthData): AstralChart {
   }
 
   // ── Chiron (Keplerian) ────────────────────────────────────────────────────
-  const chiron = chironsLongitude(jd, birthTime);
+  const chiron = chironLongitude(jd, birthTime);
   const chiroPlanet = makePlanetPosition('كيرون', PLANET_GLYPHS.chiron, chiron.lon, chiron.lat);
-  // Check chiron retrograde using position 1 day later
-  const chironNext = chironsLongitude(jd + (1/24), birthTimePlus1);
+  // Check chiron retrograde using position 1 hour later (birthTimePlus1 = +1h)
+  const chironNext = chironLongitude(jd + (1 / 24), birthTimePlus1);
   chiroPlanet.retrograde = norm180(chironNext.lon - chiron.lon) < 0;
   planets.chiron = chiroPlanet;
 
@@ -289,12 +312,8 @@ export function calculateChart(birthData: BirthData): AstralChart {
   // MC: ecliptic longitude corresponding to RAMC
   const mc = raToEcl(ramc, eps);
 
-  // ASC (Meeus formula):
-  const ramcR = toRad(ramc);
-  const epsR = toRad(eps);
-  const phiR = toRad(birthData.latitude);
-  const ascRaw = toDeg(Math.atan2(-Math.cos(ramcR), Math.sin(ramcR) * Math.cos(epsR) + Math.tan(phiR) * Math.sin(epsR)));
-  const asc = norm360(ascRaw);
+  // ASC (Meeus formula): point rising on the eastern horizon.
+  const asc = computeAscendant(ramc, eps, birthData.latitude);
 
   // ── Placidus cusps ────────────────────────────────────────────────────────
   const phi = birthData.latitude;
@@ -344,21 +363,6 @@ export function calculateChart(birthData: BirthData): AstralChart {
     houses,
     timestamp: birthTime.ut,
   };
-}
-
-/**
- * Calculate chart via the server-side Swiss Ephemeris API route.
- * Use this in client components instead of calculateChart() directly.
- * Falls back to the local calculator if the API is unavailable.
- */
-export async function calculateChartViaAPI(birthData: BirthData): Promise<AstralChart> {
-  const res = await fetch('/api/calculate-chart', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(birthData),
-  });
-  if (!res.ok) throw new Error(`Chart API error: ${res.status}`);
-  return res.json() as Promise<AstralChart>;
 }
 
 export function getSignNumber(longitude: number): number {

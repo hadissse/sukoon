@@ -5,19 +5,10 @@ import Link from 'next/link';
 import type { AstralChart } from '@/lib/chartCalculator';
 import { FIXED_STARS, findStarConjunctions, starLongitudeAtJD, fixedStarSlug, type StarConjunction } from '@/content/fixedStars';
 import { FrameworkLabel } from '@/components/FrameworkLabel';
-
-const ZODIAC_SIGNS_AR = ['الحمل', 'الثور', 'الجوزاء', 'السرطان', 'الأسد', 'العذراء', 'الميزان', 'العقرب', 'القوس', 'الجدي', 'الدلو', 'الحوت'];
-
-function toAr(n: number | string): string {
-  return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
-}
+import { formatLongitude, formatDegree } from '@/lib/format';
 
 function lonToSignDeg(lon: number): string {
-  const n = ((lon % 360) + 360) % 360;
-  const sign = Math.floor(n / 30);
-  const deg = Math.floor(n % 30);
-  const min = Math.round((n % 1) * 60);
-  return `${ZODIAC_SIGNS_AR[sign]} ${toAr(deg)}°${min > 0 ? ` ${toAr(min)}′` : ''}`;
+  return formatLongitude(lon);
 }
 
 type FilterKey = 'active' | 'all';
@@ -133,7 +124,7 @@ export default function FixedStarsPage() {
                         تلاقي مع {c.natalPlanetName}
                       </span>
                       <span className="text-[11px] text-ink-muted">
-                        بُعد {c.orb}°
+                        بُعد {formatDegree(c.orb)}
                       </span>
                     </div>
                   ))}

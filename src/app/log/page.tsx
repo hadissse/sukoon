@@ -6,6 +6,7 @@ import type { AstralChart } from '@/lib/chartCalculator';
 import { getCosmicStamp } from '@/lib/cosmicStamp';
 import { saveEvent, STREAM_AR, type LoggedEvent, type StreamKey } from '@/lib/events';
 import { syncEvent } from '@/lib/sync';
+import { formatSignDegree, toArabicDigits } from '@/lib/format';
 
 const PLANET_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
@@ -65,7 +66,7 @@ function planetPlacementSuggestions(chart: AstralChart | null): Suggestion[] {
       type: 'planet',
       key,
       label: `${PLANET_AR[key]} في ${p.sign}`,
-      when: `${p.degree}° ${p.sign}`,
+      when: formatSignDegree(p.sign, p.degree, p.minute),
     };
   });
 }
@@ -91,10 +92,6 @@ function SecondaryBtn({ children, onClick }: { children: React.ReactNode; onClic
       {children}
     </button>
   );
-}
-
-function toArabicDigits(input: string | number): string {
-  return String(input).replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]);
 }
 
 function LogFlow() {

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AstralChart } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
+import { formatSignDegree } from '@/lib/format';
 
 const VB = 1000;
 const C = 500;
@@ -308,7 +309,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
           {hovered && chart && (() => {
             const planet = chart[hovered as (typeof PLANET_KEYS)[number]];
             if (!planet) return null;
-            const label = `${planet.name} · ${planet.degree}° ${planet.sign}`;
+            const label = `${planet.name} · ${formatSignDegree(planet.sign, planet.degree, planet.minute)}`;
             const idx = PLANET_KEYS.indexOf(hovered as typeof PLANET_KEYS[number]);
             const spreadAngle = spread[idx]?.angle ?? lonToAngleDeg(planet.longitude);
             const spreadRad = (spreadAngle * Math.PI) / 180;
