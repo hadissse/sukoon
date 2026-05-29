@@ -47,7 +47,7 @@ function SkySection() {
 
       {/* Natal-style wheel */}
       <div className="flex justify-center px-2 mb-4">
-        <ZoomableWheel size={377} tone="paper" chart={sky} />
+        <ZoomableWheel size={377} tone="paper" chart={sky} showHouses={false} />
       </div>
 
       {/* Compact all-planets grid */}

@@ -70,9 +70,12 @@ export function SukoonWheel({
   const signColor = dark ? '#F2EDDF' : '#171B3A';
   const spoke = dark ? 'rgba(242,237,223,0.12)' : '#E5E1D8';
 
+  // Same convention as the shared ZoomableWheel: 0° Aries at 9 o'clock (left),
+  // ecliptic longitude increasing counter-clockwise. Keeps every chart in the
+  // app spinning the same way.
   const toXY = (lon: number, r: number) => {
-    const a = (lon - 90) * (Math.PI / 180);
-    return { x: center + r * Math.cos(a), y: center + r * Math.sin(a) };
+    const a = (lon - 180) * (Math.PI / 180);
+    return { x: center + r * Math.cos(a), y: center - r * Math.sin(a) };
   };
 
   // Aspect lines between the 10 main planets (exclude the lunar node).
@@ -100,17 +103,16 @@ export function SukoonWheel({
 
       {/* Sign spokes + glyphs */}
       {ZODIAC_SIGNS.map((g, i) => {
-        const a = (i * 30 - 90) * (Math.PI / 180);
-        const inner = { x: center + planetRadius * Math.cos(a), y: center + planetRadius * Math.sin(a) };
-        const outer = { x: center + outerRadius * Math.cos(a), y: center + outerRadius * Math.sin(a) };
+        const inner = toXY(i * 30, planetRadius);
+        const outer = toXY(i * 30, outerRadius);
         const labelR = zodiacRadius + size * 0.045;
-        const la = ((i * 30 + 15) - 90) * (Math.PI / 180);
+        const label = toXY(i * 30 + 15, labelR);
         return (
           <g key={`sign-${i}`}>
             <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke={spoke} strokeWidth="0.6" />
             <text
-              x={center + labelR * Math.cos(la)}
-              y={center + labelR * Math.sin(la)}
+              x={label.x}
+              y={label.y}
               textAnchor="middle"
               dy="0.35em"
               fontSize={size * 0.045}

@@ -87,9 +87,15 @@ interface ZoomableWheelProps {
   size?: number;
   tone?: 'paper' | 'white';
   chart?: AstralChart | null;
+  /**
+   * Draw house cusps + AC/MC labels. Houses/angles require a birth location,
+   * so the location-less "current sky" (transit) view passes false to avoid
+   * rendering meaningless angles.
+   */
+  showHouses?: boolean;
 }
 
-export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: ZoomableWheelProps) {
+export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, showHouses = true }: ZoomableWheelProps) {
   const [chart, setChart] = useState<AstralChart | null>(chartProp ?? null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -239,7 +245,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
           ))}
 
           {/* House cusps — no numbers, AC/MC labels only */}
-          {chart && chart.houses.map((house, i) => {
+          {showHouses && chart && chart.houses.map((house, i) => {
             const inner = toXY(house.cusp, R_CENTER);
             const outer = toXY(house.cusp, R_ZODIAC_IN);
             const isAsc = house.num === 1;
