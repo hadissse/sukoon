@@ -4,15 +4,15 @@
 
 import { V2Header } from '@/components/v2/V2Header';
 import { FooterTabBar } from '@/components/v2/FooterTabBar';
-import { SukoonWheel, defaultSukoonWheel, astralToWheelChart, houseOfLongitude } from '@/components/v2/SukoonWheel';
+import { ZoomableWheel } from '@/components/ZoomableWheel';
 import { usePrimaryChart } from '@/lib/usePrimaryChart';
 import { formatSignDegree, toArabicDigits } from '@/lib/format';
+import { houseOfLongitude } from '@/lib/chartCalculator';
 import type { AstralChart } from '@/lib/chartCalculator';
 
 // [glyph, name, position, house, retrograde]
 type Row = [string, string, string, string, boolean];
 
-// Placeholder shown only until the user has saved a natal chart.
 const DEMO_ROWS: Row[] = [
   ['☉', 'الشمس', 'الجدي ١٧°', '١٠', false],
   ['☽', 'القمر', 'الميزان ٢٣°', '١', false],
@@ -49,8 +49,8 @@ const SELF_TABS: [string, boolean][] = [
 
 export default function PositionsPage() {
   const natal = usePrimaryChart();
-  const chart = natal ? astralToWheelChart(natal) : defaultSukoonWheel();
   const rows = natal ? rowsFromChart(natal) : DEMO_ROWS;
+
   return (
     <div className="max-w-[430px] mx-auto w-full pb-28">
       <V2Header title="الخريطة" />
@@ -71,7 +71,7 @@ export default function PositionsPage() {
       </div>
 
       <div className="mt-2 px-2 flex justify-center">
-        <SukoonWheel chart={chart} size={332} tone="paper" />
+        <ZoomableWheel chart={natal} tone="paper" size={332} />
       </div>
 
       <div className="px-4 mt-1.5">

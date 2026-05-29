@@ -380,3 +380,14 @@ export function getSignName(signNumber: number): string {
 export function getSignGlyph(signNumber: number): string {
   return ZODIAC_SIGNS[signNumber % 12];
 }
+
+export function houseOfLongitude(chart: AstralChart, lon: number): number {
+  const norm = (d: number) => ((d % 360) + 360) % 360;
+  const L = norm(lon);
+  for (let i = 0; i < 12; i++) {
+    const a = norm(chart.houses[i].cusp);
+    const b = norm(chart.houses[(i + 1) % 12].cusp);
+    if (norm(L - a) < norm(b - a)) return i + 1;
+  }
+  return 1;
+}
