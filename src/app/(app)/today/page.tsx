@@ -394,7 +394,7 @@ export default function TodayPage() {
         {/* Logo — top right, white */}
         <div className="absolute top-5 right-5 flex items-center gap-2.5">
           <img src="/sukoon-logo-icon.svg" alt="" aria-hidden="true" className="h-10 w-10 invert" />
-          <img src="/sukun new logo/sukoon typo v2 white.svg" alt="سُكون" className="h-7" />
+          <img src="/sukoon-logo-white.svg" alt="سُكون" className="h-7" />
         </div>
         <div className="absolute inset-0 flex flex-col justify-end p-6">
           {heroText && (
