@@ -35,11 +35,17 @@ export async function upgradeToEmail(email: string, password: string): Promise<U
   return data.user;
 }
 
-export async function signInWithGoogle(): Promise<void> {
+export async function signInWithGoogle(): Promise<{ error: string | null }> {
   const sb = getSupabase();
-  if (!sb) return;
+  if (!sb) return { error: 'خدمة المصادقة غير متاحة' };
   const redirectTo = `${window.location.origin}/auth/callback`;
-  await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo, queryParams: { access_type: 'offline', prompt: 'consent' } },
+  });
+  if (error) return { error: error.message };
+  return { error: null };
+  // Browser will redirect to Google — no code after this runs
 }
 
 export async function signInWithApple(): Promise<void> {

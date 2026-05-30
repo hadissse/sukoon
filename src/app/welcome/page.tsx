@@ -42,15 +42,18 @@ function Field({ label, type, value, onChange, placeholder }: {
 // ─────────────────────────────────────────────────────────────────────────────
 // Social auth button
 // ─────────────────────────────────────────────────────────────────────────────
-function SocialBtn({ onClick, icon, label }: { onClick: () => void; icon: React.ReactNode; label: string }) {
+function SocialBtn({ onClick, icon, label, loading }: { onClick: () => void; icon: React.ReactNode; label: string; loading?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="h-[52px] rounded-[14px] bg-white border border-rule-soft flex items-center gap-3.5 px-5 hover:bg-cream-soft transition-colors w-full"
+      disabled={loading}
+      className="h-[52px] rounded-[14px] bg-white border border-rule-soft flex items-center gap-3.5 px-5 hover:bg-cream-soft transition-colors w-full disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      {icon}
-      <span className="text-[15px] font-medium text-ink">{label}</span>
+      {loading ? (
+        <div className="w-5 h-5 rounded-full border-2 border-ink/20 border-t-ink animate-spin shrink-0" />
+      ) : icon}
+      <span className="text-[15px] font-medium text-ink">{loading ? 'جارٍ التحويل...' : label}</span>
     </button>
   );
 }
@@ -78,6 +81,7 @@ export default function WelcomePage() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // Mobile: auto-advance splash → breathe → welcome
   useEffect(() => {
@@ -111,6 +115,15 @@ export default function WelcomePage() {
     setAuthLoading(false);
     if (error) { setAuthError('تعذّر إنشاء الحساب — تحقق من بريدك'); return; }
     setPhase('verify');
+  };
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    setAuthError('');
+    const { error } = await signInWithGoogle();
+    // If we're still here, the redirect didn't happen — show error
+    setGoogleLoading(false);
+    if (error) setAuthError('تعذّر تسجيل الدخول عبر جوجل — حاول مجدداً');
   };
 
   const handleReset = async () => {
@@ -190,7 +203,8 @@ export default function WelcomePage() {
             handleSignUp={handleSignUp}
             handleReset={handleReset}
             onVerifyDone={() => router.push('/today')}
-            onGoogleAuth={() => { signInWithGoogle(); router.push('/today'); }}
+            onGoogleAuth={handleGoogle}
+            googleLoading={googleLoading}
           />
         )}
       </div>
@@ -208,7 +222,8 @@ export default function WelcomePage() {
             handleSignUp={handleSignUp}
             handleReset={handleReset}
             onVerifyDone={() => router.push('/today')}
-            onGoogleAuth={() => { signInWithGoogle(); router.push('/today'); }}
+            onGoogleAuth={handleGoogle}
+            googleLoading={googleLoading}
           />
         </div>
       </div>
@@ -236,6 +251,7 @@ interface AuthProps {
   handleReset: () => void;
   onVerifyDone: () => void;
   onGoogleAuth: () => void;
+  googleLoading?: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -334,6 +350,7 @@ function DesktopAuthCard(p: AuthProps) {
       <div className="flex flex-col gap-2.5">
         <SocialBtn
           onClick={p.onGoogleAuth}
+          loading={p.googleLoading}
           label="المتابعة عبر جوجل"
           icon={
             <svg width="20" height="20" viewBox="0 0 24 24" className="shrink-0">
@@ -461,7 +478,7 @@ function MobileAuthCard(p: AuthProps) {
       <div className="px-6 pb-12 flex flex-col gap-3">
         <h2 className="font-serif text-[22px] text-ink mb-1">أنشئ حسابًا</h2>
         <p className="text-sm text-ink-muted mb-2 leading-[1.7]">زامن تقدّمك عبر أجهزتك واحفظ خريطتك النجمية.</p>
-        <SocialBtn onClick={p.onGoogleAuth} label="المتابعة عبر جوجل" icon={
+        <SocialBtn onClick={p.onGoogleAuth} loading={p.googleLoading} label="المتابعة عبر جوجل" icon={
           <svg width="20" height="20" viewBox="0 0 24 24" className="shrink-0">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
