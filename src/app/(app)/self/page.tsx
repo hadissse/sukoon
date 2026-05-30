@@ -516,7 +516,6 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                 };
                 // Gradient for all non-video planets — one per planet
                 const GRAD: Record<string, string> = {
-                  ac:        'linear-gradient(140deg, #C8B8E8 0%, #8B6BB0 100%)',
                   mercury:   'linear-gradient(140deg, #B0C8D8 0%, #507090 100%)',
                   venus:     'linear-gradient(140deg, #F0C8D0 0%, #C87090 100%)',
                   mars:      'linear-gradient(140deg, #F0A878 0%, #C04020 100%)',
