@@ -9,7 +9,7 @@ interface HeaderProps {
 export function Header({ title = 'سُكون' }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-cream/90 backdrop-blur-xl safe-top">
-      <div className="flex items-center justify-between max-w-[430px] mx-auto h-11 px-5">
+      <div className="flex items-center justify-between max-w-[430px] md:max-w-5xl mx-auto h-11 px-5 md:px-8">
         <div className="flex items-center gap-3">
           <Link href="/settings" className="p-1 -m-1 text-ink-muted hover:text-ink transition-colors" aria-label="الإعدادات">
             {/* Sliders / controls icon — clearly reads as settings */}

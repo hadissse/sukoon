@@ -56,7 +56,7 @@ export function TabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-white/90 backdrop-blur-xl border-t border-rule-soft safe-bottom z-50">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white/90 backdrop-blur-xl border-t border-rule-soft safe-bottom z-50">
       <div className="flex items-center justify-around max-w-[430px] mx-auto h-[52px]">
         {tabs.map((tab) => {
           const active = pathname.startsWith('/' + tab.key) || (tab.key === 'today' && pathname === '/today');
