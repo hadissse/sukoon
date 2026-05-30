@@ -45,3 +45,5 @@ next-env.d.ts
 *.pdf
 .env*.local
 .open-next
+.wrangler/
+.claude/worktrees/
