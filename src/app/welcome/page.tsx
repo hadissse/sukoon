@@ -221,7 +221,7 @@ export default function WelcomePage() {
 
       {/* ── Desktop: circular card ── */}
       <div className="hidden md:flex flex-1 items-center justify-center px-6 py-8">
-        <div className="w-[680px] h-[680px] flex items-center justify-center" style={{ clipPath: 'circle(50%)' }}>
+        <div className="w-[680px] h-[680px] flex items-center justify-center" style={{ clipPath: 'circle(50%)', paddingBottom: '160px' }}>
           <div className="w-[460px]">
             <DesktopAuthCard
               phase={isAuthPhase ? phase : 'welcome'}
