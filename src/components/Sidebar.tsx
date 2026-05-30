@@ -37,8 +37,8 @@ export function Sidebar() {
       <div className="flex flex-col h-full px-5 py-6">
         {/* Brand */}
         <Link href="/today" className="flex items-center gap-3 px-2 mb-8" aria-label="سُكون">
-          <SukoonIcon size={52} />
-          <Logo height={22} color="#171B3A" />
+          <SukoonIcon size={72} />
+          <Logo height={28} color="#171B3A" />
         </Link>
 
         {/* Primary navigation */}

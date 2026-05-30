@@ -101,7 +101,7 @@ export default function WelcomePage() {
     const { error } = await signInWithEmail(email, password);
     setAuthLoading(false);
     if (error) { setAuthError('بيانات الدخول غير صحيحة'); return; }
-    router.push('/onboarding');
+    router.push('/today');
   };
 
   const handleSignUp = async () => {
@@ -182,9 +182,9 @@ export default function WelcomePage() {
             handleSignIn={handleSignIn}
             handleSignUp={handleSignUp}
             handleReset={handleReset}
-            onVerifyDone={() => router.push('/onboarding')}
-            onGoogleAuth={() => { signInWithGoogle(); router.push('/onboarding'); }}
-            onAppleAuth={() => { signInWithApple(); router.push('/onboarding'); }}
+            onVerifyDone={() => router.push('/today')}
+            onGoogleAuth={() => { signInWithGoogle(); router.push('/today'); }}
+            onAppleAuth={() => { signInWithApple(); router.push('/today'); }}
           />
         )}
       </div>
@@ -201,9 +201,9 @@ export default function WelcomePage() {
             handleSignIn={handleSignIn}
             handleSignUp={handleSignUp}
             handleReset={handleReset}
-            onVerifyDone={() => router.push('/onboarding')}
-            onGoogleAuth={() => { signInWithGoogle(); router.push('/onboarding'); }}
-            onAppleAuth={() => { signInWithApple(); router.push('/onboarding'); }}
+            onVerifyDone={() => router.push('/today')}
+            onGoogleAuth={() => { signInWithGoogle(); router.push('/today'); }}
+            onAppleAuth={() => { signInWithApple(); router.push('/today'); }}
           />
         </div>
       </div>
