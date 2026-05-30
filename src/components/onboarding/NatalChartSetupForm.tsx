@@ -180,6 +180,25 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
         </div>
         {!timeUnknown && (
           <div className="flex gap-2 items-end">
+            {/* AM/PM — first in JSX = rightmost in RTL */}
+            <div>
+              <label className="block text-xs text-ink-muted mb-1 text-center opacity-0 select-none">—</label>
+              <div className="flex rounded-[14px] overflow-hidden border border-rule-soft">
+                {(['PM', 'AM'] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setAmPm(p)}
+                    className={`px-4 py-3 text-sm font-medium transition-colors ${
+                      amPm === p ? 'bg-ink text-cream' : 'bg-cream-soft text-ink-muted'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Hour — second in JSX = middle in RTL */}
             <div className="flex-1">
               <label className="block text-xs text-ink-muted mb-1 text-center">الساعة</label>
               <input
@@ -195,6 +214,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                 className={fieldCls}
               />
             </div>
+            {/* Minute — last in JSX = leftmost in RTL */}
             <div className="flex-1">
               <label className="block text-xs text-ink-muted mb-1 text-center">الدقيقة</label>
               <input
@@ -209,23 +229,6 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                 }}
                 className={fieldCls}
               />
-            </div>
-            <div>
-              <label className="block text-xs text-ink-muted mb-1 text-center opacity-0 select-none">—</label>
-              <div className="flex rounded-[14px] overflow-hidden border border-rule-soft">
-                {(['AM', 'PM'] as const).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setAmPm(p)}
-                    className={`px-4 py-3 text-sm font-medium transition-colors ${
-                      amPm === p ? 'bg-ink text-cream' : 'bg-cream-soft text-ink-muted'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         )}
