@@ -508,37 +508,28 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               {/* Gradient cards for Sun / Moon / AC — square, colored fill, white text */}
               {/* Planet color map — gradient fills for luminaries+AC, stroke-only for rest */}
               {(() => {
-                // Video backgrounds for luminaries + AC
-                const VIDEO: Record<string, string> = {
-                  sun:  '/media/planet-bg-1.webm',
-                  moon: '/media/planet-bg-2.webm',
-                  ac:   '/media/planet-bg-1.webm',
+                // Video only for Sun and Moon
+                const VIDEO: Record<string, { src: string; overlay: string }> = {
+                  sun:  { src: '/media/planet-bg-1.webm', overlay: 'linear-gradient(to top, rgba(160,60,20,0.65) 0%, rgba(100,40,10,0.2) 60%, transparent 100%)' },
+                  moon: { src: '/media/planet-bg-2.webm', overlay: 'linear-gradient(to top, rgba(30,60,110,0.65) 0%, rgba(20,40,80,0.2) 60%, transparent 100%)' },
                 };
-                // Overlay tints to keep luminaries recognizable
-                const VIDEO_OVERLAY: Record<string, string> = {
-                  sun:  'linear-gradient(to top, rgba(180,80,30,0.55) 0%, rgba(120,60,20,0.15) 60%, transparent 100%)',
-                  moon: 'linear-gradient(to top, rgba(40,70,120,0.55) 0%, rgba(30,50,90,0.15) 60%, transparent 100%)',
-                  ac:   'linear-gradient(to top, rgba(80,40,140,0.55) 0%, rgba(60,30,100,0.15) 60%, transparent 100%)',
-                };
-                // Gradient fills for secondary planets
+                // Gradient for all non-video planets — one per planet
                 const GRAD: Record<string, string> = {
-                  saturn:    'linear-gradient(140deg, #9B9BB0 0%, #5C5C7A 100%)',
-                  venus:     'linear-gradient(140deg, #F0C8D0 0%, #C87090 100%)',
-                  northNode: 'linear-gradient(140deg, #F0D890 0%, #B88820 100%)',
+                  ac:        'linear-gradient(140deg, #C8B8E8 0%, #8B6BB0 100%)',
                   mercury:   'linear-gradient(140deg, #B0C8D8 0%, #507090 100%)',
+                  venus:     'linear-gradient(140deg, #F0C8D0 0%, #C87090 100%)',
                   mars:      'linear-gradient(140deg, #F0A878 0%, #C04020 100%)',
+                  jupiter:   'linear-gradient(140deg, #C9D2BE 0%, #6A8060 100%)',
+                  saturn:    'linear-gradient(140deg, #9B9BB0 0%, #5C5C7A 100%)',
+                  uranus:    'linear-gradient(140deg, #B8D8D8 0%, #406878 100%)',
+                  neptune:   'linear-gradient(140deg, #B0B0D8 0%, #4040A0 100%)',
+                  pluto:     'linear-gradient(140deg, #888898 0%, #404050 100%)',
+                  northNode: 'linear-gradient(140deg, #F0D890 0%, #B88820 100%)',
+                  southNode: 'linear-gradient(140deg, #D0C8A8 0%, #887850 100%)',
+                  ic:        'linear-gradient(140deg, #D8C8F0 0%, #9070B8 100%)',
+                  dc:        'linear-gradient(140deg, #D0C0E8 0%, #8060A8 100%)',
+                  mc:        'linear-gradient(140deg, #C0B0D8 0%, #705098 100%)',
                 };
-                // Stroke-only for remaining planets
-                const STROKE: Record<string, string> = {
-                  jupiter:   '#8FA084', uranus:    '#7E97B8',
-                  neptune:   '#8078B8', pluto:     '#606080',
-                  southNode: '#A09878', ic:        '#C8B8E8',
-                  dc:        '#C8B8E8', mc:        '#C8B8E8',
-                };
-
-                const videoItems    = gridItems.filter(i => i.key in VIDEO);
-                const gradItems     = gridItems.filter(i => i.key in GRAD);
-                const strokeItems   = gridItems.filter(i => !(i.key in VIDEO) && !(i.key in GRAD));
 
                 const iconStyle = (svgKey: string, color: string) => ({
                   WebkitMaskImage: `url('/svg/${svgKey}.svg')`,
@@ -550,71 +541,40 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                 });
 
                 return (
-                  <div className="flex flex-col gap-3">
-                    {/* Luminaries + AC — animated video background */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {videoItems.map(item => (
+                  // Single unified grid — all cards same size, same gap
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {gridItems.map(item => {
+                      const vid = VIDEO[item.key];
+                      const grad = GRAD[item.key] ?? 'linear-gradient(140deg, #E8E2D8 0%, #C0B8A8 100%)';
+
+                      return (
                         <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
-                          <div className="rounded-[18px] aspect-square flex flex-col justify-end p-4 relative overflow-hidden">
-                            <video
-                              autoPlay muted loop playsInline
-                              className="absolute inset-0 w-full h-full object-cover"
-                            >
-                              <source src={VIDEO[item.key]} type="video/webm" />
-                            </video>
-                            {/* Color overlay */}
-                            <div className="absolute inset-0" style={{ background: VIDEO_OVERLAY[item.key] }} />
+                          <div
+                            className="rounded-[18px] aspect-square flex flex-col justify-end p-4 relative overflow-hidden"
+                            style={vid ? undefined : { background: grad }}
+                          >
+                            {/* Video background for Sun and Moon only */}
+                            {vid && (
+                              <>
+                                <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover">
+                                  <source src={vid.src} type="video/webm" />
+                                </video>
+                                <div className="absolute inset-0" style={{ background: vid.overlay }} />
+                              </>
+                            )}
                             {/* Planet icon */}
-                            <div className="absolute top-3 left-3 w-8 h-8 opacity-60 z-10" style={iconStyle(item.svgKey, 'rgba(255,255,255,0.85)')} />
-                            <div className="relative z-10 font-serif text-[17px] text-white leading-snug drop-shadow-sm">
+                            <div
+                              className="absolute top-3 left-3 w-7 h-7 opacity-55 z-10"
+                              style={iconStyle(item.svgKey, 'rgba(255,255,255,0.85)')}
+                            />
+                            <div className="relative z-10 font-serif text-[16px] text-white leading-snug drop-shadow-sm">
                               {item.name}{item.rx ? ' ℞' : ''}
                             </div>
-                            <div className="relative z-10 text-[12px] text-white/75 mt-0.5 drop-shadow-sm">{item.pos}</div>
+                            <div className="relative z-10 text-[11px] text-white/70 mt-0.5 drop-shadow-sm">{item.pos}</div>
                           </div>
                         </Link>
-                      ))}
-                    </div>
-
-                    {/* Saturn, Venus, North Node, Mercury, Mars — gradient fill, white text */}
-                    {gradItems.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {gradItems.map(item => (
-                          <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
-                            <div
-                              className="rounded-[18px] aspect-square flex flex-col justify-end p-4 relative overflow-hidden"
-                              style={{ background: GRAD[item.key] }}
-                            >
-                              <div className="absolute top-3 left-3 w-7 h-7 opacity-50" style={iconStyle(item.svgKey, 'rgba(255,255,255,0.9)')} />
-                              <div className="font-serif text-[16px] text-white leading-snug">
-                                {item.name}{item.rx ? ' ℞' : ''}
-                              </div>
-                              <div className="text-[11px] text-white/70 mt-0.5">{item.pos}</div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Remaining planets: white + colored stroke */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-                      {strokeItems.map(item => {
-                        const stroke = STROKE[item.key] ?? '#E0DBD3';
-                        return (
-                          <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
-                            <div
-                              className="rounded-[16px] aspect-square flex flex-col justify-end p-3 relative overflow-hidden bg-white"
-                              style={{ border: `1.5px solid ${stroke}` }}
-                            >
-                              <div className="absolute top-3 left-3 w-6 h-6" style={iconStyle(item.svgKey, stroke)} />
-                              <div className="text-[14px] font-semibold text-ink leading-snug">
-                                {item.name}{item.rx ? ' ℞' : ''}
-                              </div>
-                              <div className="text-[11px] text-ink-muted mt-0.5">{item.pos}</div>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
+                      );
+                    })}
                   </div>
                 );
               })()}
