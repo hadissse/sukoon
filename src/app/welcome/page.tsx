@@ -312,7 +312,6 @@ function DesktopAuthCard(p: AuthProps) {
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="font-serif text-2xl text-ink">أنشئ حسابك</h1>
-          <p className="text-sm text-ink-muted mt-1">زامن تقدّمك عبر أجهزتك.</p>
         </div>
         <div className="flex flex-col gap-3">
           <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
@@ -489,7 +488,6 @@ function MobileAuthCard(p: AuthProps) {
       </div>
       <div className="px-6 pb-12 flex flex-col gap-3">
         <h2 className="font-serif text-[22px] text-ink mb-1">أنشئ حسابًا</h2>
-        <p className="text-sm text-ink-muted mb-2 leading-[1.7]">زامن تقدّمك عبر أجهزتك واحفظ خريطتك النجمية.</p>
         {p.authError && <p className="text-[13px] text-coral bg-coral/10 rounded-xl px-3 py-2">{p.authError}</p>}
         <SocialBtn onClick={p.onGoogleAuth} loading={p.googleLoading} label="المتابعة عبر جوجل" icon={
           <svg width="20" height="20" viewBox="0 0 24 24" className="shrink-0">
