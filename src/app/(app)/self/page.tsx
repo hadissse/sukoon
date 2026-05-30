@@ -30,7 +30,7 @@ import {
 import type { HousePosition } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
 import { FIXED_STARS, findStarConjunctions, starLongitudeAtJD, fixedStarSlug, type StarConjunction } from '@/content/fixedStars';
-import { PB_TRANSITS, type GreatTransit } from '@/app/explore/biographyData';
+import { UNIFIED_TIMELINE, type UnifiedTimelineItem } from '@/app/explore/biographyData';
 
 const ZODIAC_SIGNS_AR_FS = ['الحمل', 'الثور', 'الجوزاء', 'السرطان', 'الأسد', 'العذراء', 'الميزان', 'العقرب', 'القوس', 'الجدي', 'الدلو', 'الحوت'];
 function toAr(n: number | string): string {
@@ -1072,25 +1072,43 @@ function BodyView() {
   );
 }
 
-const LIFE_ARC_PHASES = [
-  { start: 0, end: 7, name: 'الطفولة الأولى', planet: 'القمر', planetKey: 'moon', desc: 'المرحلة الأولى من الوجود. بناء الجسد وتأسيس العالم الحسّي. القمر يحكم قوى النمو والتكيّف.' },
-  { start: 7, end: 14, name: 'الطفولة الثانية', planet: 'عطارد', planetKey: 'mercury', desc: 'النمو الذهني والاجتماعي. اكتساب اللغة والمنطق وأدوات التفكير.' },
-  { start: 14, end: 21, name: 'المراهقة', planet: 'الزهرة', planetKey: 'venus', desc: 'الصحوة العاطفية. البحث عن الهوية والجمال والعلاقة بالآخر.' },
-  { start: 21, end: 28, name: 'بناء الذات', planet: 'الشمس', planetKey: 'sun', desc: 'بناء هوية مستقلة. الانطلاق نحو العالم بإرادة واعية.' },
-  { start: 28, end: 35, name: 'مرحلة المريخ', planet: 'المريخ', planetKey: 'mars', desc: 'قوة الإرادة والصراع. اختبار ما بُني في المرحلة السابقة. الأهداف تُصطدم بالواقع.' },
-  { start: 35, end: 42, name: 'مرحلة المشتري', planet: 'المشتري', planetKey: 'jupiter', desc: 'منتصف الحياة. التوسّع أو الانكماش. القدرات النفسية تبلغ ذروتها. عند ~٤٢ تحدث مقابلة أورانوس — لحظة اليقظة التي تسأل: «هل عشت حياتي أم حياة غيري؟»\n\nفي نظام هوبر، النقطة المنخفضة حول سن ٣٦ هي لحظة المراجعة الصامتة — حيث يعيد الإنسان تقييم كل ما بناه.' },
-  { start: 42, end: 49, name: 'مرحلة زحل', planet: 'زحل', planetKey: 'saturn', desc: 'العودة إلى الجوهر. الحصاد والتعديل الصعب. ما لا يصمد يتساقط.' },
-  { start: 49, end: 56, name: 'مرحلة أورانوس', planet: 'أورانوس', planetKey: 'uranus', desc: 'التحرر من القوالب. ما لم يُقَل يطفو إلى السطح. ثورة داخلية هادئة.' },
-  { start: 56, end: 63, name: 'مرحلة نبتون', planet: 'نبتون', planetKey: 'neptune', desc: 'الذوبان والتسامح. البحث عن المعنى الروحي. الحدود بين الأنا والعالم ترقّ.' },
-  { start: 63, end: 70, name: 'مرحلة بلوتو', planet: 'بلوتو', planetKey: 'pluto', desc: 'التحول الأخير. مواجهة الموروث والزائل. ما يتبقّى هو الجوهر.' },
-];
+// UNIFIED_TIMELINE is imported from biographyData
 
 function toArabicNumStr(n: number): string {
   return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
 }
 
-function LifeArcView({ chart }: { chart: AstralChart | null }) {
-  const [expanded, setExpanded] = useState<number | null>(null);
+const TRANSIT_ESSAY_LINKS = [
+  { slug: 'jupiter-return', svgKey: 'jupiter', title: 'عودة المشتري', sub: 'كلّ ١٢ سنةً · التوسّع والأُفق', color: '#9C8AB8', readTime: '٦ دقائق' },
+  { slug: 'chiron-return', svgKey: 'chiron',   title: 'عودة كيرون',  sub: 'حوالي سن ٥٠ · الجرح المُعلِّم', color: '#A8A8A8', readTime: '٧ دقائق' },
+  { slug: 'uranus-opposition', svgKey: 'uranus', title: 'تقابل أورانوس', sub: 'حوالي سن ٤٢ · يقظة منتصف الحياة', color: '#7E97B8', readTime: '٧ دقائق' },
+];
+
+// ── Planet colour map for timeline dots ──────────────────────────────────
+const PLANET_COLOR: Record<string, string> = {
+  moon: '#8FA8C8', mercury: '#6BAD9B', venus: '#C08ABF', sun: '#D4A843',
+  mars: '#C87070', jupiter: '#9C8AB8', saturn: '#7E97B8', uranus: '#7EC8C8',
+  neptune: '#6B8ABF', pluto: '#8A7070', chiron: '#A8A8A8',
+};
+
+function itemStatus(
+  item: UnifiedTimelineItem,
+  currentAge: number | null,
+): 'past' | 'current' | 'upcoming' {
+  if (currentAge === null) return 'upcoming';
+  if (item.type === 'phase') {
+    if (currentAge >= item.age[1]) return 'past';
+    if (currentAge >= item.age[0]) return 'current';
+    return 'upcoming';
+  }
+  // transit: active window ~= age[0]–age[1]
+  if (currentAge > item.age[1]) return 'past';
+  if (currentAge >= item.age[0]) return 'current';
+  return 'upcoming';
+}
+
+function UnifiedBiographyView() {
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
   const [birthYear, setBirthYear] = useState<number | null>(null);
 
   useEffect(() => {
@@ -1102,295 +1120,249 @@ function LifeArcView({ chart }: { chart: AstralChart | null }) {
 
   const currentAge = birthYear ? new Date().getFullYear() - birthYear : null;
 
-  const currentPhaseIdx = currentAge !== null
-    ? LIFE_ARC_PHASES.findIndex(p => currentAge >= p.start && currentAge < p.end)
-    : -1;
+  // Auto-expand the current or next item
+  useEffect(() => {
+    if (expandedIdx !== null) return;
+    const idx = UNIFIED_TIMELINE.findIndex(item => itemStatus(item, currentAge) === 'current');
+    if (idx >= 0) {
+      setExpandedIdx(idx);
+    } else {
+      const nextIdx = UNIFIED_TIMELINE.findIndex(item => itemStatus(item, currentAge) === 'upcoming');
+      if (nextIdx >= 0) setExpandedIdx(nextIdx);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAge]);
 
-  const currentPhase = currentPhaseIdx >= 0 ? LIFE_ARC_PHASES[currentPhaseIdx] : null;
-
-  const phaseProgress = currentPhase && currentAge !== null
-    ? (currentAge - currentPhase.start) / (currentPhase.end - currentPhase.start)
+  // Current phase for top summary card
+  const currentPhaseItem = UNIFIED_TIMELINE.find(
+    item => item.type === 'phase' && itemStatus(item, currentAge) === 'current'
+  );
+  const phaseProgress = currentPhaseItem && currentAge !== null
+    ? (currentAge - currentPhaseItem.age[0]) / (currentPhaseItem.age[1] - currentPhaseItem.age[0])
     : null;
 
-  const midPhaseAge = currentPhase ? (currentPhase.start + currentPhase.end) / 2 : null;
+  const maskStyle = (key: string, color: string) => ({
+    WebkitMaskImage: `url('/svg/${key}.svg')`, maskImage: `url('/svg/${key}.svg')`,
+    WebkitMaskSize: 'contain', maskSize: 'contain',
+    WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+    WebkitMaskPosition: 'center', maskPosition: 'center',
+    background: color,
+  });
 
   return (
-    <div className="px-5 pb-8 flex flex-col gap-4">
-      {/* Header */}
+    <div className="px-5 pb-10 flex flex-col gap-4">
+      {/* Section header */}
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
           <span className="text-coral text-xs font-semibold tracking-wider">✦</span>
           <span className="text-[11px] text-ink-muted font-semibold tracking-wider">السيرة البانورامية</span>
         </div>
-        <p className="text-xs text-ink-muted leading-[1.6] mt-1">المراحل السبعينية في حياتك حسب التقليد الأنثروبوصوفي.</p>
+        <p className="text-xs text-ink-muted leading-[1.6] mt-1">
+          مراحل شتاينر السبعينية وعبورات الكواكب الكبرى — خطٌّ زمني واحد عبر حياتك.
+        </p>
       </div>
 
       <FrameworkLabel label="قراءة العلم الروحاني" />
 
-      {/* Current age + phase summary */}
-      {currentAge !== null && currentPhase && phaseProgress !== null ? (
+      {/* Current phase summary card */}
+      {currentAge !== null && currentPhaseItem && phaseProgress !== null ? (
         <div className="bg-white rounded-[18px] p-4 border border-rule-soft">
           <div className="flex items-baseline justify-between mb-3">
             <div>
-              <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-0.5">العمر</div>
-              <div className="font-serif text-3xl text-ink">{toArabicNumStr(currentAge)} <span className="text-base text-ink-muted font-sans">سنة</span></div>
+              <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-0.5">عمرك الآن</div>
+              <div className="font-serif text-3xl text-ink">
+                {toArabicNumStr(currentAge)}{' '}
+                <span className="text-base text-ink-muted font-sans">سنة</span>
+              </div>
             </div>
             <div className="text-right">
               <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-0.5">المرحلة</div>
-              <div className="font-serif text-xl text-coral">{currentPhase.planet}</div>
+              <div className="font-serif text-xl text-coral">{currentPhaseItem.planet}</div>
             </div>
           </div>
-          {/* Phase progress bar */}
           <div className="relative h-6 flex items-center mb-1">
             <div className="absolute inset-x-0 h-1 rounded-full bg-cream-soft" />
-            <div className="absolute h-1 rounded-full bg-coral" style={{ width: `${phaseProgress * 100}%` }} />
-            <div className="absolute w-2.5 h-2.5 rounded-full bg-coral border-2 border-white shadow-sm" style={{ left: `calc(${phaseProgress * 100}% - 5px)` }} />
-            <div className="absolute left-0 top-5 text-[10px] text-ink-muted font-mono">{toArabicNumStr(currentPhase.start)}</div>
-            <div className="absolute right-0 top-5 text-[10px] text-ink-muted font-mono">{toArabicNumStr(currentPhase.end)}</div>
+            <div
+              className="absolute h-1 rounded-full bg-coral"
+              style={{ width: `${phaseProgress * 100}%` }}
+            />
+            <div
+              className="absolute w-2.5 h-2.5 rounded-full bg-coral border-2 border-white shadow-sm"
+              style={{ left: `calc(${phaseProgress * 100}% - 5px)` }}
+            />
+            <div className="absolute left-0 top-5 text-[10px] text-ink-muted font-mono">
+              {toArabicNumStr(currentPhaseItem.age[0])}
+            </div>
+            <div className="absolute right-0 top-5 text-[10px] text-ink-muted font-mono">
+              {toArabicNumStr(currentPhaseItem.age[1])}
+            </div>
           </div>
           <div className="mt-5 text-[11px] text-ink-muted text-center">
-            منتصف المرحلة · سن ~{toArabicNumStr(Math.round(midPhaseAge!))}
+            {currentPhaseItem.name} · {currentPhaseItem.theme}
           </div>
         </div>
-      ) : (
+      ) : currentAge === null ? (
         <div className="bg-cream-soft rounded-[14px] p-4 text-sm text-ink-muted text-center">
-          أدخل بيانات ميلادك لحساب مرحلتك.
+          أدخل بيانات ميلادك لحساب مرحلتك في الخطّ الزمني.
         </div>
-      )}
+      ) : null}
 
-      {/* Phases list */}
-      <div className="font-serif text-base text-ink mb-1">المراحل السبعينية</div>
-      <div className="flex flex-col gap-2">
-        {LIFE_ARC_PHASES.map((phase, i) => {
-          const status = currentAge === null ? 'unknown'
-            : currentAge >= phase.end ? 'past'
-            : i === currentPhaseIdx ? 'current'
-            : 'future';
-          const isExpanded = expanded === i || status === 'current';
+      {/* Unified chronological timeline */}
+      <div className="font-serif text-base text-ink mb-1">الخطّ الزمني</div>
+      <div className="flex flex-col gap-0">
+        {UNIFIED_TIMELINE.map((item, idx) => {
+          const status = itemStatus(item, currentAge);
+          const isExpanded = expandedIdx === idx;
+          const dotColor = status === 'current'
+            ? '#E9785E'
+            : status === 'past'
+            ? '#C0B89A'
+            : PLANET_COLOR[item.svgKey] ?? '#9A9482';
+
+          const isPhase = item.type === 'phase';
+          const cardBg = status === 'current'
+            ? 'bg-white border-coral/40 shadow-sm'
+            : status === 'past'
+            ? 'bg-white border-rule-soft opacity-60'
+            : 'bg-white border-rule-soft';
+
+          // Personal year calculation
+          const personalYear = birthYear ? birthYear + Math.round(item.sortAge) : null;
 
           return (
-            <button
-              key={i}
-              onClick={() => setExpanded(expanded === i ? null : i)}
-              className={`w-full text-right rounded-[14px] p-3.5 border transition-all ${
-                status === 'current'
-                  ? 'bg-white border-coral/40 shadow-sm'
-                  : status === 'past'
-                  ? 'bg-white border-rule-soft opacity-50'
-                  : 'bg-white border-rule-soft'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
+            <div key={idx} className="flex gap-0">
+              {/* Left: vertical timeline line + dot */}
+              <div className="flex flex-col items-center" style={{ width: 36, flexShrink: 0 }}>
+                {/* top connector */}
+                <div
+                  className="w-px flex-1"
+                  style={{
+                    background: idx === 0 ? 'transparent' : '#E8E2D2',
+                    minHeight: 10,
+                  }}
+                />
+                {/* dot */}
+                <div
+                  className="rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    width: isPhase ? 28 : 22,
+                    height: isPhase ? 28 : 22,
+                    background: status === 'current' ? '#FFF0EC' : '#F5F2EC',
+                    border: status === 'current' ? '1.5px solid #E9785E' : '1px solid #E8E2D2',
+                    boxShadow: status === 'current' ? '0 0 0 3px rgba(233,120,94,0.12)' : 'none',
+                  }}
+                >
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                    style={{ background: status === 'current' ? '#FFF0EC' : '#F5F2EC' }}
-                  >
-                    <div
-                      className="w-3.5 h-3.5"
-                      style={{
-                        WebkitMaskImage: `url('/svg/${phase.planetKey}.svg')`,
-                        maskImage: `url('/svg/${phase.planetKey}.svg')`,
-                        WebkitMaskSize: 'contain', maskSize: 'contain',
-                        WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center', maskPosition: 'center',
-                        background: status === 'current' ? '#E9785E' : '#9A9482',
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <div className={`font-serif text-sm ${status === 'current' ? 'text-ink' : 'text-ink'}`}>{phase.name}</div>
-                    <div className="text-[11px] text-ink-muted mt-0.5">{toArabicNumStr(phase.start)}–{toArabicNumStr(phase.end)} · {phase.planet}</div>
-                  </div>
+                    style={maskStyle(item.svgKey, dotColor)}
+                    className={isPhase ? 'w-3.5 h-3.5' : 'w-3 h-3'}
+                  />
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {status === 'current' && currentAge !== null && (
-                    <div className="text-[11px] font-mono text-coral font-semibold">{toArabicNumStr(currentAge)}</div>
-                  )}
-                  <div className={`text-[11px] font-semibold ${
-                    status === 'current' ? 'text-coral' : status === 'past' ? 'text-ink-muted' : 'text-ink-muted'
-                  }`}>
-                    {status === 'current' ? 'أنت هنا' : status === 'past' ? 'مضى' : status === 'future' ? 'التالي' : '‹'}
-                  </div>
-                  <span className="text-ink-muted text-xs">‹</span>
-                </div>
+                {/* bottom connector */}
+                <div
+                  className="w-px flex-1"
+                  style={{
+                    background: idx === UNIFIED_TIMELINE.length - 1 ? 'transparent' : '#E8E2D2',
+                    minHeight: 10,
+                  }}
+                />
               </div>
 
-              {/* Expanded detail */}
-              {isExpanded && (
-                <div className="mt-3 pt-3 border-t border-rule-soft text-right">
-                  {status === 'current' && (
-                    <div className="text-[11px] text-coral font-semibold mb-1.5">أنت في هذه المرحلة الآن</div>
+              {/* Right: card */}
+              <div className="flex-1 pb-2 pt-1">
+                <button
+                  onClick={() => setExpandedIdx(isExpanded ? null : idx)}
+                  className={`w-full text-right rounded-[14px] p-3.5 border transition-all ${cardBg}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 text-right">
+                      <div className="flex items-center gap-1.5 justify-end mb-0.5">
+                        {/* type badge */}
+                        <span
+                          className="text-[9px] font-semibold tracking-wide px-1.5 py-0.5 rounded-full"
+                          style={{
+                            background: isPhase ? '#F0EDE6' : '#EEF2F8',
+                            color: isPhase ? '#9A8A6A' : '#5A7A9A',
+                          }}
+                        >
+                          {isPhase ? 'مرحلة' : 'عبور'}
+                        </span>
+                      </div>
+                      <div className="font-serif text-sm text-ink leading-[1.3]">{item.name}</div>
+                      <div className="text-[11px] text-ink-muted mt-0.5">
+                        {item.ageLabel}
+                        {personalYear ? ` · ~${toArabicNumStr(personalYear)}` : ''}
+                        {' · '}{item.planet}
+                      </div>
+                      {!isExpanded && (
+                        <div className="text-[11px] text-ink-muted mt-0.5 leading-[1.5] line-clamp-1">
+                          {item.theme}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {status === 'current' && (
+                        <div
+                          className="text-[10px] font-bold tracking-wide text-coral px-2 py-0.5 rounded-full"
+                          style={{ background: 'rgba(233,120,94,0.10)' }}
+                        >
+                          أنت هنا
+                        </div>
+                      )}
+                      {status === 'past' && (
+                        <div className="text-[10px] text-ink-muted font-semibold">مضى</div>
+                      )}
+                      {status === 'upcoming' && (
+                        <div className="text-[10px] text-ink-muted font-semibold">قادم</div>
+                      )}
+                      <span className="text-ink-muted text-xs">{isExpanded ? '›' : '‹'}</span>
+                    </div>
+                  </div>
+
+                  {/* Expanded body */}
+                  {isExpanded && (
+                    <div className="mt-3 pt-3 border-t border-rule-soft text-right">
+                      {status === 'current' && (
+                        <div className="text-[11px] text-coral font-semibold mb-1.5">أنت في هذه المرحلة الآن</div>
+                      )}
+                      <p className="text-[13px] text-ink leading-[1.9]">{item.body}</p>
+                      {item.prompt && (
+                        <div className="mt-3.5 p-3 bg-cream-soft rounded-xl" style={{ borderInlineStart: '3px solid #E9785E' }}>
+                          <div className="text-[10px] text-coral font-bold tracking-wide mb-1">تأمل</div>
+                          <div className="text-[13px] text-ink leading-[1.8] font-serif">{item.prompt}</div>
+                        </div>
+                      )}
+                    </div>
                   )}
-                  <p className="text-[13px] text-ink leading-[1.8] whitespace-pre-line">{phase.desc}</p>
-                </div>
-              )}
-            </button>
+                </button>
+              </div>
+            </div>
           );
         })}
       </div>
 
-      {/* Footer */}
-      <div className="text-center text-[11px] text-ink-muted pt-2 pb-1">
-        ٧٠ سنة · ١٠ مراحل · سَكنٌ كوكبيّ لكل فصل
-      </div>
-    </div>
-  );
-}
-
-const TRANSIT_ESSAY_LINKS = [
-  { slug: 'jupiter-return', svgKey: 'jupiter', title: 'عودة المشتري', sub: 'كلّ ١٢ سنةً · التوسّع والأُفق', color: '#9C8AB8', readTime: '٦ دقائق' },
-  { slug: 'chiron-return', svgKey: 'chiron',   title: 'عودة كيرون',  sub: 'حوالي سن ٥٠ · الجرح المُعلِّم', color: '#A8A8A8', readTime: '٧ دقائق' },
-  { slug: 'uranus-opposition', svgKey: 'uranus', title: 'تقابل أورانوس', sub: 'حوالي سن ٤٢ · يقظة منتصف الحياة', color: '#7E97B8', readTime: '٧ دقائق' },
-];
-
-function transitStatusColor(s: GreatTransit['status']): string {
-  return s === 'past' ? '#5C5C7A' : '#2A2F66';
-}
-
-function TransitRowCollapsed({ t }: { t: GreatTransit }) {
-  const maskStyle = (key: string) => ({
-    WebkitMaskImage: `url('/svg/${key}.svg')`, maskImage: `url('/svg/${key}.svg')`,
-    WebkitMaskSize: 'contain', maskSize: 'contain',
-    WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-    WebkitMaskPosition: 'center', maskPosition: 'center',
-    background: '#5C5C7A',
-  });
-  return (
-    <div className="bg-white rounded-[14px] px-3.5 py-3 grid items-center gap-3"
-      style={{ border: '1px solid #E8E2D2', opacity: t.status === 'past' ? 0.6 : 1, gridTemplateColumns: '36px 1fr auto' }}>
-      <div className="w-8 h-8 rounded-2xl bg-cream-soft flex items-center justify-center">
-        <div className="w-5 h-5" style={maskStyle(t.svgKey)} />
-      </div>
-      <div>
-        <div className="font-serif text-[14.5px] text-ink leading-[1.3]">{t.name}</div>
-        <div className="text-[11px] text-ink-muted mt-0.5 font-mono">{t.year} · {t.age}</div>
-      </div>
-      <div className="text-[10px] font-semibold tracking-wide" style={{ color: transitStatusColor(t.status) }}>
-        {t.status === 'past' ? `مرّت · ${t.age}` : t.status === 'next' ? `قادمة · ${t.age}` : `لاحقًا · ${t.age}`}
-      </div>
-    </div>
-  );
-}
-
-function TransitRowExpanded({ t }: { t: GreatTransit }) {
-  const maskStyle = (key: string, bg: string) => ({
-    WebkitMaskImage: `url('/svg/${key}.svg')`, maskImage: `url('/svg/${key}.svg')`,
-    WebkitMaskSize: 'contain', maskSize: 'contain',
-    WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-    WebkitMaskPosition: 'center', maskPosition: 'center',
-    background: bg,
-  });
-  return (
-    <div className="bg-white rounded-2xl px-4 pt-4 pb-3.5" style={{ border: '1.5px solid #E9785E', boxShadow: '0 0 0 4px rgba(233,120,94,0.06)' }}>
-      <div className="flex items-start gap-3">
-        <div className="w-[46px] h-[46px] rounded-[23px] flex items-center justify-center shrink-0"
-          style={{ background: 'radial-gradient(circle at 30% 25%, #F3B8A6, #E9785E 70%)' }}>
-          <div className="w-6 h-6" style={maskStyle(t.svgKey, '#FFFFFF')} />
-        </div>
-        <div className="flex-1">
-          <div className="font-serif text-[18px] text-ink leading-[1.25]">{t.name}</div>
-          <div className="text-[11px] text-ink-muted mt-[3px] font-mono">{t.year} · {t.age} · {t.planet}</div>
-        </div>
-        <div className="text-[10px] font-bold tracking-wide text-coral px-2.5 py-1 rounded-full self-start whitespace-nowrap"
-          style={{ background: 'rgba(233,120,94,0.08)' }}>
-          {t.status === 'next' ? 'قادمة' : t.status === 'past' ? 'مرّت' : 'لاحقًا'}
-        </div>
-      </div>
-      <div className="text-[13px] text-ink leading-[1.9] mt-3.5 whitespace-pre-line">{t.intro}</div>
-      <div className="text-[12.5px] text-ink-soft leading-[1.9] mt-2.5 whitespace-pre-line">{t.body}</div>
-      <div className="mt-4 p-3.5 bg-cream-soft rounded-xl" style={{ borderInlineStart: '3px solid #E9785E' }}>
-        <div className="text-[10px] text-coral font-bold tracking-wide mb-1.5">تأمل</div>
-        <div className="text-[13.5px] text-ink leading-[1.8] font-serif">{t.prompt}</div>
-      </div>
-    </div>
-  );
-}
-
-function TransitsView() {
-  const expandedName = PB_TRANSITS.find(t => t.status === 'next')?.name
-    ?? PB_TRANSITS[PB_TRANSITS.length - 1]?.name;
-
-  return (
-    <div className="px-5 pb-6 flex flex-col gap-4">
-      <div className="font-serif text-2xl text-ink -tracking-0.5">السيرة البانورامية</div>
-      <div className="text-sm text-ink-muted">مسار الكواكب عبر الحياة</div>
-
-      {/* العبورات الكونية — full content from old great-transits page */}
+      {/* Footer: essay links */}
       <div className="mt-2">
-        <div className="font-serif text-lg text-ink mb-1">العبورات الكونية</div>
-        <p className="text-xs text-ink-muted mb-3 leading-[1.75]">
-          خمس لحظات تحوّل كونية يمرّ بها كل إنسان — مبنية على دورات الكواكب البعيدة.
-        </p>
-
-        {/* Timeline strip */}
-        <div className="px-3 pt-3.5 pb-2.5 bg-white rounded-[14px] mb-3" style={{ border: '1px solid #E8E2D2' }}>
-          <div className="grid grid-cols-5 gap-1 relative">
-            <div className="absolute top-[18px] h-[1.5px]" style={{ insetInline: 18, background: '#E8E2D2' }} />
-            {PB_TRANSITS.map((t) => {
-              const isCurrent = t.name === expandedName;
-              return (
-                <div key={t.name} className="flex flex-col items-center gap-1 relative z-[1]">
-                  <div className="w-9 h-9 rounded-[18px] flex items-center justify-center"
-                    style={{
-                      background: isCurrent ? '#E9785E' : t.status === 'past' ? '#F8F8F8' : '#fff',
-                      border: isCurrent ? 'none' : `1.5px solid ${t.status === 'past' ? '#F3B8A6' : '#E8E2D2'}`,
-                      boxShadow: isCurrent ? '0 0 0 3px #FFFFFF, 0 0 0 4.5px #E9785E' : 'none',
-                    }}>
-                    <div className="w-5 h-5" style={{
-                      WebkitMaskImage: `url('/svg/${t.svgKey}.svg')`, maskImage: `url('/svg/${t.svgKey}.svg')`,
-                      WebkitMaskSize: 'contain', maskSize: 'contain',
-                      WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-                      WebkitMaskPosition: 'center', maskPosition: 'center',
-                      background: isCurrent ? '#fff' : t.status === 'past' ? '#E9785E' : '#5C5C7A',
-                    }} />
-                  </div>
-                  <div className="text-[9.5px] text-ink-muted font-mono">{t.age.replace('سن ', '')}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Transit cards */}
+        <div className="text-[11px] text-ink-muted font-bold tracking-wide mb-2.5">مقالات تأمليّة</div>
         <div className="flex flex-col gap-2">
-          {PB_TRANSITS.map((t) =>
-            t.name === expandedName
-              ? <TransitRowExpanded key={t.name} t={t} />
-              : <TransitRowCollapsed key={t.name} t={t} />
-          )}
+          {TRANSIT_ESSAY_LINKS.map((e) => (
+            <Link key={e.slug} href={`/explore/transits/${e.slug}`}
+              className="bg-white rounded-[14px] px-3.5 py-3 grid items-center gap-3 no-underline"
+              style={{ border: '1px solid #E8E2D2', gridTemplateColumns: '36px 1fr auto' }}>
+              <div className="w-8 h-8 rounded-2xl flex items-center justify-center shrink-0" style={{ background: e.color }}>
+                <div className="w-5 h-5" style={maskStyle(e.svgKey, '#FFFFFF')} />
+              </div>
+              <div>
+                <div className="font-serif text-[14.5px] text-ink leading-[1.3]">{e.title}</div>
+                <div className="text-[11px] text-ink-muted mt-0.5">{e.sub}</div>
+              </div>
+              <div className="text-[10px] text-ink-muted font-mono whitespace-nowrap">{e.readTime}</div>
+            </Link>
+          ))}
         </div>
+      </div>
 
-        <div className="mt-4 mb-2 text-center text-xs text-ink-muted leading-[1.7]">
-          خمس عتبات · على مدى ثمانين سنة
-        </div>
-
-        {/* Essay links */}
-        <div className="mt-4">
-          <div className="text-[11px] text-ink-muted font-bold tracking-wide mb-2.5 uppercase">مقالات تأمليّة</div>
-          <div className="flex flex-col gap-2">
-            {TRANSIT_ESSAY_LINKS.map((e) => (
-              <Link key={e.slug} href={`/explore/transits/${e.slug}`}
-                className="bg-white rounded-[14px] px-3.5 py-3 grid items-center gap-3 no-underline"
-                style={{ border: '1px solid #E8E2D2', gridTemplateColumns: '36px 1fr auto' }}>
-                <div className="w-8 h-8 rounded-2xl flex items-center justify-center shrink-0" style={{ background: e.color }}>
-                  <div className="w-5 h-5" style={{
-                    WebkitMaskImage: `url('/svg/${e.svgKey}.svg')`, maskImage: `url('/svg/${e.svgKey}.svg')`,
-                    WebkitMaskSize: 'contain', maskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center', maskPosition: 'center',
-                    background: '#FFFFFF',
-                  }} />
-                </div>
-                <div>
-                  <div className="font-serif text-[14.5px] text-ink leading-[1.3]">{e.title}</div>
-                  <div className="text-[11px] text-ink-muted mt-0.5">{e.sub}</div>
-                </div>
-                <div className="text-[10px] text-ink-muted font-mono whitespace-nowrap">{e.readTime}</div>
-              </Link>
-            ))}
-          </div>
-        </div>
+      <div className="text-center text-[11px] text-ink-muted pt-1 pb-2">
+        ٧٠ سنة · مراحل وعبورات · سَكنٌ كوكبيّ لكل فصل
       </div>
     </div>
   );
@@ -1820,8 +1792,7 @@ function SelfPageInner() {
                 <div className="px-5 mb-4">
                   <Headline>السيرة البانورامية</Headline>
                 </div>
-                <TransitsView />
-                <LifeArcView chart={chart} />
+                <UnifiedBiographyView />
               </>
             )}
           </>
