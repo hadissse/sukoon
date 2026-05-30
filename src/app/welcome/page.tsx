@@ -11,8 +11,6 @@ import {
 import { Logo } from '@/components/Logo';
 import { SukoonIcon } from '@/components/SukoonIcon';
 import { sendEmailOtp, verifyEmailOtp, signInWithEmail, signUpWithEmail, resetPassword } from '@/lib/auth';
-import { getCurrentSky } from '@/lib/currentSky';
-
 const HCAPTCHA_SITE_KEY = '10000000-ffff-ffff-ffff-000000000001';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,75 +19,6 @@ const HCAPTCHA_SITE_KEY = '10000000-ffff-ffff-ffff-000000000001';
 type Phase = 'splash' | 'breathe-in' | 'breathe-out' | 'welcome'
   | 'otp-email' | 'otp-code'
   | 'signin' | 'signup' | 'reset' | 'verify';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Sky ticker — live planetary positions
-// ─────────────────────────────────────────────────────────────────────────────
-const TICKER_PLANETS = [
-  { key: 'sun',     symbol: '☉', label: 'الشمس' },
-  { key: 'moon',    symbol: '☽', label: 'القمر' },
-  { key: 'mercury', symbol: '☿', label: 'عطارد' },
-  { key: 'venus',   symbol: '♀', label: 'الزهرة' },
-  { key: 'mars',    symbol: '♂', label: 'المريخ' },
-  { key: 'jupiter', symbol: '♃', label: 'المشتري' },
-  { key: 'saturn',  symbol: '♄', label: 'زحل' },
-] as const;
-
-function toEastern(n: number) {
-  return n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
-}
-
-function SkyTicker({ compact = false }: { compact?: boolean }) {
-  const [items, setItems] = useState<Array<{ symbol: string; label: string; sign: string; degree: number }>>([]);
-
-  useEffect(() => {
-    const sky = getCurrentSky();
-    setItems(TICKER_PLANETS.map(p => ({
-      symbol: p.symbol,
-      label: p.label,
-      sign: (sky as any)[p.key].sign,
-      degree: (sky as any)[p.key].degree,
-    })));
-  }, []);
-
-  if (!items.length) return null;
-
-  const pills = items.map(p => (
-    <span key={p.label} className="inline-flex items-center gap-1 whitespace-nowrap px-3 py-1 rounded-full bg-white/60 border border-white/80 text-ink text-[12px] font-medium backdrop-blur-sm">
-      <span className="text-[13px] opacity-70">{p.symbol}</span>
-      <span>{p.label}</span>
-      <span className="opacity-50 mx-0.5">•</span>
-      <span className="text-coral/90">{p.sign}</span>
-      <span className="opacity-60">{toEastern(p.degree)}°</span>
-    </span>
-  ));
-
-  if (compact) {
-    return (
-      <div className="flex flex-wrap justify-center gap-2 px-4">
-        {pills}
-      </div>
-    );
-  }
-
-  const doubled = [...items, ...items];
-  return (
-    <div className="overflow-hidden w-full max-w-[520px]" dir="ltr">
-      <style>{`@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
-      <div className="flex gap-2.5 w-max" style={{ animation: 'tickerScroll 28s linear infinite' }}>
-        {doubled.map((p, i) => (
-          <span key={i} className="inline-flex items-center gap-1 whitespace-nowrap px-3 py-1.5 rounded-full bg-white/65 border border-white/80 text-ink text-[12px] font-medium backdrop-blur-sm">
-            <span className="text-[13px] opacity-60">{p.symbol}</span>
-            <span dir="rtl">{p.label}</span>
-            <span className="opacity-40 mx-0.5">•</span>
-            <span className="text-coral/80" dir="rtl">{p.sign}</span>
-            <span className="opacity-55">{toEastern(p.degree)}°</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Input field
@@ -263,7 +192,6 @@ export default function WelcomePage() {
             <SukoonIcon size={72} />
             <img src="/sukoon-wordmark-black.svg" style={{ height: 40, width: 'auto' }} alt="سُكون" />
           </div>
-          <SkyTicker />
           <div className="w-[520px] h-[520px] flex items-center justify-center" style={{ clipPath: 'circle(50%)' }}>
             <div className="w-[340px]">
               <DesktopAuthCard
@@ -568,7 +496,6 @@ function MobileAuthCard(p: AuthProps) {
       <div className="flex-1 flex flex-col items-center justify-center gap-3 px-8">
         <img src="/sukoon-logo-icon.svg" alt="" aria-hidden="true" className="w-20 h-20" />
         <img src="/sukoon-wordmark-black.svg" alt="سُكون" style={{ height: 36, width: 'auto' }} />
-        <SkyTicker compact />
       </div>
 
       {/* Form anchored to bottom */}
