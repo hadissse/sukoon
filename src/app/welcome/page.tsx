@@ -138,8 +138,8 @@ export default function WelcomePage() {
   return (
     <div className="flex-1 min-h-dvh flex flex-col relative" dir="rtl">
       <img src="/media/auth-bg.gif" alt="" aria-hidden="true"
-        className="fixed inset-0 w-full h-full object-cover pointer-events-none" style={{ zIndex: 0 }} />
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1, background: 'rgba(255,255,255,0.62)' }} />
+        className="md:hidden fixed inset-0 w-full h-full object-cover pointer-events-none" style={{ zIndex: 0 }} />
+      <div className="md:hidden fixed inset-0 pointer-events-none" style={{ zIndex: 1, background: 'rgba(255,255,255,0.62)' }} />
 
       <div className="relative flex-1 flex flex-col" style={{ zIndex: 2 }}>
 
