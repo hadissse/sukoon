@@ -564,13 +564,15 @@ function MobileAuthCard(p: AuthProps) {
   // welcome
   return (
     <div className="flex-1 flex flex-col bg-cream">
-      <div className="flex-1" />
-      <div className="px-6 pb-12 flex flex-col gap-3">
-        <div className="flex items-center gap-2.5 mb-1">
-          <img src="/sukoon-logo-icon.svg" alt="" aria-hidden="true" className="w-9 h-9" />
-          <h2 className="font-serif text-[22px] text-ink">أنشئ حسابًا</h2>
-        </div>
+      {/* Centered logo block — matches desktop */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 px-8">
+        <img src="/sukoon-logo-icon.svg" alt="" aria-hidden="true" className="w-20 h-20" />
+        <img src="/sukoon-wordmark-black.svg" alt="سُكون" style={{ height: 36, width: 'auto' }} />
         <SkyTicker compact />
+      </div>
+
+      {/* Form anchored to bottom */}
+      <div className="px-6 pb-12 flex flex-col gap-3">
         {p.authError && <p className="text-[13px] text-coral bg-coral/10 rounded-xl px-3 py-2">{p.authError}</p>}
 
         <button type="button" onClick={() => p.setPhase('otp-email')}
