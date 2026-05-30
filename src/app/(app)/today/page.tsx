@@ -469,17 +469,7 @@ export default function TodayPage() {
           </div>
         </Link>
 
-        {/* Knowledge — link to learn section */}
-        <Link href="/learn" className="block md:col-span-2">
-          <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #F8D6BE 0%, #F0C0A0 100%)' }}>
-            <img src="/media/sun-rings.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-30" style={{ mixBlendMode: 'multiply' }} />
-            <div className="relative flex flex-col gap-2">
-              <div className="text-[11px] text-coral font-semibold tracking-wider">المعرفة</div>
-              <div className="font-serif text-[17px] text-ink leading-[1.6]">الأسس · السلاسل · المعلّمون</div>
-              <div className="text-xs text-ink-muted leading-[1.7]">تقاليد الفلك الثلاثة — غربي، عربي، روحاني</div>
-            </div>
-          </div>
-        </Link>
+        {/* Knowledge box — hidden, re-enable when ready */}
 
         <div className="md:col-span-2">
           <Rule />

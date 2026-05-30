@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { key: 'today', label: 'اليوم', href: '/today', icon: TodayIcon },
-  { key: 'library', label: 'مكتبتي', href: '/library', icon: LibraryIcon },
+  // { key: 'library', label: 'مكتبتي', href: '/library', icon: LibraryIcon }, // hidden — re-enable when ready
   { key: 'self', label: 'أنت', href: '/self', icon: SelfIcon },
 ] as const;
 
