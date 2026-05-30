@@ -505,21 +505,90 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               <ZoomableWheel size={420} tone="paper" chart={chart} showHouses={!birthData?.timeUnknown} />
             </div>
             <div className="px-5 pb-6">
-              <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-2.5">مواضع الكواكب</div>
-              <div className="grid grid-cols-2 gap-2">
-                {gridItems.map(item => (
-                  <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
-                    <div className="bg-white rounded-[12px] px-3 py-2.5 flex items-center gap-2.5" style={{ border: '1px solid #F0EDE6' }}>
-                      <div className="w-5 h-5 shrink-0" style={maskStyle(item.svgKey)} />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[12px] font-semibold text-ink truncate">{item.name}{item.rx ? ' ℞' : ''}</div>
-                        <div className="text-[11px] text-ink-muted truncate">{item.pos}</div>
-                      </div>
-                      <div className="text-ink-muted text-xs shrink-0">›</div>
+              <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-3">مواضع الكواكب</div>
+              {/* Gradient cards for Sun / Moon / AC — square, colored fill, white text */}
+              {/* Planet color map — gradient fills for luminaries+AC, stroke-only for rest */}
+              {(() => {
+                const GRAD: Record<string, string> = {
+                  sun:  'linear-gradient(140deg, #F5C882 0%, #E9785E 100%)',
+                  moon: 'linear-gradient(140deg, #C2D3E2 0%, #7E97B8 100%)',
+                  ac:   'linear-gradient(140deg, #C8B8E8 0%, #8B6BB0 100%)',
+                };
+                const STROKE: Record<string, string> = {
+                  mercury:   '#B8C4D0', venus:     '#E8B4C0', mars:      '#E9785E',
+                  jupiter:   '#8FA084', saturn:    '#9090A0', uranus:    '#7E97B8',
+                  neptune:   '#8078B8', pluto:     '#606080', northNode: '#C4A860',
+                  southNode: '#A09878', ic:        '#C8B8E8', dc:        '#C8B8E8',
+                  mc:        '#C8B8E8',
+                };
+                const colored = gridItems.filter(i => i.key in GRAD);
+                const rest    = gridItems.filter(i => !(i.key in GRAD));
+
+                return (
+                  <div className="flex flex-col gap-3">
+                    {/* Luminaries + AC: 2→3 col square gradient cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {colored.map(item => (
+                        <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
+                          <div
+                            className="rounded-[18px] aspect-square flex flex-col justify-end p-4 relative overflow-hidden"
+                            style={{ background: GRAD[item.key] }}
+                          >
+                            {/* Planet icon top-right */}
+                            <div
+                              className="absolute top-3 left-3 w-8 h-8 opacity-50"
+                              style={{
+                                WebkitMaskImage: `url('/svg/${item.svgKey}.svg')`,
+                                maskImage: `url('/svg/${item.svgKey}.svg')`,
+                                WebkitMaskSize: 'contain', maskSize: 'contain',
+                                WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                                WebkitMaskPosition: 'center', maskPosition: 'center',
+                                background: 'rgba(255,255,255,0.7)',
+                              }}
+                            />
+                            <div className="font-serif text-[17px] text-white leading-snug">
+                              {item.name}{item.rx ? ' ℞' : ''}
+                            </div>
+                            <div className="text-[12px] text-white/70 mt-0.5">{item.pos}</div>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                  </Link>
-                ))}
-              </div>
+
+                    {/* Other planets: 2→3 col white cards with colored stroke */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+                      {rest.map(item => {
+                        const stroke = STROKE[item.key] ?? '#E0DBD3';
+                        return (
+                          <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
+                            <div
+                              className="rounded-[16px] aspect-square flex flex-col justify-end p-3 relative overflow-hidden bg-white"
+                              style={{ border: `1.5px solid ${stroke}` }}
+                            >
+                              {/* Colored icon */}
+                              <div
+                                className="absolute top-3 left-3 w-6 h-6"
+                                style={{
+                                  WebkitMaskImage: `url('/svg/${item.svgKey}.svg')`,
+                                  maskImage: `url('/svg/${item.svgKey}.svg')`,
+                                  WebkitMaskSize: 'contain', maskSize: 'contain',
+                                  WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                                  WebkitMaskPosition: 'center', maskPosition: 'center',
+                                  background: stroke,
+                                }}
+                              />
+                              <div className="text-[14px] font-semibold text-ink leading-snug">
+                                {item.name}{item.rx ? ' ℞' : ''}
+                              </div>
+                              <div className="text-[11px] text-ink-muted mt-0.5">{item.pos}</div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </>
         );
