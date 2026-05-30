@@ -105,7 +105,7 @@ function SkySection() {
       <div className="text-[11px] text-ink-muted mb-4">{dateStr} · تحديث كل دقيقة</div>
 
       <div className="w-full mb-4">
-        <ZoomableWheel size={9999} tone="paper" chart={sky} />
+        <ZoomableWheel size={9999} tone="paper" chart={sky} showHouses={false} />
       </div>
 
       <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">مواضع الكواكب</div>
