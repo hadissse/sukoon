@@ -13,7 +13,7 @@ import { AstralChart } from '@/lib/chartCalculator';
 import { SIGN_SLUGS, getPlacementContent } from '@/content/placements';
 import { loadEvents, STREAM_AR, STREAM_GLYPH, type LoggedEvent } from '@/lib/events';
 import { calculateTransits, orbLabel, formatExactDate, type Transit } from '@/lib/transits';
-import { loadTraits } from '@/lib/traitEngine';
+import { loadTraits, calculateTraits } from '@/lib/traitEngine';
 import { NatalChartSetupForm } from '@/components/onboarding/NatalChartSetupForm';
 import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
 import { TransitHeroCard } from '@/components/TransitHeroCard';
@@ -774,7 +774,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       {/* Active Transits list */}
       {/* Organs — medical astrology */}
       {activeSubtab === 'organs' && (() => {
-        const traits = loadTraits();
+        const traits = chart ? calculateTraits(chart) : loadTraits();
         if (!traits) return (
           <div className="px-5 py-12 text-center flex flex-col gap-3">
             <Body muted>أكمل إدراج بياناتك أولًا لتظهر قراءة الأعضاء.</Body>
