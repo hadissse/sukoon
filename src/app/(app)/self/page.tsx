@@ -640,35 +640,36 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       {/* Aspects list */}
       {activeSubtab === 'aspects' && (
         <>
-          <div className="px-5 flex gap-2 overflow-x-auto">
-            {['الكل', 'رئيسية', 'ثانوية', 'مقتربة'].map((filter) => (
+          <div className="px-5 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {[
+              { label: 'الكل',    color: null },
+              { label: 'تربيع',   color: '#C0392B' },
+              { label: 'اقتران',  color: '#5C5C7A' },
+              { label: 'سُداس',   color: '#4A7FB5' },
+              { label: 'تثليث',   color: '#27AE60' },
+              { label: 'تقابل',   color: '#C0392B' },
+            ].map(({ label, color }) => (
               <button
-                key={filter}
-                onClick={() => setAspectFilter(filter)}
-                className={`px-3.5 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                  aspectFilter === filter
-                    ? 'bg-ink text-cream'
-                    : 'bg-white text-ink border border-rule-soft'
-                }`}
+                key={label}
+                onClick={() => setAspectFilter(label)}
+                className="px-3.5 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0"
+                style={{
+                  background: aspectFilter === label ? (color ?? '#171B3A') : '#fff',
+                  color: aspectFilter === label ? '#F5F2EA' : '#171B3A',
+                  border: `1px solid ${aspectFilter === label ? (color ?? '#171B3A') : '#E5E1D8'}`,
+                }}
               >
-                {filter}
+                {label}
               </button>
             ))}
           </div>
-          <div className="px-5 pb-6 flex flex-col gap-3">
+          <div className="px-5 pb-6 flex flex-col gap-3 mt-1">
             {(() => {
-              const MAJOR = ['اقتران', 'تربيع', 'تثليث', 'تقابل'];
-              // Sort order: square → sextile → trine → opposition → conjunction → others
               const ASPECT_ORDER: Record<string, number> = {
-                'تربيع': 1, 'سداسي': 2, 'تثليث': 3, 'تقابل': 4, 'اقتران': 5,
+                'تربيع': 1, 'اقتران': 2, 'سُداس': 3, 'تثليث': 4, 'تقابل': 5,
               };
               const filtered = aspects
-                .filter((a) => {
-                  if (aspectFilter === 'رئيسية') return MAJOR.includes(a.type);
-                  if (aspectFilter === 'ثانوية') return !MAJOR.includes(a.type);
-                  if (aspectFilter === 'مقتربة') return a.orbDeg < 2;
-                  return true;
-                })
+                .filter((a) => aspectFilter === 'الكل' || a.type === aspectFilter)
                 .sort((a, b) => (ASPECT_ORDER[a.type] ?? 99) - (ASPECT_ORDER[b.type] ?? 99));
               return filtered.length > 0 ? (
                 filtered.map((aspect) => (
