@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 
 const tabs = [
   { key: 'today', label: 'اليوم', href: '/today', icon: TodayIcon },
-  { key: 'explore', label: 'استكشاف', href: '/explore', icon: ExploreIcon },
   { key: 'self', label: 'أنت', href: '/self', icon: SelfIcon },
 ] as const;
 
@@ -24,19 +23,6 @@ function TodayIcon({ active }: { active: boolean }) {
   );
 }
 
-function ExploreIcon({ active }: { active: boolean }) {
-  return active ? (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="#171B3A">
-      <circle cx="12" cy="12" r="10" fill="#171B3A" />
-      <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" fill="#FFFFFF" />
-    </svg>
-  ) : (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5C5C7A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" />
-    </svg>
-  );
-}
 
 function SelfIcon({ active }: { active: boolean }) {
   return active ? (

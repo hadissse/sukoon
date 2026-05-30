@@ -6,7 +6,6 @@ import { Logo } from './Logo';
 
 const tabs = [
   { key: 'today', label: 'اليوم', href: '/today', icon: TodayIcon },
-  { key: 'explore', label: 'استكشاف', href: '/explore', icon: ExploreIcon },
   { key: 'self', label: 'أنت', href: '/self', icon: SelfIcon },
 ] as const;
 
@@ -19,14 +18,6 @@ function TodayIcon({ active }: { active: boolean }) {
   );
 }
 
-function ExploreIcon({ active }: { active: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#171B3A' : '#5C5C7A'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" fill={active ? '#171B3A' : 'none'} />
-      <path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" fill={active ? '#FFFFFF' : 'none'} stroke={active ? '#FFFFFF' : '#5C5C7A'} />
-    </svg>
-  );
-}
 
 function SelfIcon({ active }: { active: boolean }) {
   return (

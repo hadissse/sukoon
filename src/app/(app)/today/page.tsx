@@ -272,9 +272,12 @@ export default function TodayPage() {
               <div className="text-[11px] text-cream/55 font-semibold tracking-wider mb-2">السماء الآن</div>
               <div className="font-serif text-2xl text-cream leading-snug">{stamp.moonPhase}</div>
               <div className="text-sm text-cream/70 mt-1.5">{stamp.sunPosition} · {stamp.dayRuler}</div>
-              <Link href="/explore" className="inline-block mt-4 text-xs text-coral font-medium">
+              <button
+                onClick={() => document.getElementById('today-sky')?.scrollIntoView({ behavior: 'smooth' })}
+                className="inline-block mt-4 text-xs text-coral font-medium"
+              >
                 استكشف السماء ←
-              </Link>
+              </button>
             </div>
           )}
         </div>
@@ -293,7 +296,7 @@ export default function TodayPage() {
         </div>
 
         {/* ── Explore: Sky / Calendar / Knowledge ── */}
-        <div className="md:col-span-2">
+        <div id="today-sky" className="md:col-span-2">
           {/* Tab switcher */}
           <div className="flex gap-2 mb-5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
             {([
