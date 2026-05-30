@@ -43,7 +43,10 @@ export async function signInWithGoogle(): Promise<{ error: string | null }> {
     provider: 'google',
     options: { redirectTo, queryParams: { access_type: 'offline', prompt: 'consent' } },
   });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('[Supabase Google OAuth error]', error);
+    return { error: error.message };
+  }
   return { error: null };
   // Browser will redirect to Google — no code after this runs
 }
