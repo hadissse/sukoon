@@ -32,7 +32,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="py-4">
+    <div className="py-4 md:max-w-lg md:mx-auto">
       <SettingsSubHeader title="الملف الشخصي" />
       <div className="px-5 flex items-center gap-3.5 mt-2">
         <div className="w-16 h-16 rounded-full flex items-center justify-center shrink-0" style={{ background: '#F8D6BE' }}>
@@ -44,7 +44,7 @@ export default function ProfilePage() {
         </div>
       </div>
       <div className="mx-5 mt-6 rounded-[18px] bg-white border border-rule-soft p-[18px]">
-        <div className="flex justify-between">
+        <div className="flex justify-between md:gap-12">
           {cells.map(([n, l]) => (
             <div key={l} className="text-center">
               <div className="font-serif text-[26px] text-ink">{n}</div>

@@ -9,7 +9,7 @@ const CONSULTATION_URL = process.env.NEXT_PUBLIC_CONSULTATION_URL ?? '';
 
 export default function PracticePage() {
   return (
-    <div className="py-4">
+    <div className="py-4 md:max-w-lg md:mx-auto">
       <SettingsSubHeader title="الاستشارات والممارسة" />
       <div className="px-5 flex flex-col gap-4">
         <Card>

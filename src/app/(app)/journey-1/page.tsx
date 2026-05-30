@@ -131,12 +131,12 @@ export default function Journey1Page() {
 
   const completedCount = journey.steps.filter((s) => s.completed).length;
 
-  // Step detail view
+  // Step detail view — mobile only (hidden on md+)
   if (activeStep !== null) {
     const step = STEP_THEMES[activeStep];
     const course = COURSES.find((c) => c.id === step.course);
     return (
-      <div className="pb-32 px-5 pt-4">
+      <div className="pb-32 px-5 pt-4 md:hidden">
         <button
           onClick={() => { saveJournalDraft(); setActiveStep(null); }}
           className="flex items-center gap-1 text-ink-muted mb-5"
@@ -203,7 +203,7 @@ export default function Journey1Page() {
 
   // Main journey list view
   return (
-    <div className="pb-24">
+    <div className="pb-24 md:max-w-4xl md:mx-auto">
       <div className="px-5 pt-6 pb-2">
         <Headline>الرحلة الأسبوعية</Headline>
         <Body muted className="mt-1 text-sm">
@@ -232,48 +232,113 @@ export default function Journey1Page() {
         </div>
       )}
 
-      <div className="px-5 flex flex-col gap-3">
-        {STEP_THEMES.map((step, i) => {
-          const status = getStepStatus(i);
-          return (
-            <div
-              key={i}
-              onClick={() => status !== 'upcoming' ? openStep(i) : undefined}
-              className={`text-right w-full${status === 'upcoming' ? ' opacity-50' : ' cursor-pointer'}`}
-            >
-              <Card>
-                <div className="flex gap-3 items-center">
-                  {/* Status indicator */}
-                  <div
-                    className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center"
-                    style={{
-                      background: status === 'completed' ? '#E9785E' : status === 'active' ? '#171B3A' : '#F0F0F0',
-                    }}
-                  >
-                    {status === 'completed' ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    ) : (
-                      <span className="text-xs font-semibold" style={{ color: status === 'active' ? '#FFFFFF' : '#9A9A9A' }}>
-                        {i + 1}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className={`font-serif text-base ${status === 'upcoming' ? 'text-ink-muted' : 'text-ink'}`}>
-                      {step.title}
+      <div className="px-5 md:grid md:grid-cols-[3fr_2fr] md:gap-8 md:items-start md:pt-6">
+        {/* Left col: step list */}
+        <div className="flex flex-col gap-3">
+          {STEP_THEMES.map((step, i) => {
+            const status = getStepStatus(i);
+            return (
+              <div
+                key={i}
+                onClick={() => status !== 'upcoming' ? openStep(i) : undefined}
+                className={`text-right w-full${status === 'upcoming' ? ' opacity-50' : ' cursor-pointer'}`}
+              >
+                <Card>
+                  <div className="flex gap-3 items-center">
+                    {/* Status indicator */}
+                    <div
+                      className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center"
+                      style={{
+                        background: status === 'completed' ? '#E9785E' : status === 'active' ? '#171B3A' : '#F0F0F0',
+                      }}
+                    >
+                      {status === 'completed' ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      ) : (
+                        <span className="text-xs font-semibold" style={{ color: status === 'active' ? '#FFFFFF' : '#9A9A9A' }}>
+                          {i + 1}
+                        </span>
+                      )}
                     </div>
-                    <div className="text-xs text-ink-muted mt-0.5">{step.subtitle}</div>
+                    <div className="flex-1">
+                      <div className={`font-serif text-base ${status === 'upcoming' ? 'text-ink-muted' : 'text-ink'}`}>
+                        {step.title}
+                      </div>
+                      <div className="text-xs text-ink-muted mt-0.5">{step.subtitle}</div>
+                    </div>
+                    <Chip active={status === 'active'} className="text-[11px] shrink-0">
+                      {status === 'completed' ? 'مكتمل' : status === 'active' ? 'نشط' : 'قادم'}
+                    </Chip>
                   </div>
-                  <Chip active={status === 'active'} className="text-[11px] shrink-0">
-                    {status === 'completed' ? 'مكتمل' : status === 'active' ? 'نشط' : 'قادم'}
-                  </Chip>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Right col: journal (desktop only) */}
+        <div className="md:sticky md:top-24 hidden md:block">
+          {activeStep !== null ? (() => {
+            const step = STEP_THEMES[activeStep];
+            const course = COURSES.find((c) => c.id === step.course);
+            return (
+              <>
+                <div className="text-xs text-coral font-medium mb-1">الخطوة {ORDINALS[activeStep]}</div>
+                <div className="font-serif text-base text-ink mb-1">{step.title}</div>
+                <div className="text-xs text-ink-muted mb-4">{step.subtitle}</div>
+
+                {course && (
+                  <Link href={`/play/${course.id}?lesson=${step.lesson}`} className="block mb-4">
+                    <Card>
+                      <div className="flex gap-3 items-center">
+                        <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center shrink-0">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E9785E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3" fill="#E9785E" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs text-ink-muted">{course.title}</div>
+                          <div className="font-serif text-sm text-ink mt-0.5">{course.lessons[step.lesson]}</div>
+                        </div>
+                        <span className="text-xs text-ink-muted">استمع ←</span>
+                      </div>
+                    </Card>
+                  </Link>
+                )}
+
+                <div className="text-sm text-ink font-medium mb-2">يوميّاتك</div>
+                <textarea
+                  value={journal}
+                  onChange={(e) => setJournal(e.target.value)}
+                  placeholder="اكتب هنا ما يراودك حول هذا الموضوع…"
+                  className="w-full min-h-[140px] rounded-[14px] bg-cream-soft border border-rule-soft text-ink text-sm p-4 placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-coral/20 resize-none leading-[1.8]"
+                  dir="rtl"
+                />
+
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={saveJournalDraft}
+                    className="flex-1 py-3 rounded-[14px] bg-white border border-rule-soft text-ink text-sm font-medium"
+                  >
+                    حفظ مسوّدة
+                  </button>
+                  <button
+                    onClick={completeStep}
+                    className="flex-1 py-3 rounded-[14px] bg-ink text-cream text-sm font-medium"
+                  >
+                    أكملت هذه الخطوة
+                  </button>
                 </div>
-              </Card>
+              </>
+            );
+          })() : (
+            <div className="text-sm text-ink-muted text-center py-12 opacity-50">
+              اختر خطوة لتبدأ الكتابة
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
     </div>
   );

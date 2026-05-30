@@ -46,7 +46,7 @@ export default function CalibrationPage() {
   const total = entries.length;
 
   return (
-    <div className="py-4">
+    <div className="py-4 md:max-w-lg md:mx-auto">
       <SettingsSubHeader title="المعايرة" />
       {loaded && total === 0 ? (
         <div className="px-5 py-12 text-center">
@@ -60,7 +60,7 @@ export default function CalibrationPage() {
             </div>
             <div className="text-[13px] text-ink-muted mt-2">ينطبق · من {toArabicDigits(total)} مواضع</div>
           </div>
-          <div className="px-5 mt-5 flex flex-col gap-2">
+          <div className="px-5 mt-5 flex flex-col gap-2 md:grid md:grid-cols-2 md:gap-2">
             {entries.map((e) => {
               const color = e.value === 'yes' ? '#8FA084' : e.value === 'no' ? '#E9785E' : '#5C5C7A';
               return (

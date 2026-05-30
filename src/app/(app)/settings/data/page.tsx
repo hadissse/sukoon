@@ -44,7 +44,7 @@ export default function DataPage() {
   };
 
   return (
-    <div className="py-4">
+    <div className="py-4 md:max-w-lg md:mx-auto">
       <SettingsSubHeader title="البيانات" />
       <div className="px-5 flex flex-col gap-3">
         <button onClick={handleExport} className="text-right">

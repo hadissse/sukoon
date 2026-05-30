@@ -42,7 +42,7 @@ function CloudSyncToggle() {
 
 export default function PrivacyPage() {
   return (
-    <div className="py-4">
+    <div className="py-4 md:max-w-lg md:mx-auto">
       <SettingsSubHeader title="سياسة الخصوصية" />
       <div className="px-5 flex flex-col gap-4 text-sm text-ink-muted leading-[1.8] mt-2">
         <p>

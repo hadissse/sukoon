@@ -50,14 +50,14 @@ export default function TraitsPage() {
   ];
 
   return (
-    <div className="pb-24">
+    <div className="pb-24 md:max-w-3xl md:mx-auto">
       <div className="px-5 pt-6 pb-4">
         <Headline>ملفّ السمات</Headline>
         <Body muted className="mt-1 text-sm">تُحسب من خريطتك مرّة واحدة.</Body>
       </div>
 
       {/* Tabs */}
-      <div className="px-5 flex gap-2 overflow-x-auto pb-2">
+      <div className="px-5 flex gap-2 overflow-x-auto pb-2 md:gap-4">
         {tabs.map((t) => (
           <Chip key={t.key} active={tab === t.key} onClick={() => setTab(t.key)}>
             {t.label}
@@ -78,6 +78,7 @@ export default function TraitsPage() {
               </div>
               <Body muted>{ELEMENT_MEANING[traits.elements.dominant].lesson}</Body>
             </div>
+            <div className="grid gap-3 md:grid-cols-2 md:gap-x-8">
             {(['fire', 'earth', 'air', 'water'] as const).map((el) => (
               <Card key={el}>
                 <div className="flex justify-between items-start mb-3">
@@ -98,12 +99,13 @@ export default function TraitsPage() {
                 </div>
               </Card>
             ))}
+            </div>
           </>
         )}
 
         {/* Minerals tab */}
         {tab === 'minerals' && (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-4">
             <FrameworkLabel label="قراءة هرمسية تقليدية" />
             {traits.minerals.map((m) => (
               <Card key={m.planet}>
@@ -128,6 +130,7 @@ export default function TraitsPage() {
         {tab === 'organs' && (
           <>
             <FrameworkLabel label="قراءة هرمسية تقليدية" />
+            <div className="grid gap-3 md:grid-cols-3 md:gap-4">
             {traits.organs.map((o) => (
               <Card key={o.planet}>
                 <div className="flex flex-col gap-2">
@@ -143,6 +146,7 @@ export default function TraitsPage() {
                 </div>
               </Card>
             ))}
+            </div>
           </>
         )}
 
@@ -153,6 +157,7 @@ export default function TraitsPage() {
             <div className="text-xs text-ink-muted mb-1 leading-[1.7]">
               المراكز المُعرَّفة تحمل طاقة ثابتة — غير المُعرَّفة مرنة ومتأثّرة بالمحيط.
             </div>
+            <div className="grid gap-3 md:grid-cols-3 md:gap-4">
             {traits.hdCentres.map((c) => {
               const meaning = HD_CENTRE_MEANING[c.name];
               return (
@@ -182,6 +187,7 @@ export default function TraitsPage() {
                 </Card>
               );
             })}
+            </div>
           </>
         )}
       </div>
