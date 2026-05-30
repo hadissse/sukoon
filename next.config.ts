@@ -18,10 +18,10 @@ const nextConfig: NextConfig = {
               // Images from self + Google profile pictures + hCaptcha challenges
               "img-src 'self' data: blob: https://*.googleusercontent.com https://lh3.googleusercontent.com https://hcaptcha.com https://*.hcaptcha.com",
               // Fonts from self
-              "font-src 'self' data:",
+              "font-src 'self' data: https://fonts.gstatic.com",
               // Default
               "default-src 'self'",
-              "style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com",
+              "style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com https://fonts.googleapis.com",
               "worker-src 'self' blob:",
             ].join("; "),
           },
