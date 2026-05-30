@@ -49,7 +49,7 @@ export default function LearnPage() {
       {tab === 'foundations' && (
         <div className="px-5 mt-5">
           <p className="text-sm text-ink-muted">ابدأ من هنا. ثبّت الأساس.</p>
-          <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
             {FOUNDATIONS.map(([t, s, v, id]) => (
               <GradientTile
                 key={t}
@@ -79,14 +79,14 @@ export default function LearnPage() {
               </span>
             ))}
           </div>
-          <div className="px-5 mt-5 flex flex-col gap-3">
+          <div className="px-5 mt-5 md:grid md:grid-cols-2 md:gap-3 flex flex-col gap-3">
             {SERIES.map((s) => (
               <Link
                 key={s.id}
                 href={`/learn/${s.id}`}
-                className="bg-white rounded-[16px] p-3.5 border border-sand flex gap-3.5"
+                className="bg-white rounded-[16px] p-3.5 border border-sand flex gap-3.5 md:flex-row"
               >
-                <div className="w-[90px] h-[90px] rounded-[12px] shrink-0" style={{ background: s.color }} />
+                <div className="w-[90px] h-[90px] md:w-[120px] md:h-[120px] rounded-[12px] shrink-0" style={{ background: s.color }} />
                 <div className="flex-1">
                   <div className="font-serif text-[17px] text-ink">{s.title}</div>
                   <div className="text-xs text-ink-muted mt-0.5">{s.sub}</div>
@@ -115,7 +115,7 @@ export default function LearnPage() {
 
       {/* Scr93 — teachers grid */}
       {tab === 'teachers' && (
-        <div className="px-5 mt-5 grid grid-cols-2 gap-3">
+        <div className="px-5 mt-5 grid grid-cols-2 md:grid-cols-4 gap-3">
           {TEACHERS.map((t) => (
             <div key={t.name} className="rounded-[16px] bg-white border border-sand p-3.5">
               <div

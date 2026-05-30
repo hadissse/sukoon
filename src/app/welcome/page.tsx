@@ -163,7 +163,8 @@ export default function WelcomePage() {
   };
 
   return (
-    <div className="max-w-[430px] mx-auto w-full flex-1 flex flex-col relative" dir="rtl">
+    <div className="flex-1 flex flex-col md:min-h-dvh md:bg-[#0F1228] md:items-center md:justify-center" dir="rtl">
+    <div className="w-full max-w-[430px] mx-auto flex-1 flex flex-col relative bg-cream md:flex-none md:h-[680px] md:rounded-[32px] md:shadow-2xl md:overflow-hidden">
       {/* ── Scr01: Splash ── */}
       {phase === 'splash' && (
         <button
@@ -350,6 +351,7 @@ export default function WelcomePage() {
           onNext={advanceIntro}
         />
       )}
+    </div>
     </div>
   );
 }

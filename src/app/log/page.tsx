@@ -167,7 +167,8 @@ function LogFlow() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col max-w-[430px] mx-auto w-full">
+    <div className="min-h-dvh flex flex-col md:bg-[#0F1228] md:items-center md:justify-center">
+    <div className="w-full max-w-[430px] mx-auto flex-1 flex flex-col bg-cream md:flex-none md:h-[680px] md:rounded-[32px] md:shadow-2xl md:overflow-hidden">
       {/* Progress header */}
       <div className="pt-4 px-5">
         <div className="flex items-center justify-between">
@@ -346,6 +347,7 @@ function LogFlow() {
         {step === 4 && <PrimaryBtn onClick={handleSave}>متابعة</PrimaryBtn>}
         {step === 5 && <PrimaryBtn onClick={() => router.push('/self')}>تمّ</PrimaryBtn>}
       </div>
+    </div>
     </div>
   );
 }

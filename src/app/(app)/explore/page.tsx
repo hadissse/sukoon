@@ -49,109 +49,117 @@ function SkySection() {
       </div>
       <div className="text-[11px] text-ink-muted px-5 mb-4">{dateStr} · تحديث كل دقيقة</div>
 
-      {/* Natal-style wheel */}
-      <div className="flex justify-center px-2 mb-4">
-        <ZoomableWheel size={420} tone="paper" chart={sky} showHouses={false} />
-      </div>
-
-      {/* Full-year navigable calendar */}
-      <div className="px-5 mb-6">
-        <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">التقويم الفلكي ٢٠٢٦</div>
-        <CalendarMonthView />
-      </div>
-
-      {/* 2026 Planetary Motion — stationary points */}
-      {(() => {
-        const now = new Date();
-        const nowYear = now.getFullYear();
-        const nowMonth = now.getMonth() + 1; // 1-indexed
-        const nowDay = now.getDate();
-        const isPast = (month: number, day: number) =>
-          nowYear > 2026 ||
-          (nowYear === 2026 && (month < nowMonth || (month === nowMonth && day <= nowDay)));
-        return (
-          <div className="px-5 mb-6">
-            <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">محطات الكواكب ٢٠٢٦</div>
-            <div className="text-[11px] text-ink-muted mb-3 leading-[1.7]">
-              المحطات هي اللحظات التي يبدو فيها الكوكب ساكنًا قبل أن يغيّر اتجاهه.
-            </div>
-            <div className="flex flex-col gap-2">
-              {(['mercury','venus','jupiter','saturn','uranus','neptune','pluto'] as const).map(svgKey => {
-                const planetStations = STATIONS_2026.filter(s => s.svgKey === svgKey);
-                if (planetStations.length === 0) return null;
-                return (
-                  <div key={svgKey} className="bg-white rounded-[12px] px-3 py-2.5" style={{ border: '1px solid #F0EDE6' }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-4 h-4 shrink-0" style={{
-                        WebkitMaskImage: `url('/svg/${svgKey}.svg')`, maskImage: `url('/svg/${svgKey}.svg')`,
-                        WebkitMaskSize: 'contain', maskSize: 'contain',
-                        WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center', maskPosition: 'center',
-                        background: '#5C5C7A',
-                      }} />
-                      <span className="text-[12px] font-semibold text-ink">{planetStations[0].nameAr}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {planetStations.map((s, i) => {
-                        const past = isPast(s.month, s.day);
-                        return (
-                          <span key={i} className="px-2 py-0.5 rounded-full text-[10px] font-medium"
-                            style={{
-                              background: '#fff',
-                              color: past ? '#B0A898' : '#171B3A',
-                              border: '1px solid #E0DBD3',
-                              textDecoration: past ? 'line-through' : 'none',
-                              opacity: past ? 0.6 : 1,
-                            }}>
-                            {s.type === 'sR' ? 'راجع' : 'مباشر'} · {s.dateLabel}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+      <div className="md:grid md:grid-cols-2 md:gap-8">
+        {/* Left col on desktop: wheel + planet grid */}
+        <div>
+          {/* Natal-style wheel */}
+          <div className="flex justify-center px-2 mb-4 md:max-w-[480px] md:mx-auto">
+            <ZoomableWheel size={420} tone="paper" chart={sky} showHouses={false} />
           </div>
-        );
-      })()}
 
-      {/* Compact all-planets grid */}
-      <div className="px-5">
-        <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">مواضع الكواكب</div>
-        {!sky && <div className="text-sm text-ink-muted text-center py-4">جارٍ الحساب...</div>}
-        {sky && (
-          <div className="grid grid-cols-2 gap-2">
-            {ALL_PLANETS.map((key) => {
-              const planet = (sky as AstralChart & Record<string, { sign: string; degree: number; minute: number; retrograde?: boolean }>)[key];
-              if (!planet) return null;
-              return (
-                <Link key={key} href={`/explore/sky/${key}`} className="block">
-                  <div className="bg-white rounded-[12px] px-3 py-2.5 flex items-center gap-2.5" style={{ border: '1px solid #F0EDE6' }}>
-                    <div
-                      className="w-5 h-5 shrink-0"
-                      style={{
-                        WebkitMaskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
-                        maskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
-                        WebkitMaskSize: 'contain', maskSize: 'contain',
-                        WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center', maskPosition: 'center',
-                        background: '#E9785E',
-                      }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[12px] font-semibold text-ink truncate">{PLANET_KEYS_AR[key]}{planet.retrograde ? ' ℞' : ''}</div>
-                      <div className="text-[11px] text-ink-muted truncate">
-                        {planet.sign} · {toAr(planet.degree)}°
+          {/* Compact all-planets grid */}
+          <div className="px-5">
+            <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">مواضع الكواكب</div>
+            {!sky && <div className="text-sm text-ink-muted text-center py-4">جارٍ الحساب...</div>}
+            {sky && (
+              <div className="grid grid-cols-2 gap-2">
+                {ALL_PLANETS.map((key) => {
+                  const planet = (sky as AstralChart & Record<string, { sign: string; degree: number; minute: number; retrograde?: boolean }>)[key];
+                  if (!planet) return null;
+                  return (
+                    <Link key={key} href={`/explore/sky/${key}`} className="block">
+                      <div className="bg-white rounded-[12px] px-3 py-2.5 flex items-center gap-2.5" style={{ border: '1px solid #F0EDE6' }}>
+                        <div
+                          className="w-5 h-5 shrink-0"
+                          style={{
+                            WebkitMaskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
+                            maskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
+                            WebkitMaskSize: 'contain', maskSize: 'contain',
+                            WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                            WebkitMaskPosition: 'center', maskPosition: 'center',
+                            background: '#E9785E',
+                          }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[12px] font-semibold text-ink truncate">{PLANET_KEYS_AR[key]}{planet.retrograde ? ' ℞' : ''}</div>
+                          <div className="text-[11px] text-ink-muted truncate">
+                            {planet.sign} · {toAr(planet.degree)}°
+                          </div>
+                        </div>
+                        <div className="text-ink-muted text-xs shrink-0">›</div>
                       </div>
-                    </div>
-                    <div className="text-ink-muted text-xs shrink-0">›</div>
-                  </div>
-                </Link>
-              );
-            })}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Right col on desktop: calendar + stations */}
+        <div>
+          {/* Full-year navigable calendar */}
+          <div className="px-5 mb-6">
+            <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">التقويم الفلكي ٢٠٢٦</div>
+            <CalendarMonthView />
+          </div>
+
+          {/* 2026 Planetary Motion — stationary points */}
+          {(() => {
+            const now = new Date();
+            const nowYear = now.getFullYear();
+            const nowMonth = now.getMonth() + 1; // 1-indexed
+            const nowDay = now.getDate();
+            const isPast = (month: number, day: number) =>
+              nowYear > 2026 ||
+              (nowYear === 2026 && (month < nowMonth || (month === nowMonth && day <= nowDay)));
+            return (
+              <div className="px-5 mb-6">
+                <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">محطات الكواكب ٢٠٢٦</div>
+                <div className="text-[11px] text-ink-muted mb-3 leading-[1.7]">
+                  المحطات هي اللحظات التي يبدو فيها الكوكب ساكنًا قبل أن يغيّر اتجاهه.
+                </div>
+                <div className="flex flex-col gap-2">
+                  {(['mercury','venus','jupiter','saturn','uranus','neptune','pluto'] as const).map(svgKey => {
+                    const planetStations = STATIONS_2026.filter(s => s.svgKey === svgKey);
+                    if (planetStations.length === 0) return null;
+                    return (
+                      <div key={svgKey} className="bg-white rounded-[12px] px-3 py-2.5" style={{ border: '1px solid #F0EDE6' }}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-4 h-4 shrink-0" style={{
+                            WebkitMaskImage: `url('/svg/${svgKey}.svg')`, maskImage: `url('/svg/${svgKey}.svg')`,
+                            WebkitMaskSize: 'contain', maskSize: 'contain',
+                            WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                            WebkitMaskPosition: 'center', maskPosition: 'center',
+                            background: '#5C5C7A',
+                          }} />
+                          <span className="text-[12px] font-semibold text-ink">{planetStations[0].nameAr}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {planetStations.map((s, i) => {
+                            const past = isPast(s.month, s.day);
+                            return (
+                              <span key={i} className="px-2 py-0.5 rounded-full text-[10px] font-medium"
+                                style={{
+                                  background: '#fff',
+                                  color: past ? '#B0A898' : '#171B3A',
+                                  border: '1px solid #E0DBD3',
+                                  textDecoration: past ? 'line-through' : 'none',
+                                  opacity: past ? 0.6 : 1,
+                                }}>
+                                {s.type === 'sR' ? 'راجع' : 'مباشر'} · {s.dateLabel}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
       </div>
     </div>
   );
@@ -166,7 +174,7 @@ function KnowledgeSection() {
       </div>
 
       {/* Knowledge topics grid */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
         {ASTRO_KNOWLEDGE.map((item) => (
           <Link key={item.id} href={`/learn/${item.courseId}`} className="block">
             <div className="bg-white rounded-[16px] border border-rule-soft p-3.5 flex flex-col gap-2">
@@ -190,7 +198,7 @@ function KnowledgeSection() {
           <div className="font-serif text-base text-ink">دورات نجمية</div>
           <Link href="/learn" className="text-xs text-coral font-medium">عرض الكل ←</Link>
         </div>
-        <div className="flex flex-col gap-2.5">
+        <div className="md:grid md:grid-cols-2 md:gap-2.5 flex flex-col gap-2.5">
           {ASTRO_COURSES.slice(0, 4).map((c) => (
             <Link key={c.id} href={`/learn/${c.id}`} className="block">
               <div className="bg-white rounded-[16px] border border-rule-soft p-3.5 flex items-center gap-3">
