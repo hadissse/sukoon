@@ -490,10 +490,11 @@ function MobileAuthCard(p: AuthProps) {
 
   // welcome
   return (
-    <div className="flex-1 flex flex-col bg-cream">
-      <div className="flex flex-col items-center pt-12 pb-6 px-8 gap-4">
-        <SukoonIcon size={56} />
-        <Logo height={300} color="#171B3A" />
+    <div className="flex-1 flex flex-col">
+      {/* Centered logo — icon + white text logo, 3× header size */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 px-8">
+        <img src="/sukoon-logo-icon.svg" alt="" aria-hidden="true" className="w-[132px] h-[132px] invert" />
+        <img src="/sukun new logo/sukoon typo v2 white.svg" alt="سُكون" className="h-[84px] w-auto" />
       </div>
       <div className="px-6 pb-12 flex flex-col gap-3">
         <h2 className="font-serif text-[22px] text-ink mb-1">أنشئ حسابًا</h2>

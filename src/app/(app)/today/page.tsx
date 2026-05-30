@@ -391,6 +391,11 @@ export default function TodayPage() {
       <div className="relative w-full aspect-square md:aspect-[16/7] overflow-hidden md:rounded-[28px] md:mt-4" style={{ background: '#1A0C00' }}>
         <img src="/media/match-flame.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(15,18,40,0.60) 0%, rgba(15,18,40,0) 42%, rgba(15,18,40,0.78) 100%)' }} />
+        {/* Logo — top right, white */}
+        <div className="absolute top-5 right-5 flex items-center gap-2.5">
+          <img src="/sukoon-logo-icon.svg" alt="" aria-hidden="true" className="h-10 w-10 invert" />
+          <img src="/sukun new logo/sukoon typo v2 white.svg" alt="سُكون" className="h-7" />
+        </div>
         <div className="absolute inset-0 flex flex-col justify-end p-6">
           {heroText && (
             <div className="font-serif text-2xl text-cream leading-snug">{heroText}</div>
