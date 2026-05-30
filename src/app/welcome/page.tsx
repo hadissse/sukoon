@@ -221,7 +221,7 @@ export default function WelcomePage() {
 
       {/* ── Desktop: circular card ── */}
       <div className="hidden md:flex flex-1 items-center justify-center px-6 py-8">
-        <div className="w-[960px] h-[960px] bg-transparent rounded-full overflow-hidden flex items-center justify-center">
+        <div className="w-[680px] h-[680px] flex items-center justify-center" style={{ clipPath: 'circle(50%)' }}>
           <div className="w-[460px]">
             <DesktopAuthCard
               phase={isAuthPhase ? phase : 'welcome'}
@@ -353,10 +353,7 @@ function DesktopAuthCard(p: AuthProps) {
   // welcome (default)
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-center">
-        <h1 className="font-serif text-2xl text-ink">أنشئ حسابًا</h1>
-        <p className="text-sm text-ink-muted mt-1">زامن تقدّمك عبر أجهزتك واحفظ خريطتك.</p>
-      </div>
+      <h1 className="font-serif text-2xl text-ink text-center">أنشئ حسابًا</h1>
 
       {p.authError && <p className="text-[13px] text-coral bg-coral/10 rounded-xl px-3 py-2 text-center">{p.authError}</p>}
 
