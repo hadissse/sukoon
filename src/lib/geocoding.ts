@@ -124,9 +124,10 @@ export async function searchLocation(query: string): Promise<Location[]> {
   if (cached) return [cached];
 
   try {
+    // Open-Meteo is fast (~100ms), no cold start, no API key required
     const locations = process.env.NEXT_PUBLIC_OPENCAGE_KEY
       ? await searchOpenCage(query)
-      : await searchViaEdgeFn(query);
+      : await searchOpenMeteo(query);
 
     if (locations.length > 0) {
       setCachedLocation(query, locations[0]);
@@ -134,11 +135,7 @@ export async function searchLocation(query: string): Promise<Location[]> {
 
     return locations;
   } catch {
-    try {
-      return await searchOpenMeteo(query);
-    } catch {
-      return [];
-    }
+    return [];
   }
 }
 

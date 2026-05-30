@@ -15,8 +15,25 @@ function to24h(h: number, ampm: 'AM' | 'PM'): number {
   return h === 12 ? 12 : h + 12;
 }
 
-const fieldCls =
-  'w-full px-3 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink text-sm text-center focus:outline-none focus:ring-1 focus:ring-coral/20';
+const inputCls =
+  'w-full px-3 py-2.5 bg-transparent border-b border-stone-200 text-ink text-sm text-center focus:outline-none focus:border-coral/50 transition-colors placeholder:text-ink-muted/50';
+
+const inputFullCls =
+  'w-full px-4 py-3 bg-transparent border-b border-stone-200 text-ink text-sm focus:outline-none focus:border-coral/50 transition-colors placeholder:text-ink-muted/50';
+
+function SectionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-[20px] border border-stone-100 px-5 py-5 flex flex-col gap-4">
+      {children}
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[11px] font-semibold text-coral tracking-wider uppercase">{children}</span>
+  );
+}
 
 export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
   const currentYear = new Date().getFullYear();
@@ -37,20 +54,20 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (locationQuery.trim().length < 2) {
+      setLocationResults([]);
+      return;
+    }
     const t = setTimeout(async () => {
-      if (locationQuery.trim().length > 2) {
-        setIsSearching(true);
-        try {
-          setLocationResults(await searchLocation(locationQuery));
-        } catch {
-          setLocationResults([]);
-        } finally {
-          setIsSearching(false);
-        }
-      } else {
+      setIsSearching(true);
+      try {
+        setLocationResults(await searchLocation(locationQuery));
+      } catch {
         setLocationResults([]);
+      } finally {
+        setIsSearching(false);
       }
-    }, 250);
+    }, 150);
     return () => clearTimeout(t);
   }, [locationQuery]);
 
@@ -91,31 +108,31 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
   };
 
   return (
-    <div className="px-5 pt-6 pb-10 flex flex-col gap-7" dir="rtl">
-      <div>
+    <div className="px-5 pt-6 pb-10 flex flex-col gap-5" dir="rtl">
+      <div className="mb-2">
         <h2 className="font-serif text-2xl text-ink mb-1">خريطتك الفلكية</h2>
         <p className="text-sm text-ink-muted">أدخل بيانات ميلادك لتوليد خريطتك</p>
       </div>
 
       {/* ── Name ── */}
-      <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">الاسم</span>
+      <SectionCard>
+        <SectionLabel>الاسم</SectionLabel>
         <input
           type="text"
           placeholder="اسمك"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full px-4 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink placeholder:text-ink-muted text-sm focus:outline-none focus:ring-1 focus:ring-coral/20"
+          className={inputFullCls}
           dir="rtl"
         />
-      </div>
+      </SectionCard>
 
       {/* ── Birth date ── */}
-      <div className="flex flex-col gap-3">
-        <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">تاريخ الميلاد</span>
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <label className="block text-xs text-ink-muted mb-1 text-center">اليوم</label>
+      <SectionCard>
+        <SectionLabel>تاريخ الميلاد</SectionLabel>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="flex flex-col items-center gap-1">
+            <label className="text-[11px] text-ink-muted">اليوم</label>
             <input
               type="number"
               min="1"
@@ -126,11 +143,11 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                 const v = parseInt(e.target.value, 10);
                 if (!isNaN(v)) setDay(String(Math.min(31, Math.max(1, v))));
               }}
-              className={fieldCls}
+              className={inputCls}
             />
           </div>
-          <div>
-            <label className="block text-xs text-ink-muted mb-1 text-center">الشهر</label>
+          <div className="flex flex-col items-center gap-1">
+            <label className="text-[11px] text-ink-muted">الشهر</label>
             <input
               type="number"
               min="1"
@@ -141,11 +158,11 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                 const v = parseInt(e.target.value, 10);
                 if (!isNaN(v)) setMonth(String(Math.min(12, Math.max(1, v))));
               }}
-              className={fieldCls}
+              className={inputCls}
             />
           </div>
-          <div>
-            <label className="block text-xs text-ink-muted mb-1 text-center">السنة</label>
+          <div className="flex flex-col items-center gap-1">
+            <label className="text-[11px] text-ink-muted">السنة</label>
             <input
               type="number"
               min="1900"
@@ -156,41 +173,41 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                 const v = parseInt(e.target.value, 10);
                 if (!isNaN(v)) setYear(String(Math.min(currentYear, Math.max(1900, v))));
               }}
-              className={fieldCls}
+              className={inputCls}
             />
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* ── Birth time ── */}
-      <div className="flex flex-col gap-3">
+      <SectionCard>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">وقت الميلاد</span>
+          <SectionLabel>وقت الميلاد</SectionLabel>
           <button
             type="button"
             onClick={() => setTimeUnknown(!timeUnknown)}
-            className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+            className={`text-[11px] font-medium px-3 py-1 rounded-full border transition-colors ${
               timeUnknown
-                ? 'bg-coral/10 border-coral text-coral'
-                : 'bg-white border-rule-soft text-ink-muted'
+                ? 'border-coral text-coral'
+                : 'border-stone-200 text-ink-muted'
             }`}
           >
             لا أعرف وقت ميلادي
           </button>
         </div>
         {!timeUnknown && (
-          <div className="flex gap-2 items-end">
+          <div className="flex gap-4 items-end">
             {/* AM/PM — first in JSX = rightmost in RTL */}
-            <div>
-              <label className="block text-xs text-ink-muted mb-1 text-center opacity-0 select-none">—</label>
-              <div className="flex rounded-[14px] overflow-hidden border border-rule-soft">
+            <div className="flex flex-col items-center gap-1">
+              <label className="text-[11px] text-ink-muted opacity-0 select-none">—</label>
+              <div className="flex rounded-full overflow-hidden border border-stone-200">
                 {(['PM', 'AM'] as const).map((p) => (
                   <button
                     key={p}
                     type="button"
                     onClick={() => setAmPm(p)}
-                    className={`px-4 py-3 text-sm font-medium transition-colors ${
-                      amPm === p ? 'bg-ink text-cream' : 'bg-cream-soft text-ink-muted'
+                    className={`px-4 py-2 text-xs font-semibold transition-colors ${
+                      amPm === p ? 'bg-ink text-cream' : 'bg-white text-ink-muted'
                     }`}
                   >
                     {p}
@@ -199,8 +216,8 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
               </div>
             </div>
             {/* Hour — second in JSX = middle in RTL */}
-            <div className="flex-1">
-              <label className="block text-xs text-ink-muted mb-1 text-center">الساعة</label>
+            <div className="flex-1 flex flex-col items-center gap-1">
+              <label className="text-[11px] text-ink-muted">الساعة</label>
               <input
                 type="number"
                 min="1"
@@ -211,12 +228,12 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                   const v = parseInt(e.target.value, 10);
                   if (!isNaN(v)) setHour(String(Math.min(12, Math.max(1, v))));
                 }}
-                className={fieldCls}
+                className={inputCls}
               />
             </div>
             {/* Minute — last in JSX = leftmost in RTL */}
-            <div className="flex-1">
-              <label className="block text-xs text-ink-muted mb-1 text-center">الدقيقة</label>
+            <div className="flex-1 flex flex-col items-center gap-1">
+              <label className="text-[11px] text-ink-muted">الدقيقة</label>
               <input
                 type="number"
                 min="0"
@@ -227,50 +244,53 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                   const v = parseInt(e.target.value, 10);
                   if (!isNaN(v)) setMinute(String(v).padStart(2, '0'));
                 }}
-                className={fieldCls}
+                className={inputCls}
               />
             </div>
           </div>
         )}
-      </div>
+      </SectionCard>
 
       {/* ── Birth location ── */}
-      <div className="flex flex-col gap-3">
-        <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">مكان الميلاد</span>
-        <input
-          type="text"
-          placeholder="اكتب اسم المدينة بالعربي أو الإنجليزي"
-          value={locationQuery}
-          onChange={(e) => {
-            setLocationQuery(e.target.value);
-            setSelectedLocation(null);
-          }}
-          className="w-full px-4 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-ink placeholder:text-ink-muted text-sm focus:outline-none focus:ring-1 focus:ring-coral/20"
-        />
-        {isSearching && (
-          <p className="text-xs text-ink-muted text-center">جاري البحث...</p>
-        )}
-        {locationResults.length > 0 && !selectedLocation && (
-          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-            {locationResults.map((loc, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => {
-                  setSelectedLocation(loc);
-                  setLocationQuery(loc.name);
-                  setLocationResults([]);
-                }}
-                className="text-right px-4 py-3 rounded-[14px] bg-white border border-rule-soft text-ink text-sm hover:bg-cream-soft transition-colors"
-              >
-                <div className="font-medium">{loc.name}</div>
-                <div className="text-xs text-ink-muted">{loc.country}</div>
-              </button>
-            ))}
-          </div>
-        )}
-        {selectedLocation && (
-          <div className="px-4 py-3 rounded-[14px] bg-cream-soft border border-rule-soft flex items-center justify-between">
+      <SectionCard>
+        <SectionLabel>مكان الميلاد</SectionLabel>
+        {!selectedLocation ? (
+          <>
+            <input
+              type="text"
+              placeholder="اكتب اسم المدينة"
+              value={locationQuery}
+              onChange={(e) => {
+                setLocationQuery(e.target.value);
+                setSelectedLocation(null);
+              }}
+              className={inputFullCls}
+            />
+            {isSearching && (
+              <p className="text-xs text-ink-muted text-center">جاري البحث...</p>
+            )}
+            {locationResults.length > 0 && (
+              <div className="flex flex-col divide-y divide-stone-100 -mx-5 px-5">
+                {locationResults.map((loc, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      setSelectedLocation(loc);
+                      setLocationQuery(loc.name);
+                      setLocationResults([]);
+                    }}
+                    className="text-right py-3 text-ink text-sm hover:text-coral transition-colors"
+                  >
+                    <div className="font-medium">{loc.name}</div>
+                    <div className="text-xs text-ink-muted">{loc.country}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium text-ink">{selectedLocation.name}</div>
               <div className="text-xs text-ink-muted">{selectedLocation.country}</div>
@@ -278,13 +298,13 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
             <button
               type="button"
               onClick={() => { setSelectedLocation(null); setLocationQuery(''); }}
-              className="text-ink-muted text-xs hover:text-ink"
+              className="text-xs text-coral hover:text-coral/70 transition-colors"
             >
               تغيير
             </button>
           </div>
         )}
-      </div>
+      </SectionCard>
 
       {error && <p className="text-sm text-coral text-center">{error}</p>}
 
@@ -292,7 +312,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
         type="button"
         onClick={handleSubmit}
         disabled={!canSubmit}
-        className="w-full h-[52px] rounded-[26px] bg-ink text-cream text-base font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full h-[52px] rounded-[26px] bg-ink text-cream text-base font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed mt-2"
       >
         {isSubmitting ? 'جاري الحساب...' : 'أنشئ خريطتي'}
       </button>
