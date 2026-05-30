@@ -164,7 +164,7 @@ export default function WelcomePage() {
       {/* ── Desktop top bar: icon + wordmark together top-right ── */}
       <div className="hidden md:flex items-center gap-4 px-10 pt-8">
         <SukoonIcon size={120} />
-        <Logo height={60} color="white" />
+        <Logo height={60} color="#171B3A" />
       </div>
 
       {/* ── Mobile: splash + breathe animations ── */}
@@ -221,8 +221,8 @@ export default function WelcomePage() {
 
       {/* ── Desktop: circular card ── */}
       <div className="hidden md:flex flex-1 items-center justify-center px-6 py-8">
-        <div className="w-[640px] h-[640px] bg-white rounded-full shadow-2xl overflow-hidden flex items-center justify-center">
-          <div className="w-[380px]">
+        <div className="w-[960px] h-[960px] bg-white rounded-full shadow-2xl overflow-hidden flex items-center justify-center">
+          <div className="w-[460px]">
             <DesktopAuthCard
               phase={isAuthPhase ? phase : 'welcome'}
               email={email} setEmail={setEmail}
@@ -290,10 +290,7 @@ function DesktopAuthCard(p: AuthProps) {
   if (p.phase === 'signin') {
     return (
       <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="font-serif text-2xl text-ink">أهلًا بعودتك</h1>
-          <p className="text-sm text-ink-muted mt-1">سجّل الدخول لمتابعة ممارستك.</p>
-        </div>
+        <h1 className="font-serif text-2xl text-ink">أهلًا بعودتك</h1>
         <div className="flex flex-col gap-3">
           <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
           <Field label="كلمة المرور" type="password" value={p.password} onChange={p.setPassword} placeholder="••••••••" />
