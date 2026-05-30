@@ -209,7 +209,7 @@ function ChartVoiceIntro({ chart }: { chart: AstralChart }) {
   ];
 
   return (
-    <div className="px-5 flex flex-col gap-3">
+    <div className="px-5 flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-3">
       {items.map((it) => (
         <Link
           key={it.label}
@@ -463,7 +463,9 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       {activeSubtab === 'planets' && (
         <>
           <div className="flex justify-center px-2 pt-2">
-            <ZoomableWheel size={377} tone="paper" chart={chart} />
+            <div className="w-full max-w-[377px] md:max-w-[480px]">
+              <ZoomableWheel size={520} tone="paper" chart={chart} />
+            </div>
           </div>
           <ChartVoiceIntro chart={chart} />
         </>
@@ -471,7 +473,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
 
       {/* Planets list */}
       {activeSubtab === 'planets' && (
-        <div className="px-5 pb-6 flex flex-col gap-3">
+        <div className="px-5 pb-6 flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-3">
           {planets.map((planet) => (
             <Link key={planet.key} href={`/self/planet/${planet.key}`} className="block" onClick={saveNavState}>
               <Card>
@@ -545,7 +547,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
 
       {/* Signs list */}
       {activeSubtab === 'signs' && (
-        <div className="px-5 pb-6 flex flex-col gap-3">
+        <div className="px-5 pb-6 flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-3">
           {signs.map((sign, idx) => (
             <Link key={sign.name} href={`/self/sign/${SIGN_SLUGS[idx]}`} className="block" onClick={saveNavState}>
               <Card>
@@ -616,7 +618,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               </button>
             ))}
           </div>
-          <div className="px-5 pb-6 flex flex-col gap-3">
+          <div className="px-5 pb-6 flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-3">
             {(() => {
               const MAJOR = ['اقتران', 'تربيع', 'تثليث', 'تقابل'];
               const filtered = aspects.filter((a) => {
@@ -1301,12 +1303,12 @@ function SelfPageInner() {
   };
 
   return (
-    <div className="pb-32">
+    <div className="pb-32 md:pb-10">
       {showGuide && chart && <ChartIntroOverlay chart={chart} onDone={dismissGuide} />}
       <div className="pt-6">
-        {/* Main tabs — fixed bottom bar */}
+        {/* Main tabs — floating bottom bar on mobile, inline toolbar on desktop */}
         <div
-          className="fixed bottom-20 left-0 right-0 z-40 flex gap-2 justify-center px-5 py-3 overflow-x-auto"
+          className="fixed bottom-20 left-0 right-0 z-40 flex gap-2 justify-center px-5 py-3 overflow-x-auto md:static md:bottom-auto md:justify-start md:py-0 md:mb-5 md:overflow-visible"
           style={{ scrollbarWidth: 'none', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'transparent' }}
         >
           {[

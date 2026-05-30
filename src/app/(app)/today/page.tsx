@@ -33,7 +33,7 @@ function SyncPrompt() {
   };
 
   return (
-    <div className="mx-5 mt-4 p-4 rounded-[16px] border border-rule-soft bg-white flex flex-col gap-3">
+    <div className="mx-5 md:mx-0 mt-4 p-4 rounded-[16px] border border-rule-soft bg-white flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-semibold text-ink">احفظ خريطتك سحابيًّا</div>
@@ -98,8 +98,8 @@ export default function TodayPage() {
 
   return (
     <div className="pb-24 flex flex-col gap-0">
-      {/* ── Sky hero — square full-bleed ── */}
-      <div className="relative w-full aspect-square overflow-hidden" style={{ background: '#0F1228' }}>
+      {/* ── Sky hero — square on mobile, cinematic banner on desktop ── */}
+      <div className="relative w-full aspect-square md:aspect-[16/7] overflow-hidden md:rounded-[28px] md:mt-4" style={{ background: '#0F1228' }}>
         <img src="/media/blob-purple.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(15,18,40,0.60) 0%, rgba(15,18,40,0) 42%, rgba(15,18,40,0.78) 100%)' }} />
         <div className="absolute inset-0 flex flex-col justify-between p-6">
@@ -119,11 +119,15 @@ export default function TodayPage() {
 
       <SyncPrompt />
 
-      <div className="px-5 flex flex-col gap-4 pt-5">
+      <div className="px-5 md:px-0 flex flex-col gap-4 pt-5 md:pt-6 md:grid md:grid-cols-2 md:gap-5 md:items-start">
         {/* Active transit */}
-        <TransitHeroCard />
+        <div className="md:col-span-2">
+          <TransitHeroCard />
+        </div>
 
-        <Rule />
+        <div className="md:col-span-2">
+          <Rule />
+        </div>
 
         {/* Daily question — coral-tinted box */}
         <Link href="/log" className="block">
@@ -171,7 +175,7 @@ export default function TodayPage() {
         </Link>
 
         {/* Knowledge — link to learn section */}
-        <Link href="/learn" className="block">
+        <Link href="/learn" className="block md:col-span-2">
           <div className="rounded-[20px] p-5" style={{ background: '#F5F0E8', border: '1px solid #E8E2D2' }}>
             <div className="flex flex-col gap-2">
               <div className="text-[11px] text-ink/50 font-semibold tracking-wider">المعرفة</div>
@@ -182,7 +186,9 @@ export default function TodayPage() {
           </div>
         </Link>
 
-        <Rule />
+        <div className="md:col-span-2">
+          <Rule />
+        </div>
 
         {/* Body + moon — square full-bleed */}
         <Link href="/self" className="block">

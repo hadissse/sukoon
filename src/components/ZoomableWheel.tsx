@@ -182,7 +182,11 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
   return (
     <div
       style={{
-        width: size, height: size, overflow: 'hidden', position: 'relative',
+        // Fluid: fills the parent up to `size`, staying a perfect circle.
+        // The wheel is fully resolution-independent (SVG viewBox), so a
+        // single dynamic width drives every desktop/mobile breakpoint.
+        width: '100%', maxWidth: size, aspectRatio: '1 / 1',
+        overflow: 'hidden', position: 'relative',
         cursor: zoom > 1 ? 'grab' : 'pointer',
         borderRadius: '50%', touchAction: 'none', userSelect: 'none',
       }}
@@ -193,13 +197,13 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
       onPointerCancel={onPointerUp}
     >
       <div style={{
-        width: size, height: size,
+        width: '100%', height: '100%',
         transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
         transformOrigin: 'center center',
         transition: dragging.current ? 'none' : 'transform 220ms cubic-bezier(0.2,0.7,0.2,1)',
       }}>
         <svg
-          width={size} height={size} viewBox={`0 0 ${VB} ${VB}`}
+          width="100%" height="100%" viewBox={`0 0 ${VB} ${VB}`}
           role="img" aria-label="الخريطة الفلكية"
           style={{ display: 'block' }}
         >
