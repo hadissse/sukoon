@@ -500,8 +500,8 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                 </Link>
               </div>
             )}
-            <div className="flex justify-center px-2 pt-2">
-              <ZoomableWheel size={420} tone="paper" chart={chart} showHouses={!birthData?.timeUnknown} />
+            <div className="w-full pt-2">
+              <ZoomableWheel size={9999} tone="paper" chart={chart} showHouses={!birthData?.timeUnknown} />
             </div>
             <div className="px-5 pb-6">
               <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-3">مواضع الكواكب</div>
@@ -689,11 +689,30 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                     onClick={saveNavState}
                   >
                     <Card>
-                      <div className="flex justify-between gap-3 mb-2">
-                        <div className="font-serif text-base text-ink">{aspect.aspect}</div>
-                        <div className="text-xs text-ink-muted font-mono">{aspect.orb}</div>
+                      <div className="flex items-center gap-3">
+                        {/* Aspect symbol badge */}
+                        {(() => {
+                          const sym = aspect.aspect.match(/[☌⚹▫△☍]/)?.[0] ?? '·';
+                          return (
+                            <div
+                              className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-[16px] font-serif"
+                              style={{ background: `${aspect.color}18`, color: aspect.color, border: `1.5px solid ${aspect.color}40` }}
+                            >
+                              {sym}
+                            </div>
+                          );
+                        })()}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-serif text-base text-ink">{aspect.aspect}</div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[12px] font-medium" style={{ color: aspect.color }}>{aspect.type}</span>
+                            <span className="text-[11px] text-ink-muted font-mono">{aspect.orb}</span>
+                          </div>
+                        </div>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted opacity-30 shrink-0 rotate-180">
+                          <path d="M9 18l6-6-6-6" />
+                        </svg>
                       </div>
-                      <div className="text-sm font-medium" style={{ color: aspect.color }}>{aspect.type}</div>
                     </Card>
                   </Link>
                 ))
@@ -1428,24 +1447,34 @@ function ActiveTransitsView({ chart, onNavigate }: { chart: AstralChart | null; 
             return (
               <Link key={t.id} href={`/self/aspect/${transitSlug}`} className="block" onClick={onNavigate}>
                 <Card>
-                  <div className="flex justify-between items-baseline gap-2 mb-1.5">
-                    <div className="font-serif text-base text-ink">
-                      {t.transitName} · {t.natalName}
+                  <div className="flex items-center gap-3">
+                    {/* Aspect symbol badge */}
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-[18px] font-serif"
+                      style={{ background: `${t.aspectColor}18`, color: t.aspectColor, border: `1.5px solid ${t.aspectColor}40` }}
+                    >
+                      {t.aspectSymbol}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {isNoted && (
-                        <div className="flex items-center gap-1 text-[10px] font-semibold text-[#8FA084]">
-                          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                            <circle cx="6" cy="6" r="5.5" stroke="#8FA084" />
-                            <path d="M3.5 6l1.8 1.8L8.5 4.5" stroke="#8FA084" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          مُدوَّن
-                        </div>
-                      )}
-                      <div className="text-xs text-ink-muted font-mono">{orbLabel(t.orb)}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-serif text-base text-ink">{t.label}</div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[12px] font-medium" style={{ color: t.aspectColor }}>{t.aspectName}</span>
+                        <span className="text-[11px] text-ink-muted font-mono">{orbLabel(t.orb)}</span>
+                        {isNoted && (
+                          <span className="flex items-center gap-0.5 text-[10px] font-semibold text-[#8FA084]">
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                              <circle cx="6" cy="6" r="5.5" stroke="#8FA084" />
+                              <path d="M3.5 6l1.8 1.8L8.5 4.5" stroke="#8FA084" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            مُدوَّن
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted opacity-30 shrink-0 rotate-180">
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
                   </div>
-                  <div className="text-sm font-medium" style={{ color: t.aspectColor }}>{t.aspectName}</div>
                 </Card>
               </Link>
             );

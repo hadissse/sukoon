@@ -251,8 +251,12 @@ export function PlacementDetailClient({ type, decodedKey }: { type: string; deco
         </div>
         <div className="flex gap-3.5 items-center mt-3">
           <div
-            className="w-14 h-14 rounded-full bg-cream-soft flex items-center justify-center shrink-0 text-2xl font-serif"
-            style={{ color: header.color }}
+            className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 text-2xl font-serif"
+            style={{
+              background: header.svgKey ? '#F5F0E8' : `${header.color}18`,
+              border: header.svgKey ? 'none' : `2px solid ${header.color}40`,
+              color: header.color,
+            }}
           >
             {header.svgKey ? (
               <div
