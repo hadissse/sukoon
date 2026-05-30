@@ -221,8 +221,8 @@ export default function WelcomePage() {
 
       {/* ── Desktop: circular card ── */}
       <div className="hidden md:flex flex-1 items-center justify-center px-6 py-8">
-        <div className="w-[480px] h-[480px] bg-white rounded-full shadow-2xl overflow-hidden flex items-center justify-center">
-          <div className="w-full px-16">
+        <div className="w-[640px] h-[640px] bg-white rounded-full shadow-2xl overflow-hidden flex items-center justify-center">
+          <div className="w-[380px]">
             <DesktopAuthCard
               phase={isAuthPhase ? phase : 'welcome'}
               email={email} setEmail={setEmail}
