@@ -174,7 +174,7 @@ function SkySection() {
                       {planet.sign} · {toAr(planet.degree)}°
                     </div>
                   </div>
-                  <div className="text-ink-muted text-xs shrink-0">›</div>
+                  <div className="text-ink-muted text-xs shrink-0">‹</div>
                 </div>
               </Link>
             );

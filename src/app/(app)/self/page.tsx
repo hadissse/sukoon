@@ -666,7 +666,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                     <div className="font-serif text-base text-ink">{sign.name}</div>
                     <div className="text-xs text-ink-muted mt-1">{sign.house} · {sign.element}</div>
                   </div>
-                  <div className="text-lg text-ink-muted">›</div>
+                  <div className="text-lg text-ink-muted">‹</div>
                 </div>
               </Card>
             </Link>

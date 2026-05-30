@@ -95,7 +95,7 @@ export default function ImmersiveWheelPage() {
           className="w-10 h-10 rounded-full flex items-center justify-center text-[18px]"
           style={{ background: 'rgba(255,255,255,0.08)', color: '#F2EDDF' }}
         >
-          ‹
+          ›
         </button>
         <div className="text-xs font-mono tracking-wide" style={{ color: '#F2EDDF', opacity: 0.6 }}>
           الخريطة · تكبير

@@ -34,7 +34,7 @@ export function CalEventRow({ e }: { e: CalEvent }) {
           {e.time} · {kindLabel(e.kind)}
         </div>
       </div>
-      <div className="text-sm text-ink-muted opacity-50 rotate-180">‹</div>
+      <div className="text-sm text-ink-muted opacity-50">‹</div>
     </div>
   );
 }
