@@ -12,7 +12,7 @@ import { Logo } from '@/components/Logo';
 import { SukoonIcon } from '@/components/SukoonIcon';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } from '@/lib/auth';
 
-const HCAPTCHA_SITE_KEY = '0x4AAAAAADZm32ijpTAk7MWU';
+const HCAPTCHA_SITE_KEY = '9b50ecfa-57d0-40bc-9892-e6d8fa1427ea';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase types
