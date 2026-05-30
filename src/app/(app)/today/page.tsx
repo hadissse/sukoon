@@ -260,8 +260,8 @@ export default function TodayPage() {
   return (
     <div className="pb-24 flex flex-col gap-0">
       {/* ── Sky hero — square on mobile, cinematic banner on desktop ── */}
-      <div className="relative w-full aspect-square md:aspect-[16/7] overflow-hidden md:rounded-[28px] md:mt-4" style={{ background: '#0F1228' }}>
-        <img src="/media/blob-purple.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+      <div className="relative w-full aspect-square md:aspect-[16/7] overflow-hidden md:rounded-[28px] md:mt-4" style={{ background: '#1A0C00' }}>
+        <img src="/media/match-flame.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(15,18,40,0.60) 0%, rgba(15,18,40,0) 42%, rgba(15,18,40,0.78) 100%)' }} />
         <div className="absolute inset-0 flex flex-col justify-between p-6">
           <h1 className="font-serif text-3xl text-cream">{greeting}</h1>
@@ -394,8 +394,8 @@ export default function TodayPage() {
 
         {/* Teaching — square full-bleed */}
         <Link href="/learn" className="block">
-          <div className="relative w-full aspect-square overflow-hidden rounded-[20px]" style={{ background: '#1A0C00' }}>
-            <img src="/media/match-flame.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+          <div className="relative w-full aspect-square overflow-hidden rounded-[20px]" style={{ background: '#0F1228' }}>
+            <img src="/media/blob-purple.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
             <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0) 42%, rgba(0,0,0,0.74) 100%)' }} />
             <div className="absolute inset-0 flex flex-col justify-between p-6">
               <div className="text-[11px] text-cream/60 font-semibold tracking-wider">تعلّم</div>
