@@ -6,6 +6,8 @@ import type { AstralChart } from '@/lib/chartCalculator';
 import { getCosmicStamp } from '@/lib/cosmicStamp';
 import { saveEvent, STREAM_AR, type LoggedEvent, type StreamKey } from '@/lib/events';
 import { syncEvent } from '@/lib/sync';
+import { SukoonIcon } from '@/components/SukoonIcon';
+import { Logo } from '@/components/Logo';
 
 const PLANET_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
@@ -167,8 +169,16 @@ function LogFlow() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col md:bg-[#0F1228] md:items-center md:justify-center">
-    <div className="w-full max-w-[430px] mx-auto flex-1 flex flex-col bg-cream md:flex-none md:h-[680px] md:rounded-[32px] md:shadow-2xl md:overflow-hidden">
+    <div
+      className="min-h-dvh flex flex-col md:items-center md:justify-center md:py-10 md:px-6"
+      style={{ background: 'linear-gradient(160deg, #F0EDE6 0%, #D4E0EB 45%, #7E97B8 100%)' }}
+    >
+      {/* Desktop top logo — outside the card like Welcome page */}
+      <div className="hidden md:flex items-center gap-2.5 self-start px-4 mb-6">
+        <SukoonIcon size={36} />
+        <Logo height={18} color="#171B3A" />
+      </div>
+    <div className="w-full max-w-[480px] mx-auto flex-1 flex flex-col bg-cream md:flex-none md:rounded-[28px] md:shadow-2xl md:overflow-hidden">
       {/* Progress header */}
       <div className="pt-4 px-5">
         <div className="flex items-center justify-between">
