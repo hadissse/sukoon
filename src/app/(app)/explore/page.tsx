@@ -242,25 +242,24 @@ function CalendarSection() {
 }
 
 export default function ExplorePage() {
-  const [view, setView] = useState<'sky' | 'knowledge' | 'calendar'>('sky');
+  const [view, setView] = useState<'sky' | 'calendar'>('sky');
 
   return (
-    <div className="pb-24">
+    <div className="pb-10">
+      {/* Sky / Calendar tab content */}
       {view === 'sky' && <SkySection />}
-      {view === 'knowledge' && <KnowledgeSection />}
       {view === 'calendar' && <CalendarSection />}
 
-      {/* Navigation buttons */}
-      <div className="fixed bottom-20 left-0 right-0 px-5 py-4 flex gap-2 justify-center overflow-x-auto z-40" style={{ scrollbarWidth: 'none' }}>
+      {/* Tab switcher — السماء · التقويم only */}
+      <div className="px-5 py-4 flex gap-2 justify-center" style={{ scrollbarWidth: 'none' }}>
         {([
           ['sky', 'السماء'],
           ['calendar', 'التقويم'],
-          ['knowledge', 'المعرفة'],
         ] as const).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setView(key)}
-            className={`px-4 py-2 rounded-[14px] text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`px-5 py-2 rounded-[14px] text-xs font-medium transition-colors whitespace-nowrap ${
               view === key ? 'bg-ink text-cream' : 'bg-white text-ink border border-rule-soft'
             }`}
           >
@@ -268,6 +267,12 @@ export default function ExplorePage() {
           </button>
         ))}
       </div>
+
+      {/* Divider */}
+      <div className="h-px bg-rule-soft mx-5 my-2" />
+
+      {/* المعرفة — always shown as a separate section below */}
+      <KnowledgeSection />
     </div>
   );
 }
