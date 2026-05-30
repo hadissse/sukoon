@@ -125,14 +125,21 @@ export default function WelcomePage() {
   const isAuthPhase = phase === 'welcome' || phase === 'signin' || phase === 'signup' || phase === 'reset' || phase === 'verify';
 
   return (
-    // Full viewport — gradient on desktop, plain cream on mobile
-    <div
-      className="flex-1 min-h-dvh flex flex-col"
-      style={{
-        background: 'linear-gradient(160deg, #F0EDE6 0%, #D4E0EB 45%, #7E97B8 100%)',
-      }}
-      dir="rtl"
-    >
+    <div className="flex-1 min-h-dvh flex flex-col relative" dir="rtl">
+      {/* ── Full-bleed animated background (desktop + mobile) ── */}
+      <img
+        src="/media/auth-bg.gif"
+        alt=""
+        aria-hidden="true"
+        className="fixed inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ zIndex: 0 }}
+      />
+      {/* Overlay so text/card remain readable */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1, background: 'rgba(240,237,230,0.45)' }} />
+
+      {/* All content above the background */}
+      <div className="relative flex-1 flex flex-col" style={{ zIndex: 2 }}>
+
       {/* ── Desktop top bar: logo top-left (like Headspace) ── */}
       <div className="hidden md:flex items-center gap-2.5 px-10 pt-8">
         <SukoonIcon size={40} />
@@ -209,9 +216,10 @@ export default function WelcomePage() {
       </div>
 
       {/* Desktop footer */}
-      <p className="hidden md:block text-center text-[12px] text-ink/40 pb-8">
+      <p className="hidden md:block text-center text-[12px] text-ink/60 pb-8">
         © 2026 Arabic Astrology Academy Inc.
       </p>
+      </div>{/* end zIndex:2 wrapper */}
     </div>
   );
 }

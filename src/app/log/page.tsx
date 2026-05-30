@@ -124,12 +124,19 @@ function LogFlow() {
   const pct = Math.round((step / STEPS) * 100);
 
   return (
-    // Full gradient backdrop — same as Welcome page
-    <div
-      dir="rtl"
-      className="min-h-dvh flex flex-col"
-      style={{ background: 'linear-gradient(160deg, #F0EDE6 0%, #D4E0EB 50%, #7E97B8 100%)' }}
-    >
+    <div dir="rtl" className="min-h-dvh flex flex-col relative">
+      {/* ── Full-bleed animated GIF background ── */}
+      <img
+        src="/media/auth-bg.gif"
+        alt=""
+        aria-hidden="true"
+        className="fixed inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ zIndex: 0 }}
+      />
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1, background: 'rgba(240,237,230,0.45)' }} />
+
+      <div className="relative flex-1 flex flex-col" style={{ zIndex: 2 }}>
+
       {/* ── Desktop logo row ── */}
       <div className="hidden md:flex items-center gap-2.5 px-10 pt-8 pb-2">
         <SukoonIcon size={36} />
@@ -408,6 +415,7 @@ function LogFlow() {
           </div>
         </div>
       </div>
+      </div>{/* end zIndex:2 wrapper */}
     </div>
   );
 }
