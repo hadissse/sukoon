@@ -4,6 +4,25 @@ export const metadata = {
   title: 'Terms & Conditions — سُكون',
 };
 
+const TOC = [
+  ['#acceptance',    '1. Acceptance of Terms'],
+  ['#eligibility',   '2. Eligibility'],
+  ['#service',       '3. Description of Service'],
+  ['#account',       '4. Account Registration'],
+  ['#content',       '5. User Content'],
+  ['#ip',            '6. Intellectual Property'],
+  ['#prohibited',    '7. Prohibited Uses'],
+  ['#third-party',   '8. Third-Party Services'],
+  ['#disclaimer',    '9. Disclaimer of Warranties'],
+  ['#liability',     '10. Limitation of Liability'],
+  ['#indemnification','11. Indemnification'],
+  ['#termination',   '12. Termination'],
+  ['#changes',       '13. Changes to These Terms'],
+  ['#governing',     '14. Governing Law'],
+  ['#dispute',       '15. Dispute Resolution'],
+  ['#contact',       '16. Contact'],
+];
+
 export default function TermsPage() {
   return (
     <div className="min-h-dvh bg-cream text-ink" dir="ltr">
@@ -25,20 +44,9 @@ export default function TermsPage() {
         {/* TOC sidebar */}
         <aside className="hidden md:block w-52 shrink-0">
           <div className="sticky top-24">
-            <p className="text-[11px] font-semibold text-ink-muted tracking-wider uppercase mb-4">Table of Contents</p>
+            <p className="text-[11px] font-semibold text-ink-muted tracking-wider uppercase mb-4">Contents</p>
             <nav className="flex flex-col gap-2">
-              {[
-                ['#acceptance', '1. Acceptance of Terms'],
-                ['#service', '2. Description of Service'],
-                ['#account', '3. Your Account'],
-                ['#content', '4. User Content'],
-                ['#prohibited', '5. Prohibited Uses'],
-                ['#disclaimer', '6. Disclaimer'],
-                ['#liability', '7. Limitation of Liability'],
-                ['#termination', '8. Termination'],
-                ['#governing', '9. Governing Law'],
-                ['#contact', '10. Contact'],
-              ].map(([href, label]) => (
+              {TOC.map(([href, label]) => (
                 <a key={href} href={href} className="text-[13px] text-ink-muted hover:text-coral transition-colors leading-snug">
                   {label}
                 </a>
@@ -50,86 +58,276 @@ export default function TermsPage() {
         {/* Content */}
         <article className="flex-1 min-w-0">
           <h1 className="font-serif text-4xl text-ink mb-2">Terms &amp; Conditions</h1>
-          <p className="text-sm text-ink-muted mb-8">Effective: January 1, 2026 · Last updated: May 30, 2026</p>
+          <p className="text-sm text-ink-muted mb-10">
+            Effective: 1 January 2026 · Last updated: 30 May 2026
+          </p>
 
-          <div className="text-ink leading-[1.8] space-y-8">
+          <div className="text-ink leading-[1.85] space-y-10">
 
             <section id="acceptance">
               <h2 className="font-serif text-2xl text-ink mb-3">1. Acceptance of Terms</h2>
               <p className="text-ink-muted">
-                By downloading, accessing, or using سُكون (the "App"), you agree to be bound by these Terms &amp; Conditions ("Terms"). If you do not agree to these Terms, do not use the App. These Terms constitute a legal agreement between you and Arabic Astrology Academy Inc. ("Company", "we", "us", or "our").
+                By accessing, downloading, or using <strong>سُكون</strong> (the "App") — available at{' '}
+                <span className="font-mono text-sm">sukoon.arabic-astro.com</span> — you agree to be bound by
+                these Terms &amp; Conditions ("Terms"). These Terms form a legally binding agreement between you
+                and <strong>Arabic Astrology Academy Inc.</strong> ("Company", "we", "us", or "our").
+              </p>
+              <p className="text-ink-muted mt-3">
+                If you do not agree to these Terms in their entirety, you must immediately stop using the App.
+                Your continued use of the App following any modification to these Terms constitutes your
+                acceptance of the modified Terms.
+              </p>
+            </section>
+
+            <section id="eligibility">
+              <h2 className="font-serif text-2xl text-ink mb-3">2. Eligibility</h2>
+              <p className="text-ink-muted">
+                You must be at least <strong>13 years of age</strong> to use the App. If you are under 18,
+                you represent that a parent or legal guardian has reviewed and agreed to these Terms on your
+                behalf. We do not knowingly collect personal information from children under the age of 13. If
+                we become aware that a user is under 13, we will promptly delete their account and associated
+                data.
+              </p>
+              <p className="text-ink-muted mt-3">
+                By using the App, you represent and warrant that you have the legal capacity to enter into
+                this agreement and that all information you provide is accurate and truthful.
               </p>
             </section>
 
             <section id="service">
-              <h2 className="font-serif text-2xl text-ink mb-3">2. Description of Service</h2>
+              <h2 className="font-serif text-2xl text-ink mb-3">3. Description of Service</h2>
               <p className="text-ink-muted">
-                سُكون is an Arabic-first mobile web application that provides astrological charts, daily sky readings, personal guidance, and self-reflection tools. All astrological interpretations are for entertainment and personal growth purposes only. Nothing in the App constitutes professional advice of any kind, including medical, psychological, financial, or legal advice.
+                سُكون is an Arabic-first mobile web application offering natal astrology charts, daily sky
+                readings, planetary transit tracking, personal reflection tools, and educational content rooted
+                in Western, Arabic, and spiritual astrological traditions.
+              </p>
+              <p className="text-ink-muted mt-3">
+                <strong>Important Notice:</strong> All astrological content — including planetary readings,
+                transit interpretations, biographical timelines, body-organ correspondences, and house
+                analyses — is provided <strong>for entertainment, personal growth, and educational
+                purposes only</strong>. Nothing in the App constitutes professional advice of any kind,
+                including but not limited to medical, psychological, psychiatric, financial, nutritional,
+                or legal advice. You should always consult a qualified professional before making decisions
+                about your health, finances, or legal matters.
+              </p>
+              <p className="text-ink-muted mt-3">
+                We reserve the right to modify, suspend, or discontinue any part of the App at any time
+                without prior notice or liability.
               </p>
             </section>
 
             <section id="account">
-              <h2 className="font-serif text-2xl text-ink mb-3">3. Your Account</h2>
+              <h2 className="font-serif text-2xl text-ink mb-3">4. Account Registration</h2>
               <p className="text-ink-muted">
-                You may use the App with a local account (data stored on-device) or by creating a cloud account. You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account. You must be at least 13 years of age to use the App. We reserve the right to terminate accounts that violate these Terms.
+                You may use core App features locally without an account (data stored on your device). To
+                enable cloud synchronisation and access your data across multiple devices, you must create
+                an account using a valid email address and password, or authenticate via a supported
+                third-party provider (Google).
+              </p>
+              <p className="text-ink-muted mt-3">
+                You are solely responsible for:
+              </p>
+              <ul className="list-disc list-inside text-ink-muted mt-2 space-y-1">
+                <li>Maintaining the confidentiality of your account credentials</li>
+                <li>All activity that occurs under your account, whether or not authorised by you</li>
+                <li>Notifying us immediately at <a href="mailto:info@arabic-astro.com" className="text-coral hover:underline">info@arabic-astro.com</a> if you suspect unauthorised access</li>
+              </ul>
+              <p className="text-ink-muted mt-3">
+                You may not share your account with others or create accounts using automated means. We
+                reserve the right to suspend or terminate accounts that violate these Terms.
               </p>
             </section>
 
             <section id="content">
-              <h2 className="font-serif text-2xl text-ink mb-3">4. User Content</h2>
+              <h2 className="font-serif text-2xl text-ink mb-3">5. User Content</h2>
               <p className="text-ink-muted">
-                Any content you create within the App — including journal entries, logged moments, and reflection notes — remains yours. By enabling cloud sync, you grant us a limited, non-exclusive licence to store and process your content solely to provide the Service. We do not claim ownership of your content.
+                Any content you create within the App — including journal entries, logged moments, evening
+                reflections, and notes — remains your intellectual property. By enabling cloud synchronisation,
+                you grant Arabic Astrology Academy Inc. a limited, non-exclusive, worldwide, royalty-free
+                licence to store, reproduce, and process your content solely to the extent necessary to
+                provide the Service. This licence terminates when you delete the relevant content or close
+                your account.
+              </p>
+              <p className="text-ink-muted mt-3">
+                You warrant that any content you submit does not infringe the intellectual property,
+                privacy, or other rights of any third party, and does not contain unlawful, harmful,
+                or offensive material.
+              </p>
+            </section>
+
+            <section id="ip">
+              <h2 className="font-serif text-2xl text-ink mb-3">6. Intellectual Property</h2>
+              <p className="text-ink-muted">
+                All App content that is not User Content — including but not limited to astrological
+                interpretations, educational text, software code, design, graphics, icons, animations,
+                and the سُكون name and logo — is the exclusive property of Arabic Astrology Academy Inc.
+                or its licensors, and is protected by copyright, trademark, and other applicable
+                intellectual property laws.
+              </p>
+              <p className="text-ink-muted mt-3">
+                You are granted a limited, non-exclusive, non-transferable, revocable licence to access
+                and use the App for your personal, non-commercial purposes. You may not copy, reproduce,
+                distribute, publish, modify, create derivative works from, or commercially exploit any
+                part of the App without our prior written consent.
               </p>
             </section>
 
             <section id="prohibited">
-              <h2 className="font-serif text-2xl text-ink mb-3">5. Prohibited Uses</h2>
+              <h2 className="font-serif text-2xl text-ink mb-3">7. Prohibited Uses</h2>
               <p className="text-ink-muted">You agree not to:</p>
-              <ul className="list-disc list-inside text-ink-muted mt-2 space-y-1">
-                <li>Use the App for any unlawful purpose or in violation of any regulations</li>
-                <li>Attempt to gain unauthorised access to any part of the App or its servers</li>
-                <li>Reverse engineer, decompile, or disassemble any part of the App</li>
-                <li>Use automated means to scrape, crawl, or harvest data from the App</li>
+              <ul className="list-disc list-inside text-ink-muted mt-2 space-y-2">
+                <li>Use the App for any unlawful purpose or in violation of any applicable local, national, or international law or regulation</li>
+                <li>Attempt to gain unauthorised access to any server, database, or account associated with the App</li>
+                <li>Reverse engineer, decompile, disassemble, or attempt to derive the source code of the App</li>
+                <li>Use automated tools (bots, scrapers, crawlers) to access, extract, or harvest data from the App</li>
+                <li>Transmit any viruses, malware, or other harmful code through the App</li>
                 <li>Impersonate any person or entity, or misrepresent your affiliation with any person or entity</li>
+                <li>Use the App to harass, defame, or harm any individual</li>
+                <li>Interfere with or disrupt the integrity or performance of the App or its infrastructure</li>
+                <li>Circumvent any security or access-control mechanism of the App</li>
+                <li>Resell, sublicence, or otherwise commercialise access to the App without our prior written consent</li>
               </ul>
             </section>
 
-            <section id="disclaimer">
-              <h2 className="font-serif text-2xl text-ink mb-3">6. Disclaimer of Warranties</h2>
+            <section id="third-party">
+              <h2 className="font-serif text-2xl text-ink mb-3">8. Third-Party Services</h2>
               <p className="text-ink-muted">
-                The App is provided "as is" and "as available" without warranties of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. We do not warrant that the App will be error-free, uninterrupted, or free of viruses or other harmful components. Astrological content is for informational and entertainment purposes only.
+                The App integrates with the following third-party services, each governed by their own
+                terms and privacy policies:
+              </p>
+              <ul className="list-disc list-inside text-ink-muted mt-2 space-y-2">
+                <li><strong>Supabase</strong> — cloud database and authentication infrastructure</li>
+                <li><strong>Google OAuth</strong> — optional sign-in via Google account</li>
+                <li><strong>hCaptcha</strong> — bot-detection and fraud prevention on account registration</li>
+                <li><strong>Cloudflare</strong> — hosting, CDN, and DDoS protection</li>
+                <li><strong>OpenCage</strong> — geocoding of birth location data for chart calculations</li>
+              </ul>
+              <p className="text-ink-muted mt-3">
+                We are not responsible for the content, privacy practices, or availability of third-party
+                services. Your use of those services is at your own risk and subject to their respective
+                terms.
+              </p>
+            </section>
+
+            <section id="disclaimer">
+              <h2 className="font-serif text-2xl text-ink mb-3">9. Disclaimer of Warranties</h2>
+              <p className="text-ink-muted">
+                TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, THE APP IS PROVIDED "AS IS" AND
+                "AS AVAILABLE", WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+                LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+                NON-INFRINGEMENT, ACCURACY, OR UNINTERRUPTED ACCESS.
+              </p>
+              <p className="text-ink-muted mt-3">
+                We do not warrant that: (a) the App will be error-free or uninterrupted; (b) any defects
+                will be corrected; (c) the App or the servers that make it available are free of viruses
+                or other harmful components; or (d) astrological interpretations are accurate, complete,
+                or applicable to your specific circumstances.
               </p>
             </section>
 
             <section id="liability">
-              <h2 className="font-serif text-2xl text-ink mb-3">7. Limitation of Liability</h2>
+              <h2 className="font-serif text-2xl text-ink mb-3">10. Limitation of Liability</h2>
               <p className="text-ink-muted">
-                To the fullest extent permitted by applicable law, Arabic Astrology Academy Inc. shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, goodwill, or other intangible losses, resulting from your use of or inability to use the App.
+                TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, ARABIC ASTROLOGY ACADEMY INC. AND
+                ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND LICENSORS SHALL NOT BE LIABLE FOR ANY
+                INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES —
+                INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, GOODWILL, HEALTH OUTCOMES,
+                OR OTHER INTANGIBLE LOSSES — ARISING FROM OR RELATING TO YOUR USE OF, OR INABILITY
+                TO USE, THE APP, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+              </p>
+              <p className="text-ink-muted mt-3">
+                OUR TOTAL CUMULATIVE LIABILITY TO YOU FOR ANY CLAIMS ARISING OUT OF OR RELATED TO
+                THESE TERMS OR THE APP SHALL NOT EXCEED THE GREATER OF (A) THE AMOUNT YOU PAID US
+                IN THE TWELVE MONTHS PRECEDING THE CLAIM, OR (B) USD 50.
+              </p>
+              <p className="text-ink-muted mt-3">
+                Some jurisdictions do not allow the exclusion or limitation of liability for certain
+                types of damages, so the above limitations may not apply to you to the extent
+                prohibited by law.
+              </p>
+            </section>
+
+            <section id="indemnification">
+              <h2 className="font-serif text-2xl text-ink mb-3">11. Indemnification</h2>
+              <p className="text-ink-muted">
+                You agree to indemnify, defend, and hold harmless Arabic Astrology Academy Inc. and its
+                officers, directors, employees, agents, and licensors from and against any claims,
+                liabilities, damages, losses, costs, and expenses (including reasonable legal fees)
+                arising from: (a) your use of the App; (b) your violation of these Terms; (c) your
+                violation of any third-party rights; or (d) any content you submit or transmit
+                through the App.
               </p>
             </section>
 
             <section id="termination">
-              <h2 className="font-serif text-2xl text-ink mb-3">8. Termination</h2>
+              <h2 className="font-serif text-2xl text-ink mb-3">12. Termination</h2>
               <p className="text-ink-muted">
-                We may suspend or terminate your access to the App at any time, with or without cause, with or without notice. Upon termination, your right to use the App ceases immediately. You may delete your account at any time through the App settings.
+                We may suspend or permanently terminate your access to the App at any time, with or
+                without cause, and with or without notice, if we reasonably believe you have violated
+                these Terms or if required by law.
+              </p>
+              <p className="text-ink-muted mt-3">
+                You may delete your account at any time through <strong>Settings → Account → Delete
+                Account</strong>. Upon deletion, your cloud-stored data will be permanently removed
+                within 30 days, subject to any legal retention requirements. Locally stored data
+                remains on your device until you clear it manually.
+              </p>
+              <p className="text-ink-muted mt-3">
+                Sections 5, 6, 9, 10, 11, and 14 of these Terms shall survive termination.
+              </p>
+            </section>
+
+            <section id="changes">
+              <h2 className="font-serif text-2xl text-ink mb-3">13. Changes to These Terms</h2>
+              <p className="text-ink-muted">
+                We reserve the right to modify these Terms at any time. We will notify you of material
+                changes by posting the updated Terms in the App and updating the "Last updated" date
+                above. For registered users, we will also send an email notification to the address
+                on file. Your continued use of the App after the effective date of any changes
+                constitutes your acceptance of the revised Terms.
               </p>
             </section>
 
             <section id="governing">
-              <h2 className="font-serif text-2xl text-ink mb-3">9. Governing Law</h2>
+              <h2 className="font-serif text-2xl text-ink mb-3">14. Governing Law</h2>
               <p className="text-ink-muted">
-                These Terms are governed by and construed in accordance with applicable law. Any disputes arising from these Terms shall be subject to the exclusive jurisdiction of the competent courts. If any provision of these Terms is found to be unenforceable, the remaining provisions will remain in full force.
+                These Terms are governed by and construed in accordance with the laws applicable to
+                Arabic Astrology Academy Inc., without regard to conflict-of-law principles. The United
+                Nations Convention on Contracts for the International Sale of Goods does not apply.
+              </p>
+              <p className="text-ink-muted mt-3">
+                If any provision of these Terms is found by a court of competent jurisdiction to be
+                invalid or unenforceable, that provision shall be modified to the minimum extent
+                necessary to make it enforceable, and the remaining provisions shall continue in full
+                force and effect.
+              </p>
+            </section>
+
+            <section id="dispute">
+              <h2 className="font-serif text-2xl text-ink mb-3">15. Dispute Resolution</h2>
+              <p className="text-ink-muted">
+                Before initiating any formal legal proceeding, you agree to contact us at{' '}
+                <a href="mailto:info@arabic-astro.com" className="text-coral hover:underline">info@arabic-astro.com</a>{' '}
+                and make a good-faith effort to resolve the dispute informally within 30 days.
+              </p>
+              <p className="text-ink-muted mt-3">
+                If informal resolution fails, any dispute, claim, or controversy arising out of or
+                relating to these Terms or the App shall be submitted to binding arbitration or
+                resolved by the competent courts in the jurisdiction applicable to the Company,
+                as determined by applicable law. You waive any right to a jury trial in connection
+                with any action or litigation relating to these Terms.
               </p>
             </section>
 
             <section id="contact">
-              <h2 className="font-serif text-2xl text-ink mb-3">10. Contact</h2>
+              <h2 className="font-serif text-2xl text-ink mb-3">16. Contact</h2>
               <p className="text-ink-muted">
-                For questions about these Terms, please contact us at:
+                For questions, concerns, or notices regarding these Terms, please contact us:
               </p>
-              <address className="not-italic mt-3 text-ink-muted">
-                Arabic Astrology Academy Inc.<br />
-                <a href="mailto:legal@arabic-astrology.com" className="text-coral hover:underline">legal@arabic-astrology.com</a>
+              <address className="not-italic mt-4 text-ink-muted space-y-1">
+                <div><strong className="text-ink">Arabic Astrology Academy Inc.</strong></div>
+                <div>App: <span className="font-mono text-sm">sukoon.arabic-astro.com</span></div>
+                <div>Email: <a href="mailto:info@arabic-astro.com" className="text-coral hover:underline">info@arabic-astro.com</a></div>
               </address>
             </section>
 
