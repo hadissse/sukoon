@@ -284,15 +284,6 @@ export default function TodayPage() {
       <SyncPrompt />
 
       <div className="px-5 md:px-0 flex flex-col gap-4 pt-5 md:pt-6 md:grid md:grid-cols-2 md:gap-5 md:items-start">
-        {/* Active transit */}
-        <div className="md:col-span-2">
-          <TransitHeroCard />
-        </div>
-
-        <div className="md:col-span-2">
-          <Rule />
-        </div>
-
         {/* ── Explore: Sky / Calendar / Knowledge ── */}
         <div id="today-sky" className="md:col-span-2">
           {/* Tab switcher */}

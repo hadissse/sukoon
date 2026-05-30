@@ -16,6 +16,7 @@ import { calculateTransits, orbLabel, formatExactDate, type Transit } from '@/li
 import { loadTraits } from '@/lib/traitEngine';
 import { NatalChartSetupForm } from '@/components/onboarding/NatalChartSetupForm';
 import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
+import { TransitHeroCard } from '@/components/TransitHeroCard';
 import { FrameworkLabel } from '@/components/FrameworkLabel';
 import {
   ELEMENT_MEANING,
@@ -1431,6 +1432,11 @@ function ActiveTransitsView({ chart, onNavigate }: { chart: AstralChart | null; 
       <Headline>العبورات</Headline>
       <p className="text-sm text-ink-muted mt-1 mb-4">ما يلامس خريطتك الآن، مرتّبًا بالقرب.</p>
 
+      {/* Transit hero — same card from Today page, now lives here */}
+      <div className="mb-5 -mx-5">
+        <TransitHeroCard />
+      </div>
+
       {/* Calendar */}
       <div className="mb-5">
         <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-2">التقويم الفلكي</div>
@@ -1561,30 +1567,35 @@ function SelfPageInner() {
   return (
     <div className="pb-32">
       {showGuide && chart && <ChartIntroOverlay chart={chart} onDone={dismissGuide} />}
-      <div className="pt-6">
-        {/* Main tabs — fixed bottom bar */}
-        <div
-          className="fixed bottom-20 left-0 right-0 z-40 flex gap-2 justify-center px-5 py-3 overflow-x-auto"
-          style={{ scrollbarWidth: 'none', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'transparent' }}
-        >
-          {[
-            { key: 'chart', label: 'الخريطة' },
-            { key: 'body', label: 'الجسد' },
-            { key: 'active', label: 'العبورات' },
-            { key: 'transits', label: 'السيرة' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setMainTab(tab.key)}
-              className={`px-4 py-2 rounded-[14px] text-xs font-medium transition-colors whitespace-nowrap ${
-                mainTab === tab.key
-                  ? 'bg-ink text-cream'
-                  : 'bg-white text-ink border border-rule-soft'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+      <div className="pt-0">
+        {/* Main tabs — sticky header with underline style (Image #20) */}
+        <div className="sticky top-0 z-40 bg-cream/95 backdrop-blur-xl border-b border-rule-soft">
+          <div className="flex items-baseline justify-between px-5 pt-5 pb-0">
+            <div className="font-serif text-[28px] text-ink -tracking-[0.5px]">أنت</div>
+            <Link href="/journey-2" className="text-[13px] text-coral font-medium">
+              سجلّاتك
+            </Link>
+          </div>
+          <div className="flex gap-0 overflow-x-auto px-5 mt-2" style={{ scrollbarWidth: 'none' }}>
+            {[
+              { key: 'chart',   label: 'الخريطة' },
+              { key: 'active',  label: 'العبورات' },
+              { key: 'transits',label: 'السيرة' },
+              { key: 'body',    label: 'الجسد' },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setMainTab(tab.key)}
+                className="relative px-4 pb-3 pt-1 text-[14px] font-medium whitespace-nowrap transition-colors shrink-0"
+                style={{ color: mainTab === tab.key ? '#171B3A' : '#5C5C7A' }}
+              >
+                {tab.label}
+                {mainTab === tab.key && (
+                  <span className="absolute bottom-0 left-4 right-4 h-[2px] bg-ink rounded-full" />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {mainTab === 'chart' && (
