@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
 import {
   IconBack,
   Orb,
@@ -10,14 +9,86 @@ import {
 } from '@/components/onboarding/PreAppUI';
 import { Logo } from '@/components/Logo';
 import { SukoonIcon } from '@/components/SukoonIcon';
-import { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } from '@/lib/auth';
-
-const HCAPTCHA_SITE_KEY = '10000000-ffff-ffff-ffff-000000000001';
+import { sendEmailOtp, verifyEmailOtp } from '@/lib/auth';
+import { getCurrentSky } from '@/lib/currentSky';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase types
 // ─────────────────────────────────────────────────────────────────────────────
-type Phase = 'splash' | 'breathe-in' | 'breathe-out' | 'welcome' | 'signin' | 'signup' | 'reset' | 'verify';
+type Phase = 'splash' | 'breathe-in' | 'breathe-out' | 'welcome' | 'email' | 'otp';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sky ticker — live planetary positions
+// ─────────────────────────────────────────────────────────────────────────────
+const TICKER_PLANETS = [
+  { key: 'sun',     symbol: '☉', label: 'الشمس' },
+  { key: 'moon',    symbol: '☽', label: 'القمر' },
+  { key: 'mercury', symbol: '☿', label: 'عطارد' },
+  { key: 'venus',   symbol: '♀', label: 'الزهرة' },
+  { key: 'mars',    symbol: '♂', label: 'المريخ' },
+  { key: 'jupiter', symbol: '♃', label: 'المشتري' },
+  { key: 'saturn',  symbol: '♄', label: 'زحل' },
+] as const;
+
+function toEastern(n: number) {
+  return n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+}
+
+function SkyTicker({ compact = false }: { compact?: boolean }) {
+  const [items, setItems] = useState<Array<{ symbol: string; label: string; sign: string; degree: number }>>([]);
+
+  useEffect(() => {
+    const sky = getCurrentSky();
+    setItems(TICKER_PLANETS.map(p => ({
+      symbol: p.symbol,
+      label: p.label,
+      sign: (sky as any)[p.key].sign,
+      degree: (sky as any)[p.key].degree,
+    })));
+  }, []);
+
+  if (!items.length) return null;
+
+  const pills = items.map(p => (
+    <span key={p.label} className="inline-flex items-center gap-1 whitespace-nowrap px-3 py-1 rounded-full bg-white/60 border border-white/80 text-ink text-[12px] font-medium backdrop-blur-sm">
+      <span className="text-[13px] opacity-70">{p.symbol}</span>
+      <span>{p.label}</span>
+      <span className="opacity-50 mx-0.5">•</span>
+      <span className="text-coral/90">{p.sign}</span>
+      <span className="opacity-60">{toEastern(p.degree)}°</span>
+    </span>
+  ));
+
+  if (compact) {
+    return (
+      <div className="flex flex-wrap justify-center gap-2 px-4">
+        {pills}
+      </div>
+    );
+  }
+
+  // Scrolling ticker for desktop
+  const doubled = [...items, ...items];
+  return (
+    <div className="overflow-hidden w-full max-w-[520px]" dir="ltr">
+      <style>{`@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
+      <div
+        className="flex gap-2.5 w-max"
+        style={{ animation: 'tickerScroll 28s linear infinite' }}
+      >
+        {doubled.map((p, i) => (
+          <span key={i} className="inline-flex items-center gap-1 whitespace-nowrap px-3 py-1.5 rounded-full bg-white/65 border border-white/80 text-ink text-[12px] font-medium backdrop-blur-sm">
+            <span className="text-[13px] opacity-60">{p.symbol}</span>
+            <span dir="rtl">{p.label}</span>
+            <span className="opacity-40 mx-0.5">•</span>
+            <span className="text-coral/80" dir="rtl">{p.sign}</span>
+            <span className="opacity-55">{toEastern(p.degree)}°</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Input field
@@ -36,40 +107,8 @@ function Field({ label, type, value, onChange, placeholder }: {
         placeholder={placeholder}
         className="h-[50px] rounded-[14px] bg-cream-soft border border-rule-soft px-4 text-[15px] text-ink placeholder:text-ink-muted/50 focus:outline-none focus:border-coral/50 focus:ring-1 focus:ring-coral/20 transition-colors"
         style={{ direction: 'ltr' }}
-        autoComplete={type === 'email' ? 'email' : type === 'password' ? 'current-password' : 'off'}
+        autoComplete={type === 'email' ? 'email' : 'one-time-code'}
       />
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Social auth button
-// ─────────────────────────────────────────────────────────────────────────────
-function SocialBtn({ onClick, icon, label, loading }: { onClick: () => void; icon: React.ReactNode; label: string; loading?: boolean }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={loading}
-      className="h-[52px] rounded-[14px] bg-white border border-rule-soft flex items-center gap-3.5 px-5 hover:bg-cream-soft transition-colors w-full disabled:opacity-60 disabled:cursor-not-allowed"
-    >
-      {loading ? (
-        <div className="w-5 h-5 rounded-full border-2 border-ink/20 border-t-ink animate-spin shrink-0" />
-      ) : icon}
-      <span className="text-[15px] font-medium text-ink">{loading ? 'جارٍ التحويل...' : label}</span>
-    </button>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Divider with "أو"
-// ─────────────────────────────────────────────────────────────────────────────
-function OrDivider() {
-  return (
-    <div className="flex items-center gap-3 my-1">
-      <div className="flex-1 h-px bg-rule-soft" />
-      <span className="text-[12px] text-ink-muted font-medium">أو</span>
-      <div className="flex-1 h-px bg-rule-soft" />
     </div>
   );
 }
@@ -81,12 +120,9 @@ export default function WelcomePage() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('splash');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const captchaRef = useRef<HCaptcha>(null);
 
   // Mobile: auto-advance splash → breathe → welcome
   useEffect(() => {
@@ -104,50 +140,30 @@ export default function WelcomePage() {
     }
   }, [phase]);
 
-  const handleSignIn = async () => {
-    if (!email || !password) { setAuthError('يرجى إدخال البريد وكلمة المرور'); return; }
+  const handleSendOtp = async () => {
+    if (!email) { setAuthError('يرجى إدخال بريدك الإلكتروني'); return; }
     setAuthLoading(true); setAuthError('');
-    const { error } = await signInWithEmail(email, password);
+    const { error } = await sendEmailOtp(email);
     setAuthLoading(false);
-    if (error) { setAuthError('بيانات الدخول غير صحيحة'); return; }
+    if (error) { setAuthError('تعذّر إرسال الرمز — تحقق من البريد وأعد المحاولة'); return; }
+    setOtp('');
+    setPhase('otp');
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length < 6) { setAuthError('يرجى إدخال الرمز المكوّن من ٦ أرقام'); return; }
+    setAuthLoading(true); setAuthError('');
+    const { error } = await verifyEmailOtp(email, otp);
+    setAuthLoading(false);
+    if (error) { setAuthError('الرمز غير صحيح أو انتهت صلاحيته'); return; }
     router.push('/today');
   };
 
-  const handleSignUp = async () => {
-    if (!email || !password) { setAuthError('يرجى إدخال البريد وكلمة المرور'); return; }
-    if (!captchaToken) { setAuthError('يرجى إكمال التحقق أولاً'); return; }
-    setAuthLoading(true); setAuthError('');
-    const { error } = await signUpWithEmail(email, password, captchaToken);
-    captchaRef.current?.resetCaptcha();
-    setCaptchaToken(null);
-    setAuthLoading(false);
-    if (error) { setAuthError('تعذّر إنشاء الحساب — تحقق من بريدك'); return; }
-    setPhase('verify');
-  };
-
-  const handleGoogle = async () => {
-    setGoogleLoading(true);
-    setAuthError('');
-    const { error } = await signInWithGoogle();
-    // If we're still here, the redirect didn't happen — show error
-    setGoogleLoading(false);
-    if (error) setAuthError('تعذّر تسجيل الدخول عبر جوجل — حاول مجدداً');
-  };
-
-  const handleReset = async () => {
-    if (!email) { setAuthError('يرجى إدخال بريدك الإلكتروني'); return; }
-    setAuthLoading(true); setAuthError('');
-    await resetPassword(email);
-    setAuthLoading(false);
-    setPhase('verify');
-  };
-
-  // ── Desktop: always show auth card (skip mobile animations) ────────────────
-  const isAuthPhase = phase === 'welcome' || phase === 'signin' || phase === 'signup' || phase === 'reset' || phase === 'verify';
+  const isAuthPhase = phase === 'welcome' || phase === 'email' || phase === 'otp';
 
   return (
     <div className="flex-1 min-h-dvh flex flex-col relative" dir="rtl">
-      {/* ── Full-bleed animated background (desktop + mobile) ── */}
+      {/* ── Full-bleed animated background ── */}
       <img
         src="/media/auth-bg.gif"
         alt=""
@@ -155,17 +171,9 @@ export default function WelcomePage() {
         className="fixed inset-0 w-full h-full object-cover pointer-events-none"
         style={{ zIndex: 0 }}
       />
-      {/* Overlay so text/card remain readable */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1, background: 'rgba(240,237,230,0.45)' }} />
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 1, background: 'rgba(255,255,255,0.62)' }} />
 
-      {/* All content above the background */}
       <div className="relative flex-1 flex flex-col" style={{ zIndex: 2 }}>
-
-      {/* ── Desktop top bar: icon + wordmark together top-right ── */}
-      <div className="hidden md:flex items-center gap-4 px-10 pt-8">
-        <SukoonIcon size={120} />
-        <img src="/sukoon-wordmark-black.svg" style={{ height: 60, width: 'auto' }} alt="سُكون" />
-      </div>
 
       {/* ── Mobile: splash + breathe animations ── */}
       <div className="md:hidden flex-1 flex flex-col bg-cream">
@@ -199,49 +207,41 @@ export default function WelcomePage() {
           </>
         )}
 
-        {/* Mobile auth screens */}
         {isAuthPhase && (
           <MobileAuthCard
             phase={phase}
             email={email} setEmail={setEmail}
-            password={password} setPassword={setPassword}
+            otp={otp} setOtp={setOtp}
             authError={authError} authLoading={authLoading}
             setPhase={setPhase}
-            handleSignIn={handleSignIn}
-            handleSignUp={handleSignUp}
-            handleReset={handleReset}
-            onVerifyDone={() => router.push('/today')}
-            onGoogleAuth={handleGoogle}
-            googleLoading={googleLoading}
-            captchaRef={captchaRef}
-            onCaptchaVerify={setCaptchaToken}
+            handleSendOtp={handleSendOtp}
+            handleVerifyOtp={handleVerifyOtp}
           />
         )}
       </div>
 
-      {/* ── Desktop: circular card ── */}
-      <div className="hidden md:flex flex-1 items-start justify-center px-6 pt-4">
-        <div className="w-[680px] h-[680px] flex items-center justify-center" style={{ clipPath: 'circle(50%)' }}>
-          <div className="w-[460px]">
+      {/* ── Desktop: logo + circular card centered ── */}
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center gap-5 px-6">
+        <div className="flex items-center gap-3">
+          <SukoonIcon size={72} />
+          <img src="/sukoon-wordmark-black.svg" style={{ height: 40, width: 'auto' }} alt="سُكون" />
+        </div>
+        <SkyTicker />
+        <div className="w-[520px] h-[520px] flex items-center justify-center" style={{ clipPath: 'circle(50%)' }}>
+          <div className="w-[340px]">
             <DesktopAuthCard
               phase={isAuthPhase ? phase : 'welcome'}
               email={email} setEmail={setEmail}
-              password={password} setPassword={setPassword}
+              otp={otp} setOtp={setOtp}
               authError={authError} authLoading={authLoading}
               setPhase={setPhase}
-              handleSignIn={handleSignIn}
-              handleSignUp={handleSignUp}
-              handleReset={handleReset}
-              onVerifyDone={() => router.push('/today')}
-              onGoogleAuth={handleGoogle}
-              googleLoading={googleLoading}
-              captchaRef={captchaRef}
-              onCaptchaVerify={setCaptchaToken}
+              handleSendOtp={handleSendOtp}
+              handleVerifyOtp={handleVerifyOtp}
             />
           </div>
         </div>
       </div>
-      </div>{/* end zIndex:2 wrapper */}
+      </div>
     </div>
   );
 }
@@ -252,99 +252,45 @@ export default function WelcomePage() {
 interface AuthProps {
   phase: Phase;
   email: string; setEmail: (v: string) => void;
-  password: string; setPassword: (v: string) => void;
+  otp: string; setOtp: (v: string) => void;
   authError: string; authLoading: boolean;
   setPhase: (p: Phase) => void;
-  handleSignIn: () => void;
-  handleSignUp: () => void;
-  handleReset: () => void;
-  onVerifyDone: () => void;
-  onGoogleAuth: () => void;
-  googleLoading?: boolean;
-  captchaRef?: React.RefObject<HCaptcha | null>;
-  onCaptchaVerify?: (token: string) => void;
+  handleSendOtp: () => void;
+  handleVerifyOtp: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Desktop card content
 // ─────────────────────────────────────────────────────────────────────────────
 function DesktopAuthCard(p: AuthProps) {
-  if (p.phase === 'verify') {
-    return (
-      <div className="flex flex-col items-center text-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-cream-soft flex items-center justify-center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8FA084" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-        </div>
-        <h1 className="font-serif text-2xl text-ink">تحقّق من بريدك</h1>
-        <p className="text-sm text-ink-muted leading-[1.7]">أرسلنا رابط التحقّق. بعد التأكيد، ستنتقل لإضافة خريطتك النجمية.</p>
-        <button onClick={p.onVerifyDone} className="mt-2 w-full h-[52px] rounded-[26px] bg-ink text-cream font-medium text-[15px]">
-          متابعة لإعداد خريطتك
-        </button>
-        <button onClick={() => p.setPhase('welcome')} className="text-sm text-ink-muted">رجوع</button>
-      </div>
-    );
-  }
-
-  if (p.phase === 'signin') {
+  if (p.phase === 'email') {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="font-serif text-2xl text-ink">أهلًا بعودتك</h1>
-        <div className="flex flex-col gap-3">
-          <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
-          <Field label="كلمة المرور" type="password" value={p.password} onChange={p.setPassword} placeholder="••••••••" />
-          {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
-        </div>
-        <button onClick={p.handleSignIn} disabled={p.authLoading} className="h-[52px] rounded-[26px] bg-ink text-cream font-medium text-[15px] disabled:opacity-40">
-          {p.authLoading ? '...' : 'دخول'}
-        </button>
-        <div className="flex items-center justify-between text-[13px]">
-          <button onClick={() => p.setPhase('reset')} className="text-ink-muted hover:text-ink">نسيت كلمة المرور؟</button>
-          <button onClick={() => p.setPhase('welcome')} className="text-coral font-medium">إنشاء حساب</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (p.phase === 'signup') {
-    return (
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="font-serif text-2xl text-ink">أنشئ حسابك</h1>
-        </div>
-        <div className="flex flex-col gap-3">
-          <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
-          <Field label="كلمة المرور" type="password" value={p.password} onChange={p.setPassword} placeholder="٨ أحرف على الأقل" />
-          {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
-        </div>
-        <div className="flex justify-center">
-          <HCaptcha ref={p.captchaRef ?? null} sitekey={HCAPTCHA_SITE_KEY} onVerify={(token) => p.onCaptchaVerify?.(token)} />
-        </div>
-        <button onClick={p.handleSignUp} disabled={p.authLoading} className="h-[52px] rounded-[26px] bg-ink text-cream font-medium text-[15px] disabled:opacity-40">
-          {p.authLoading ? '...' : 'إنشاء الحساب'}
-        </button>
-        <p className="text-center text-[13px] text-ink-muted">
-          عضو من قبل؟{' '}
-          <button onClick={() => p.setPhase('signin')} className="text-ink font-medium">سجّل الدخول</button>
-        </p>
-      </div>
-    );
-  }
-
-  if (p.phase === 'reset') {
-    return (
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="font-serif text-2xl text-ink">استعادة كلمة المرور</h1>
-          <p className="text-sm text-ink-muted mt-1">سنرسل رابط الاستعادة إلى بريدك.</p>
-        </div>
+        <h1 className="font-serif text-2xl text-ink">أدخل بريدك الإلكتروني</h1>
+        <p className="text-sm text-ink-muted">سنرسل رمز التحقق إلى بريدك.</p>
         <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
         {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
-        <button onClick={p.handleReset} disabled={p.authLoading} className="h-[52px] rounded-[26px] bg-ink text-cream font-medium text-[15px] disabled:opacity-40">
-          {p.authLoading ? '...' : 'إرسال الرابط'}
+        <button onClick={p.handleSendOtp} disabled={p.authLoading} className="h-[52px] rounded-[26px] bg-ink text-cream font-medium text-[15px] disabled:opacity-40">
+          {p.authLoading ? '...' : 'إرسال الرمز'}
         </button>
-        <button onClick={() => p.setPhase('signin')} className="text-center text-[13px] text-ink-muted">رجوع</button>
+        <button onClick={() => p.setPhase('welcome')} className="text-center text-[13px] text-ink-muted">رجوع</button>
+      </div>
+    );
+  }
+
+  if (p.phase === 'otp') {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="font-serif text-2xl text-ink">أدخل رمز التحقق</h1>
+        <p className="text-sm text-ink-muted leading-[1.7]">أرسلنا رمزًا مكوّنًا من ٦ أرقام إلى <span className="text-ink font-medium" style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{p.email}</span></p>
+        <Field label="رمز التحقق" type="text" value={p.otp} onChange={(v) => p.setOtp(v.replace(/\D/g, '').slice(0, 6))} placeholder="000000" />
+        {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
+        <button onClick={p.handleVerifyOtp} disabled={p.authLoading} className="h-[52px] rounded-[26px] bg-ink text-cream font-medium text-[15px] disabled:opacity-40">
+          {p.authLoading ? '...' : 'تأكيد'}
+        </button>
+        <button onClick={() => { p.setPhase('email'); }} className="text-center text-[13px] text-ink-muted">
+          لم يصل الرمز؟ إعادة الإرسال
+        </button>
       </div>
     );
   }
@@ -356,24 +302,8 @@ function DesktopAuthCard(p: AuthProps) {
 
       {p.authError && <p className="text-[13px] text-coral bg-coral/10 rounded-xl px-3 py-2 text-center">{p.authError}</p>}
 
-      <SocialBtn
-        onClick={p.onGoogleAuth}
-        loading={p.googleLoading}
-        label="المتابعة عبر جوجل"
-        icon={
-          <svg width="20" height="20" viewBox="0 0 24 24" className="shrink-0">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-        }
-      />
-
-      <OrDivider />
-
       <button
-        onClick={() => p.setPhase('signup')}
+        onClick={() => p.setPhase('email')}
         className="h-[52px] rounded-[26px] bg-ink text-cream font-medium text-[15px] hover:bg-ink/90 transition-colors"
       >
         المتابعة بالبريد الإلكتروني
@@ -381,7 +311,7 @@ function DesktopAuthCard(p: AuthProps) {
 
       <p className="text-center text-[13px] text-ink-muted">
         عضو من قبل؟{' '}
-        <button onClick={() => p.setPhase('signin')} className="text-ink font-medium hover:text-coral transition-colors">
+        <button onClick={() => p.setPhase('email')} className="text-ink font-medium hover:text-coral transition-colors">
           سجّل الدخول
         </button>
       </p>
@@ -397,83 +327,49 @@ function DesktopAuthCard(p: AuthProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Mobile auth card (full-screen, existing UX preserved)
+// Mobile auth card
 // ─────────────────────────────────────────────────────────────────────────────
 function MobileAuthCard(p: AuthProps) {
-  if (p.phase === 'verify') {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center px-8 bg-cream">
-        <Orb variant="sage" size={100} />
-        <h1 className="font-serif text-[28px] text-ink mt-7 text-center">تحقّق من بريدك</h1>
-        <p className="text-sm text-ink-muted mt-2.5 leading-[1.7] text-center">أرسلنا رابط التحقّق. بعد التأكيد، ستنتقل لإضافة خريطتك.</p>
-        <div className="mt-8 w-full">
-          <PrimaryBtn onClick={p.onVerifyDone}>متابعة لإعداد خريطتك</PrimaryBtn>
-        </div>
-        <p className="mt-4 text-sm text-ink-muted">إعادة الإرسال خلال ٠:٥٤</p>
-      </div>
-    );
-  }
-
-  if (p.phase === 'signin') {
+  if (p.phase === 'email') {
     return (
       <div className="flex-1 px-6 pt-14 bg-cream">
         <button type="button" onClick={() => p.setPhase('welcome')} className="flex items-center h-11">
           <IconBack />
         </button>
-        <h1 className="font-serif text-[28px] text-ink mt-6">أهلًا بعودتك</h1>
-        <p className="text-sm text-ink-muted mt-1.5 leading-[1.7]">سجّل الدخول لمتابعة ممارستك.</p>
+        <h1 className="font-serif text-[28px] text-ink mt-6">أدخل بريدك الإلكتروني</h1>
+        <p className="text-sm text-ink-muted mt-1.5 leading-[1.7]">سنرسل رمز التحقق إلى بريدك.</p>
         <div className="mt-8 flex flex-col gap-3">
           <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
-          <Field label="كلمة المرور" type="password" value={p.password} onChange={p.setPassword} placeholder="••••••••" />
           {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
         </div>
         <div className="mt-6">
-          <PrimaryBtn onClick={p.handleSignIn} disabled={p.authLoading}>{p.authLoading ? '...' : 'متابعة'}</PrimaryBtn>
-        </div>
-        <button type="button" onClick={() => p.setPhase('reset')} className="block w-full text-center mt-4 text-sm text-ink-muted">
-          نسيت كلمة المرور؟
-        </button>
-      </div>
-    );
-  }
-
-  if (p.phase === 'signup') {
-    return (
-      <div className="flex-1 px-6 pt-14 bg-cream">
-        <button type="button" onClick={() => p.setPhase('welcome')} className="flex items-center h-11">
-          <IconBack />
-        </button>
-        <h1 className="font-serif text-[28px] text-ink mt-6">أنشئ حسابك</h1>
-        <div className="mt-7 flex flex-col gap-3">
-          <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
-          <Field label="كلمة المرور" type="password" value={p.password} onChange={p.setPassword} placeholder="٨ أحرف على الأقل" />
-          {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
-        </div>
-        <div className="mt-4 flex justify-center">
-          <HCaptcha ref={p.captchaRef ?? null} sitekey={HCAPTCHA_SITE_KEY} onVerify={(token) => p.onCaptchaVerify?.(token)} />
-        </div>
-        <div className="mt-4">
-          <PrimaryBtn onClick={p.handleSignUp} disabled={p.authLoading}>{p.authLoading ? '...' : 'متابعة'}</PrimaryBtn>
+          <PrimaryBtn onClick={p.handleSendOtp} disabled={p.authLoading}>{p.authLoading ? '...' : 'إرسال الرمز'}</PrimaryBtn>
         </div>
       </div>
     );
   }
 
-  if (p.phase === 'reset') {
+  if (p.phase === 'otp') {
     return (
       <div className="flex-1 px-6 pt-14 bg-cream">
-        <button type="button" onClick={() => p.setPhase('signin')} className="flex items-center h-11">
+        <button type="button" onClick={() => p.setPhase('email')} className="flex items-center h-11">
           <IconBack />
         </button>
-        <h1 className="font-serif text-[28px] text-ink mt-[30px]">استعادة كلمة المرور</h1>
-        <p className="text-sm text-ink-muted mt-2 leading-[1.7]">سنرسل رابط الاستعادة إلى بريدك.</p>
-        <div className="mt-7">
-          <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
-          {p.authError && <p className="text-[13px] text-coral mt-1">{p.authError}</p>}
+        <h1 className="font-serif text-[28px] text-ink mt-6">رمز التحقق</h1>
+        <p className="text-sm text-ink-muted mt-1.5 leading-[1.7]">
+          أرسلنا رمزًا من ٦ أرقام إلى{' '}
+          <span className="text-ink font-medium" style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{p.email}</span>
+        </p>
+        <div className="mt-8 flex flex-col gap-3">
+          <Field label="رمز التحقق" type="text" value={p.otp} onChange={(v) => p.setOtp(v.replace(/\D/g, '').slice(0, 6))} placeholder="000000" />
+          {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
         </div>
         <div className="mt-6">
-          <PrimaryBtn onClick={p.handleReset} disabled={p.authLoading}>{p.authLoading ? '...' : 'إرسال الرابط'}</PrimaryBtn>
+          <PrimaryBtn onClick={p.handleVerifyOtp} disabled={p.authLoading}>{p.authLoading ? '...' : 'تأكيد'}</PrimaryBtn>
         </div>
+        <button type="button" onClick={() => p.setPhase('email')} className="block w-full text-center mt-4 text-sm text-ink-muted">
+          لم يصل الرمز؟ إعادة الإرسال
+        </button>
       </div>
     );
   }
@@ -481,32 +377,22 @@ function MobileAuthCard(p: AuthProps) {
   // welcome
   return (
     <div className="flex-1 flex flex-col bg-cream">
-      {/* Centered logo — icon + white text logo, 3× header size */}
-      <div className="flex flex-col items-center justify-center gap-5 px-8 pt-16 pb-8">
-        <img src="/sukoon-logo-icon.svg" alt="" aria-hidden="true" className="w-[132px] h-[132px]" />
-        <img src="/sukoon-logo-white.svg" alt="سُكون" className="h-[84px] w-auto" />
-      </div>
+      <div className="flex-1" />
       <div className="px-6 pb-12 flex flex-col gap-3">
-        <h2 className="font-serif text-[22px] text-ink mb-1">أنشئ حسابًا</h2>
+        <div className="flex items-center gap-2.5 mb-1">
+          <img src="/sukoon-logo-icon.svg" alt="" aria-hidden="true" className="w-9 h-9" />
+          <h2 className="font-serif text-[22px] text-ink">أنشئ حسابًا</h2>
+        </div>
+        <SkyTicker compact />
         {p.authError && <p className="text-[13px] text-coral bg-coral/10 rounded-xl px-3 py-2">{p.authError}</p>}
-        <SocialBtn onClick={p.onGoogleAuth} loading={p.googleLoading} label="المتابعة عبر جوجل" icon={
-          <svg width="20" height="20" viewBox="0 0 24 24" className="shrink-0">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-        } />
-        <OrDivider />
-        <button type="button" onClick={() => p.setPhase('signup')} className="h-14 rounded-[26px] bg-ink text-cream font-medium text-[15px]">
+        <button type="button" onClick={() => p.setPhase('email')} className="h-14 rounded-[26px] bg-ink text-cream font-medium text-[15px]">
           المتابعة بالبريد الإلكتروني
         </button>
         <div className="text-center text-[13px] text-ink-muted mt-2">
           عضو من قبل؟{' '}
-          <button type="button" onClick={() => p.setPhase('signin')} className="text-ink font-medium">سجّل الدخول</button>
+          <button type="button" onClick={() => p.setPhase('email')} className="text-ink font-medium">سجّل الدخول</button>
         </div>
       </div>
     </div>
   );
 }
-
