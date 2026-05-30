@@ -525,11 +525,12 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                   uranus:    'linear-gradient(140deg, #B8D8D8 0%, #406878 100%)',
                   neptune:   'linear-gradient(140deg, #B0B0D8 0%, #4040A0 100%)',
                   pluto:     'linear-gradient(140deg, #888898 0%, #404050 100%)',
-                  northNode: 'linear-gradient(140deg, #F0D890 0%, #B88820 100%)',
-                  southNode: 'linear-gradient(140deg, #D0C8A8 0%, #887850 100%)',
-                  ic:        'linear-gradient(140deg, #D8C8F0 0%, #9070B8 100%)',
-                  dc:        'linear-gradient(140deg, #D0C0E8 0%, #8060A8 100%)',
-                  mc:        'linear-gradient(140deg, #C0B0D8 0%, #705098 100%)',
+                  northNode: 'linear-gradient(140deg, #A8D8A8 0%, #3A8040 100%)',
+                  southNode: 'linear-gradient(140deg, #404840 0%, #182018 100%)',
+                  ac:        'linear-gradient(140deg, #F5C0B0 0%, #D06050 100%)',
+                  ic:        'linear-gradient(140deg, #B0D8F8 0%, #5090C0 100%)',
+                  dc:        'linear-gradient(140deg, #C08080 0%, #802020 100%)',
+                  mc:        'linear-gradient(140deg, #6080C0 0%, #203070 100%)',
                 };
 
                 const iconStyle = (svgKey: string, color: string) => ({
