@@ -36,7 +36,7 @@ export function Sidebar() {
       <div className="flex flex-col h-full px-5 py-6">
         {/* Brand */}
         <Link href="/today" className="flex items-center gap-2 px-2 mb-8" aria-label="سُكون">
-          <Logo height={26} color="#171B3A" />
+          <Logo height={65} color="#171B3A" />
         </Link>
 
         {/* Primary navigation */}
