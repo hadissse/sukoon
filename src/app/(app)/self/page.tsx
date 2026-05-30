@@ -46,7 +46,6 @@ const chartSubtabs = [
   { key: 'houses', label: 'البيوت' },
   { key: 'aspects', label: 'الجوانب' },
   { key: 'stars', label: 'النجوم الثابتة' },
-  { key: 'active', label: 'التأثيرات النشطة' },
 ] as const;
 
 const ZODIAC_SVG_KEYS = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sag', 'cap', 'aqua', 'pisces'];
@@ -669,12 +668,18 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
           <div className="px-5 pb-6 flex flex-col gap-3">
             {(() => {
               const MAJOR = ['اقتران', 'تربيع', 'تثليث', 'تقابل'];
-              const filtered = aspects.filter((a) => {
-                if (aspectFilter === 'رئيسية') return MAJOR.includes(a.type);
-                if (aspectFilter === 'ثانوية') return !MAJOR.includes(a.type);
-                if (aspectFilter === 'مقتربة') return a.orbDeg < 2;
-                return true;
-              });
+              // Sort order: square → sextile → trine → opposition → conjunction → others
+              const ASPECT_ORDER: Record<string, number> = {
+                'تربيع': 1, 'سداسي': 2, 'تثليث': 3, 'تقابل': 4, 'اقتران': 5,
+              };
+              const filtered = aspects
+                .filter((a) => {
+                  if (aspectFilter === 'رئيسية') return MAJOR.includes(a.type);
+                  if (aspectFilter === 'ثانوية') return !MAJOR.includes(a.type);
+                  if (aspectFilter === 'مقتربة') return a.orbDeg < 2;
+                  return true;
+                })
+                .sort((a, b) => (ASPECT_ORDER[a.type] ?? 99) - (ASPECT_ORDER[b.type] ?? 99));
               return filtered.length > 0 ? (
                 filtered.map((aspect) => (
                   <Link
@@ -701,50 +706,6 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       )}
 
       {/* Active Transits list */}
-      {activeSubtab === 'active' && (
-        <>
-          <div className="px-5 text-xs text-ink-muted">
-            ما يلامس خريطتك الآن، مرتّبًا بالقرب.
-          </div>
-          <div className="px-5 pb-6 flex flex-col gap-2.5">
-            {transits.length === 0 ? (
-              <Card>
-                <div className="text-sm text-ink-muted">لا توجد عبورات نشطة ضمن المدى الآن.</div>
-              </Card>
-            ) : (
-              transits.map((t) => {
-                const transitSlug = `${t.transitKey}-${t.natalKey}`;
-                const isNoted = notedTransitKeys.has(transitSlug);
-                return (
-                  <Link key={t.id} href={`/self/aspect/${transitSlug}`} className="block" onClick={saveNavState}>
-                    <Card>
-                      <div className="flex justify-between items-baseline gap-2 mb-1.5">
-                        <div className="font-serif text-base text-ink">
-                          {t.transitName} · {t.natalName}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {isNoted && (
-                            <div className="flex items-center gap-1 text-[10px] font-semibold text-[#8FA084]">
-                              <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                                <circle cx="6" cy="6" r="5.5" stroke="#8FA084" />
-                                <path d="M3.5 6l1.8 1.8L8.5 4.5" stroke="#8FA084" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                              مُدوَّن
-                            </div>
-                          )}
-                          <div className="text-xs text-ink-muted font-mono">{orbLabel(t.orb)}</div>
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium" style={{ color: t.aspectColor }}>{t.aspectName}</div>
-                    </Card>
-                  </Link>
-                );
-              })
-            )}
-          </div>
-        </>
-      )}
-
       {/* Fixed Stars */}
       {activeSubtab === 'stars' && <FixedStarsView chart={chart} onNavigate={saveNavState} />}
 
@@ -1162,11 +1123,8 @@ function TransitsView() {
 
   return (
     <div className="px-5 pb-6 flex flex-col gap-4">
-      <div className="font-serif text-2xl text-ink -tracking-0.5">العبورات</div>
-      <div className="text-sm text-ink-muted">مسار الكواكب · شهريًا</div>
-      <div style={{ background: '#FFFFFF', borderRadius: 18, padding: '14px 12px', border: '1px solid #E8E2D2' }}>
-        <CalendarMonthView />
-      </div>
+      <div className="font-serif text-2xl text-ink -tracking-0.5">السيرة البانورامية</div>
+      <div className="text-sm text-ink-muted">مسار الكواكب عبر الحياة</div>
 
       {/* العبورات الكونية — full content from old great-transits page */}
       <div className="mt-2">
@@ -1419,6 +1377,85 @@ function ChartIntroOverlay({ chart, onDone }: { chart: AstralChart; onDone: () =
   );
 }
 
+// ── Active Transits — standalone top-level view ───────────────────────────────
+function ActiveTransitsView({ chart, onNavigate }: { chart: AstralChart | null; onNavigate: () => void }) {
+  const [transits, setTransits] = useState<Transit[]>([]);
+  const [notedTransitKeys, setNotedTransitKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!chart) return;
+    setTransits(calculateTransits(chart));
+    const events = loadEvents();
+    const keys = new Set(
+      events
+        .filter(e => e.placement?.type === 'aspect' && e.placement.key)
+        .map(e => e.placement!.key)
+    );
+    setNotedTransitKeys(keys);
+  }, [chart]);
+
+  if (!chart) {
+    return (
+      <div className="px-5 pt-8 text-center text-sm text-ink-muted">
+        أضف خريطتك أولًا لعرض التأثيرات النشطة.
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-5 pt-6 pb-8">
+      <Headline>التأثيرات النشطة</Headline>
+      <p className="text-sm text-ink-muted mt-1 mb-4">ما يلامس خريطتك الآن، مرتّبًا بالقرب.</p>
+
+      {/* Calendar — moved from السيرة البانورامية */}
+      <div className="mb-5">
+        <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-2">التقويم الفلكي</div>
+        <div style={{ background: '#FFFFFF', borderRadius: 18, padding: '14px 12px', border: '1px solid #E8E2D2' }}>
+          <CalendarMonthView />
+        </div>
+      </div>
+
+      <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-2">العبورات على خريطتك</div>
+      <div className="flex flex-col gap-2.5">
+        {transits.length === 0 ? (
+          <Card>
+            <div className="text-sm text-ink-muted">لا توجد عبورات نشطة ضمن المدى الآن.</div>
+          </Card>
+        ) : (
+          transits.map((t) => {
+            const transitSlug = `${t.transitKey}-${t.natalKey}`;
+            const isNoted = notedTransitKeys.has(transitSlug);
+            return (
+              <Link key={t.id} href={`/self/aspect/${transitSlug}`} className="block" onClick={onNavigate}>
+                <Card>
+                  <div className="flex justify-between items-baseline gap-2 mb-1.5">
+                    <div className="font-serif text-base text-ink">
+                      {t.transitName} · {t.natalName}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isNoted && (
+                        <div className="flex items-center gap-1 text-[10px] font-semibold text-[#8FA084]">
+                          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                            <circle cx="6" cy="6" r="5.5" stroke="#8FA084" />
+                            <path d="M3.5 6l1.8 1.8L8.5 4.5" stroke="#8FA084" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          مُدوَّن
+                        </div>
+                      )}
+                      <div className="text-xs text-ink-muted font-mono">{orbLabel(t.orb)}</div>
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium" style={{ color: t.aspectColor }}>{t.aspectName}</div>
+                </Card>
+              </Link>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SelfPageInner() {
   const searchParams = useSearchParams();
   const [mainTab, setMainTab] = useState<string>(searchParams.get('tab') ?? 'chart');
@@ -1462,7 +1499,8 @@ function SelfPageInner() {
           {[
             { key: 'chart', label: 'الخريطة' },
             { key: 'body', label: 'الجسد' },
-            { key: 'transits', label: 'العبورات' },
+            { key: 'active', label: 'التأثيرات' },
+            { key: 'transits', label: 'السيرة' },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -1514,10 +1552,17 @@ function SelfPageInner() {
           </>
         )}
 
+        {mainTab === 'active' && (
+          <ActiveTransitsView chart={chart} onNavigate={() => {
+            const el = document.documentElement;
+            sessionStorage.setItem('sukoon.self.scrollY', String(el.scrollTop || window.scrollY));
+          }} />
+        )}
+
         {mainTab === 'transits' && (
           <>
             <div className="px-5 mb-4">
-              <Headline>العبورات</Headline>
+              <Headline>السيرة البانورامية</Headline>
             </div>
             <TransitsView />
             <LifeArcView chart={chart} />
