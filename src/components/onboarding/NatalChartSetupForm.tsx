@@ -130,7 +130,8 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
       {/* ── Birth date ── */}
       <SectionCard>
         <SectionLabel>تاريخ الميلاد</SectionLabel>
-        <div className="grid grid-cols-3 gap-4">
+        {/* LTR so columns read: day | month | year left-to-right */}
+        <div className="grid grid-cols-3 gap-4" style={{ direction: 'ltr' }}>
           <div className="flex flex-col items-center gap-1">
             <label className="text-[11px] text-ink-muted">اليوم</label>
             <input
@@ -195,27 +196,9 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
             لا أعرف وقت ميلادي
           </button>
         </div>
+        {/* LTR so fields read: hour | minute | AM/PM left-to-right */}
         {!timeUnknown && (
-          <div className="flex gap-4 items-end">
-            {/* AM/PM — first in JSX = rightmost in RTL */}
-            <div className="flex flex-col items-center gap-1">
-              <label className="text-[11px] text-ink-muted opacity-0 select-none">—</label>
-              <div className="flex rounded-full overflow-hidden border border-stone-200">
-                {(['PM', 'AM'] as const).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setAmPm(p)}
-                    className={`px-4 py-2 text-xs font-semibold transition-colors ${
-                      amPm === p ? 'bg-ink text-cream' : 'bg-white text-ink-muted'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {/* Hour — second in JSX = middle in RTL */}
+          <div className="flex gap-4 items-end" style={{ direction: 'ltr' }}>
             <div className="flex-1 flex flex-col items-center gap-1">
               <label className="text-[11px] text-ink-muted">الساعة</label>
               <input
@@ -231,7 +214,6 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                 className={inputCls}
               />
             </div>
-            {/* Minute — last in JSX = leftmost in RTL */}
             <div className="flex-1 flex flex-col items-center gap-1">
               <label className="text-[11px] text-ink-muted">الدقيقة</label>
               <input
@@ -246,6 +228,23 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
                 }}
                 className={inputCls}
               />
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <label className="text-[11px] text-ink-muted opacity-0 select-none">—</label>
+              <div className="flex rounded-full overflow-hidden border border-stone-200">
+                {(['AM', 'PM'] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setAmPm(p)}
+                    className={`px-4 py-2 text-xs font-semibold transition-colors ${
+                      amPm === p ? 'bg-ink text-cream' : 'bg-white text-ink-muted'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
