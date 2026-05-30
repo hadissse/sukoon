@@ -41,7 +41,7 @@ export function BirthDateStep({ initialData, onComplete }: BirthDateStepProps) {
           onClick={() => router.back()}
           className="mb-8 text-ink-muted hover:text-ink transition-colors"
         >
-          ← رجوع
+          رجوع ›
         </button>
 
         <h1 className="font-serif text-3xl text-ink mb-2">متى وُلدت؟</h1>

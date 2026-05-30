@@ -78,7 +78,7 @@ export function LocationStep({ initialData, onComplete }: LocationStepProps) {
           onClick={() => router.back()}
           className="mb-8 text-ink-muted hover:text-ink transition-colors"
         >
-          ← رجوع
+          رجوع ›
         </button>
 
         <h1 className="font-serif text-3xl text-ink mb-2">أين وُلدت؟</h1>

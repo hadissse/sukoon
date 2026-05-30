@@ -145,7 +145,7 @@ export default function FixedStarsPage() {
       </div>
 
 <Link href="/self" className="flex items-center gap-2 px-5 pb-6 text-sm text-coral font-medium">
-        ← العودة للخريطة
+        العودة للخريطة ›
       </Link>
     </div>
   );

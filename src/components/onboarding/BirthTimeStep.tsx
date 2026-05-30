@@ -45,7 +45,7 @@ export function BirthTimeStep({ initialData, onComplete }: BirthTimeStepProps) {
           onClick={() => router.back()}
           className="mb-8 text-ink-muted hover:text-ink transition-colors"
         >
-          ← رجوع
+          رجوع ›
         </button>
 
         <h1 className="font-serif text-3xl text-ink mb-2">في أي وقت وُلدت؟</h1>
