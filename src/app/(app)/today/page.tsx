@@ -8,6 +8,12 @@ import { TransitHeroCard } from '@/components/TransitHeroCard';
 import { GradientOrb } from '@/components/GradientOrb';
 import { getCosmicStamp, type CosmicStamp } from '@/lib/cosmicStamp';
 import { syncAllLocalData } from '@/lib/sync';
+import { ASTRO_KNOWLEDGE, ASTRO_COURSES } from '@/content/courses';
+import { ZoomableWheel } from '@/components/ZoomableWheel';
+import { getCurrentSky } from '@/lib/currentSky';
+import type { AstralChart } from '@/lib/chartCalculator';
+import { planetSvgKey } from '@/lib/planetMeta';
+import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
 
 function SyncPrompt() {
   const [show, setShow] = useState(false);
@@ -33,7 +39,7 @@ function SyncPrompt() {
   };
 
   return (
-    <div className="mx-5 mt-4 p-4 rounded-[16px] border border-rule-soft bg-white flex flex-col gap-3">
+    <div className="mx-5 md:mx-0 mt-4 p-4 rounded-[16px] border border-rule-soft bg-white flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-semibold text-ink">احفظ خريطتك سحابيًّا</div>
@@ -59,7 +65,163 @@ function SyncPrompt() {
   );
 }
 
-// Daily rotating question — advances each day
+// ── Explore section helpers ──────────────────────────────────────────────────
+
+function toAr(n: number | string): string {
+  return String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+}
+
+const PLANET_KEYS_AR: Record<string, string> = {
+  sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
+  jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
+  chiron: 'كيرون', northNode: 'شمال القمر', southNode: 'جنوب القمر',
+};
+
+const ALL_PLANETS = [
+  'sun', 'moon', 'mercury', 'venus', 'mars',
+  'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
+  'chiron', 'northNode', 'southNode',
+] as const;
+
+function SkySection() {
+  const [sky, setSky] = useState<AstralChart | null>(null);
+
+  useEffect(() => {
+    setSky(getCurrentSky());
+    const id = setInterval(() => setSky(getCurrentSky()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = now.toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  return (
+    <div className="pb-4">
+      <div className="flex items-baseline justify-between mb-1">
+        <h2 className="font-serif text-2xl text-ink">السماء الآن</h2>
+        <div className="text-[11px] text-ink-muted font-mono" dir="ltr">{timeStr}</div>
+      </div>
+      <div className="text-[11px] text-ink-muted mb-4">{dateStr} · تحديث كل دقيقة</div>
+
+      <div className="flex justify-center mb-4">
+        <div className="w-full max-w-[377px] md:max-w-[480px]">
+          <ZoomableWheel size={520} tone="paper" chart={sky} />
+        </div>
+      </div>
+
+      <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">مواضع الكواكب</div>
+      {!sky && <div className="text-sm text-ink-muted text-center py-4">جارٍ الحساب...</div>}
+      {sky && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {ALL_PLANETS.map((key) => {
+            const planet = (sky as AstralChart & Record<string, { sign: string; degree: number; minute: number; retrograde?: boolean }>)[key];
+            if (!planet) return null;
+            return (
+              <Link key={key} href={`/explore/sky/${key}`} className="block">
+                <div className="bg-white rounded-[12px] px-3 py-2.5 flex items-center gap-2.5" style={{ border: '1px solid #F0EDE6' }}>
+                  <div
+                    className="w-5 h-5 shrink-0"
+                    style={{
+                      WebkitMaskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
+                      maskImage: `url('/svg/${planetSvgKey(key)}.svg')`,
+                      WebkitMaskSize: 'contain', maskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center', maskPosition: 'center',
+                      background: '#E9785E',
+                    }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[12px] font-semibold text-ink truncate">{PLANET_KEYS_AR[key]}{planet.retrograde ? ' ℞' : ''}</div>
+                    <div className="text-[11px] text-ink-muted truncate">
+                      {planet.sign} · {toAr(planet.degree)}°{planet.minute > 0 ? `${toAr(planet.minute)}′` : ''}
+                    </div>
+                  </div>
+                  <div className="text-ink-muted text-xs shrink-0">›</div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KnowledgeSection() {
+  return (
+    <div className="pb-4 flex flex-col gap-4">
+      <div>
+        <h2 className="font-serif text-2xl text-ink -tracking-0.5">المعرفة</h2>
+        <p className="text-sm text-ink-muted mt-1">ابنِ فهمك بدروس موجّهة.</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+        {ASTRO_KNOWLEDGE.map((item) => (
+          <Link key={item.id} href={`/learn/${item.courseId}`} className="block">
+            <div className="bg-white rounded-[16px] border border-rule-soft p-3.5 flex flex-col gap-2">
+              {item.svgKey ? (
+                <div className="w-6 h-6" style={{ WebkitMaskImage: `url('/svg/${item.svgKey}.svg')`, maskImage: `url('/svg/${item.svgKey}.svg')`, WebkitMaskSize: 'contain', maskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat', WebkitMaskPosition: 'center', maskPosition: 'center', background: '#171B3A' }} />
+              ) : (
+                <span className="text-xl text-ink">{item.icon}</span>
+              )}
+              <div>
+                <div className="font-serif text-sm text-ink">{item.title}</div>
+                <div className="text-xs text-ink-muted mt-0.5">{item.subtitle}</div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="font-serif text-base text-ink">دورات نجمية</div>
+          <Link href="/learn" className="text-xs text-coral font-medium">عرض الكل ←</Link>
+        </div>
+        <div className="flex flex-col gap-2.5 md:grid md:grid-cols-2">
+          {ASTRO_COURSES.slice(0, 4).map((c) => (
+            <Link key={c.id} href={`/learn/${c.id}`} className="block">
+              <div className="bg-white rounded-[16px] border border-rule-soft p-3.5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-[12px] shrink-0" style={{
+                  background: c.variant === 'dawn' ? 'linear-gradient(135deg,#F8D6BE,#E9785E)'
+                    : c.variant === 'lake' ? 'linear-gradient(135deg,#C2D3E2,#7E97B8)'
+                    : c.variant === 'ember' ? 'linear-gradient(135deg,#F0C8A0,#D4804C)'
+                    : c.variant === 'dust' ? 'linear-gradient(135deg,#D8D4C8,#9A9482)'
+                    : 'linear-gradient(135deg,#C9D2BE,#8FA084)',
+                }} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-serif text-sm text-ink truncate">{c.title}</div>
+                  <div className="text-xs text-ink-muted mt-0.5">{c.course} · {c.teacher}</div>
+                </div>
+                <span className="text-coral text-sm shrink-0">←</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <Link href="/library" className="flex items-center justify-between p-3.5 rounded-[14px] bg-cream-soft border border-rule-soft">
+        <span className="text-sm font-serif text-ink">مكتبتي · المحفوظة والسجل</span>
+        <span className="text-coral text-sm">←</span>
+      </Link>
+    </div>
+  );
+}
+
+function CalendarSection() {
+  return (
+    <div className="pb-4 flex flex-col gap-4">
+      <div>
+        <h2 className="font-serif text-2xl text-ink -tracking-0.5">تقويم العبورات</h2>
+        <p className="text-sm text-ink-muted mt-1">الأحداث الكونية الجماعية للشهر.</p>
+      </div>
+      <CalendarMonthView />
+    </div>
+  );
+}
+
+// ── Daily rotating question — advances each day
 const DAILY_QUESTIONS = [
   'ما الذي يحتاج منك أن تسمعه اليوم، لا أن تحلّه؟',
   'من أنت حين لا يراك أحد؟',
@@ -80,6 +242,7 @@ function getDailyQuestion(): string {
 export default function TodayPage() {
   const [stamp, setStamp] = useState<CosmicStamp | null>(null);
   const [journey1Step, setJourney1Step] = useState<number | null>(null);
+  const [exploreView, setExploreView] = useState<'sky' | 'calendar' | 'knowledge'>('sky');
 
   useEffect(() => {
     setStamp(getCosmicStamp());
@@ -98,8 +261,8 @@ export default function TodayPage() {
 
   return (
     <div className="pb-24 flex flex-col gap-0">
-      {/* ── Sky hero — square full-bleed ── */}
-      <div className="relative w-full aspect-square overflow-hidden" style={{ background: '#0F1228' }}>
+      {/* ── Sky hero — square on mobile, cinematic banner on desktop ── */}
+      <div className="relative w-full aspect-square md:aspect-[16/7] overflow-hidden md:rounded-[28px] md:mt-4" style={{ background: '#0F1228' }}>
         <img src="/media/blob-purple.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(15,18,40,0.60) 0%, rgba(15,18,40,0) 42%, rgba(15,18,40,0.78) 100%)' }} />
         <div className="absolute inset-0 flex flex-col justify-between p-6">
@@ -119,11 +282,44 @@ export default function TodayPage() {
 
       <SyncPrompt />
 
-      <div className="px-5 flex flex-col gap-4 pt-5">
+      <div className="px-5 md:px-0 flex flex-col gap-4 pt-5 md:pt-6 md:grid md:grid-cols-2 md:gap-5 md:items-start">
         {/* Active transit */}
-        <TransitHeroCard />
+        <div className="md:col-span-2">
+          <TransitHeroCard />
+        </div>
 
-        <Rule />
+        <div className="md:col-span-2">
+          <Rule />
+        </div>
+
+        {/* ── Explore: Sky / Calendar / Knowledge ── */}
+        <div className="md:col-span-2">
+          {/* Tab switcher */}
+          <div className="flex gap-2 mb-5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {([
+              ['sky', 'السماء'],
+              ['calendar', 'التقويم'],
+              ['knowledge', 'المعرفة'],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setExploreView(key)}
+                className={`px-4 py-2 rounded-[14px] text-xs font-medium transition-colors whitespace-nowrap ${
+                  exploreView === key ? 'bg-ink text-cream' : 'bg-white text-ink border border-rule-soft'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {exploreView === 'sky' && <SkySection />}
+          {exploreView === 'calendar' && <CalendarSection />}
+          {exploreView === 'knowledge' && <KnowledgeSection />}
+        </div>
+
+        <div className="md:col-span-2">
+          <Rule />
+        </div>
 
         {/* Daily question — coral-tinted box */}
         <Link href="/log" className="block">
@@ -171,7 +367,7 @@ export default function TodayPage() {
         </Link>
 
         {/* Knowledge — link to learn section */}
-        <Link href="/learn" className="block">
+        <Link href="/learn" className="block md:col-span-2">
           <div className="rounded-[20px] p-5" style={{ background: '#F5F0E8', border: '1px solid #E8E2D2' }}>
             <div className="flex flex-col gap-2">
               <div className="text-[11px] text-ink/50 font-semibold tracking-wider">المعرفة</div>
@@ -182,7 +378,9 @@ export default function TodayPage() {
           </div>
         </Link>
 
-        <Rule />
+        <div className="md:col-span-2">
+          <Rule />
+        </div>
 
         {/* Body + moon — square full-bleed */}
         <Link href="/self" className="block">

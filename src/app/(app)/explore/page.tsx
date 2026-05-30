@@ -50,7 +50,9 @@ function SkySection() {
 
       {/* Natal-style wheel */}
       <div className="flex justify-center px-2 mb-4">
-        <ZoomableWheel size={377} tone="paper" chart={sky} />
+        <div className="w-full max-w-[377px] md:max-w-[480px]">
+          <ZoomableWheel size={520} tone="paper" chart={sky} />
+        </div>
       </div>
 
       {/* Compact all-planets grid */}
@@ -58,7 +60,7 @@ function SkySection() {
         <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-2.5">مواضع الكواكب</div>
         {!sky && <div className="text-sm text-ink-muted text-center py-4">جارٍ الحساب...</div>}
         {sky && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {ALL_PLANETS.map((key) => {
               const planet = (sky as AstralChart & Record<string, { sign: string; degree: number; minute: number; retrograde?: boolean }>)[key];
               if (!planet) return null;
@@ -103,7 +105,7 @@ function KnowledgeSection() {
       </div>
 
       {/* Knowledge topics grid */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
         {ASTRO_KNOWLEDGE.map((item) => (
           <Link key={item.id} href={`/learn/${item.courseId}`} className="block">
             <div className="bg-white rounded-[16px] border border-rule-soft p-3.5 flex flex-col gap-2">
@@ -127,7 +129,7 @@ function KnowledgeSection() {
           <div className="font-serif text-base text-ink">دورات نجمية</div>
           <Link href="/learn" className="text-xs text-coral font-medium">عرض الكل ←</Link>
         </div>
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 md:grid md:grid-cols-2">
           {ASTRO_COURSES.slice(0, 4).map((c) => (
             <Link key={c.id} href={`/learn/${c.id}`} className="block">
               <div className="bg-white rounded-[16px] border border-rule-soft p-3.5 flex items-center gap-3">
@@ -174,13 +176,13 @@ export default function ExplorePage() {
   const [view, setView] = useState<'sky' | 'knowledge' | 'calendar'>('sky');
 
   return (
-    <div className="pb-24">
+    <div className="pb-24 md:pb-10 md:flex md:flex-col-reverse">
       {view === 'sky' && <SkySection />}
       {view === 'knowledge' && <KnowledgeSection />}
       {view === 'calendar' && <CalendarSection />}
 
-      {/* Navigation buttons */}
-      <div className="fixed bottom-20 left-0 right-0 px-5 py-4 flex gap-2 justify-center overflow-x-auto z-40" style={{ scrollbarWidth: 'none' }}>
+      {/* Navigation buttons — floating on mobile, inline toolbar on desktop */}
+      <div className="fixed bottom-20 left-0 right-0 px-5 py-4 flex gap-2 justify-center overflow-x-auto z-40 md:static md:bottom-auto md:justify-start md:px-5 md:py-4 md:overflow-visible" style={{ scrollbarWidth: 'none' }}>
         {([
           ['sky', 'السماء'],
           ['calendar', 'التقويم'],
