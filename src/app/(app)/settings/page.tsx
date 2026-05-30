@@ -164,18 +164,8 @@ export default function SettingsPage() {
 
       {/* ── Profile hero card ── */}
       <div className="mx-5 mt-6 rounded-[20px] bg-cream-soft border border-rule-soft p-6 flex flex-col items-center gap-3 text-center">
-        <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-sm border border-rule-soft">
-          <div
-            className="w-8 h-8"
-            style={{
-              WebkitMaskImage: `url('/svg/moon.svg')`,
-              maskImage: `url('/svg/moon.svg')`,
-              WebkitMaskSize: 'contain', maskSize: 'contain',
-              WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-              WebkitMaskPosition: 'center', maskPosition: 'center',
-              background: '#E9785E',
-            }}
-          />
+        <div className="w-16 h-16 rounded-full overflow-hidden shadow-sm border border-rule-soft">
+          <img src="/sukoon-avatar.png" width={64} height={64} alt="avatar" className="w-full h-full object-cover" />
         </div>
         <div>
           <div className="font-serif text-2xl text-ink">
