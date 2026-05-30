@@ -505,6 +505,58 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               <ZoomableWheel size={9999} tone="paper" chart={chart} showHouses={!birthData?.timeUnknown} />
             </div>
             <div className="px-5 pb-6">
+              {/* Modality + Element summary — 2 columns */}
+              {(() => {
+                const SIGN_ELEMENT: Record<number, string> = { 0:'نار',3:'ماء',1:'تراب',2:'هواء',4:'نار',5:'تراب',6:'هواء',7:'ماء',8:'نار',9:'تراب',10:'هواء',11:'ماء' };
+                const SIGN_MODALITY: Record<number, string> = { 0:'متحرك',1:'ثابت',2:'متغيّر',3:'متحرك',4:'ثابت',5:'متغيّر',6:'متحرك',7:'ثابت',8:'متغيّر',9:'متحرك',10:'ثابت',11:'متغيّر' };
+                const ELEM_COLOR: Record<string, string> = { 'نار':'#E9785E','تراب':'#BDAA82','هواء':'#C2D3E2','ماء':'#7E97B8' };
+                const MODAL_COLOR: Record<string, string> = { 'متحرك':'#E9785E','ثابت':'#7E97B8','متغيّر':'#8FA084' };
+                const pKeys = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'] as const;
+                const elemCount: Record<string,number> = {};
+                const modCount: Record<string,number> = {};
+                for (const k of pKeys) {
+                  const p = (chart as any)[k];
+                  if (!p) continue;
+                  const signIdx = Math.floor(((p.longitude % 360) + 360) % 360 / 30);
+                  const el = SIGN_ELEMENT[signIdx]; const mo = SIGN_MODALITY[signIdx];
+                  elemCount[el] = (elemCount[el] ?? 0) + 1;
+                  modCount[mo] = (modCount[mo] ?? 0) + 1;
+                }
+                const sortedElem = Object.entries(elemCount).sort((a,b)=>b[1]-a[1]);
+                const sortedMod = Object.entries(modCount).sort((a,b)=>b[1]-a[1]);
+                return (
+                  <div className="grid grid-cols-2 gap-3 mb-5">
+                    <div className="rounded-[14px] p-3" style={{ background: '#F5F2EA', border: '1px solid #E5E1D8' }}>
+                      <div className="text-[10px] font-semibold tracking-wider text-ink-muted mb-2">العناصر</div>
+                      <div className="flex flex-col gap-1.5">
+                        {sortedElem.map(([el, cnt]) => (
+                          <div key={el} className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: ELEM_COLOR[el] }} />
+                              <span className="text-[12px] text-ink font-medium">{el}</span>
+                            </div>
+                            <span className="text-[11px] text-ink-muted font-mono">{toAr(cnt)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="rounded-[14px] p-3" style={{ background: '#F5F2EA', border: '1px solid #E5E1D8' }}>
+                      <div className="text-[10px] font-semibold tracking-wider text-ink-muted mb-2">الطبائع</div>
+                      <div className="flex flex-col gap-1.5">
+                        {sortedMod.map(([mo, cnt]) => (
+                          <div key={mo} className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: MODAL_COLOR[mo] }} />
+                              <span className="text-[12px] text-ink font-medium">{mo}</span>
+                            </div>
+                            <span className="text-[11px] text-ink-muted font-mono">{toAr(cnt)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-3">مواضع الكواكب</div>
               {/* Gradient cards for Sun / Moon / AC — square, colored fill, white text */}
               {/* Planet color map — gradient fills for luminaries+AC, stroke-only for rest */}
@@ -742,7 +794,7 @@ const elements = [
 ];
 
 function BodyView() {
-  const [activeBodyTab, setActiveBodyTab] = useState<string>('elements');
+  const [activeBodyTab, setActiveBodyTab] = useState<string>('organs');
   const traits = loadTraits();
 
   if (!traits) {
@@ -758,7 +810,7 @@ function BodyView() {
     <div className="flex flex-col gap-5">
       {/* Sub-tabs */}
       <div className="px-5 pt-2 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        {([['elements', 'العناصر'], ['minerals', 'المعادن'], ['organs', 'الأعضاء'], ['hd', 'مراكز HD']] as const).map(([key, label]) => (
+        {([['organs', 'الأعضاء'], ['hd', 'مراكز HD']] as const).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setActiveBodyTab(key)}

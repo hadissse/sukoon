@@ -81,7 +81,7 @@ function SkySection() {
                   <div className="min-w-0 flex-1">
                     <div className="text-[12px] font-semibold text-ink truncate">{PLANET_KEYS_AR[key]}{planet.retrograde ? ' ℞' : ''}</div>
                     <div className="text-[11px] text-ink-muted truncate">
-                      {planet.sign} · {toAr(planet.degree)}°{planet.minute > 0 ? `${toAr(planet.minute)}′` : ''}
+                      {planet.sign} · {toAr(planet.degree)}°
                     </div>
                   </div>
                   <div className="text-ink-muted text-xs shrink-0">›</div>
@@ -186,13 +186,46 @@ function getDailyQuestion(): string {
   return DAILY_QUESTIONS[dayOfYear % DAILY_QUESTIONS.length];
 }
 
+const SKY_ASPECT_TYPES = [
+  { angle: 180, orb: 8, name: 'تقابل',  priority: 1 },
+  { angle: 0,   orb: 8, name: 'اقتران', priority: 2 },
+  { angle: 120, orb: 8, name: 'تثليث',  priority: 3 },
+  { angle: 90,  orb: 8, name: 'تربيع',  priority: 4 },
+  { angle: 60,  orb: 6, name: 'سُداس',  priority: 5 },
+];
+
+const SKY_PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'] as const;
+
+function getSkyAspectText(sky: AstralChart): string | null {
+  let best: { p1: string; p2: string; name: string; priority: number } | null = null;
+  for (let i = 0; i < SKY_PLANET_KEYS.length; i++) {
+    for (let j = i + 1; j < SKY_PLANET_KEYS.length; j++) {
+      const a = (sky as any)[SKY_PLANET_KEYS[i]];
+      const b = (sky as any)[SKY_PLANET_KEYS[j]];
+      if (!a || !b) continue;
+      const sep = Math.abs(((a.longitude - b.longitude + 180) % 360) - 180);
+      for (const asp of SKY_ASPECT_TYPES) {
+        if (Math.abs(sep - asp.angle) <= asp.orb) {
+          if (!best || asp.priority < best.priority) {
+            best = { p1: PLANET_KEYS_AR[SKY_PLANET_KEYS[i]], p2: PLANET_KEYS_AR[SKY_PLANET_KEYS[j]], name: asp.name, priority: asp.priority };
+          }
+          break;
+        }
+      }
+    }
+  }
+  return best ? `${best.p1} ${best.name} ${best.p2}` : null;
+}
+
 export default function TodayPage() {
   const [stamp, setStamp] = useState<CosmicStamp | null>(null);
   const [journey1Step, setJourney1Step] = useState<number | null>(null);
   const [exploreView, setExploreView] = useState<'sky' | 'calendar' | 'knowledge'>('sky');
+  const [heroSky, setHeroSky] = useState<AstralChart | null>(null);
 
   useEffect(() => {
     setStamp(getCosmicStamp());
+    setHeroSky(getCurrentSky());
     try {
       const raw = localStorage.getItem('sukoon.journey1.v1');
       if (raw) {
@@ -203,8 +236,7 @@ export default function TodayPage() {
   }, []);
 
   const question = getDailyQuestion();
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'صباح الخير' : hour < 18 ? 'مساء الخير' : 'مساء الخير';
+  const heroText = heroSky ? getSkyAspectText(heroSky) : null;
 
   return (
     <div className="pb-24 flex flex-col gap-0">
@@ -212,20 +244,12 @@ export default function TodayPage() {
       <div className="relative w-full aspect-square md:aspect-[16/7] overflow-hidden md:rounded-[28px] md:mt-4" style={{ background: '#1A0C00' }}>
         <img src="/media/match-flame.webp" alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(15,18,40,0.60) 0%, rgba(15,18,40,0) 42%, rgba(15,18,40,0.78) 100%)' }} />
-        <div className="absolute inset-0 flex flex-col justify-between p-6">
-          <h1 className="font-serif text-3xl text-cream">{greeting}</h1>
-          {stamp && (
-            <div>
-              <div className="text-[11px] text-cream/55 font-semibold tracking-wider mb-2">السماء الآن</div>
-              <div className="font-serif text-2xl text-cream leading-snug">{stamp.moonPhase}</div>
-              <div className="text-sm text-cream/70 mt-1.5">{stamp.sunPosition} · {stamp.dayRuler}</div>
-              <button
-                onClick={() => document.getElementById('today-sky')?.scrollIntoView({ behavior: 'smooth' })}
-                className="inline-block mt-4 text-xs text-coral font-medium"
-              >
-                استكشف السماء ←
-              </button>
-            </div>
+        <div className="absolute inset-0 flex flex-col justify-end p-6">
+          {heroText && (
+            <div className="font-serif text-2xl text-cream leading-snug">{heroText}</div>
+          )}
+          {!heroText && stamp && (
+            <div className="font-serif text-2xl text-cream leading-snug">{stamp.moonPhase}</div>
           )}
         </div>
       </div>
@@ -259,18 +283,6 @@ export default function TodayPage() {
         <div className="md:col-span-2">
           <Rule />
         </div>
-
-        {/* Daily question — coral-tinted box */}
-        <Link href="/log" className="block">
-          <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #F8D6BE 0%, #F0C0A0 100%)' }}>
-            <img src="/media/sun-rings.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-30" style={{ mixBlendMode: 'multiply' }} />
-            <div className="relative">
-              <div className="text-[11px] text-coral font-semibold tracking-wider mb-2">سؤال اليوم</div>
-              <div className="font-serif text-[17px] text-ink leading-[1.6]">{question}</div>
-              <div className="text-xs text-ink-muted mt-3 font-medium">سجّل إجابتك ←</div>
-            </div>
-          </div>
-        </Link>
 
         {/* Journey card — sage/green box */}
         <Link href="/journey-1" className="block">
@@ -307,12 +319,12 @@ export default function TodayPage() {
 
         {/* Knowledge — link to learn section */}
         <Link href="/learn" className="block md:col-span-2">
-          <div className="rounded-[20px] p-5" style={{ background: '#F5F0E8', border: '1px solid #E8E2D2' }}>
-            <div className="flex flex-col gap-2">
-              <div className="text-[11px] text-ink/50 font-semibold tracking-wider">المعرفة</div>
+          <div className="relative rounded-[20px] overflow-hidden p-5" style={{ background: 'linear-gradient(135deg, #F8D6BE 0%, #F0C0A0 100%)' }}>
+            <img src="/media/sun-rings.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-30" style={{ mixBlendMode: 'multiply' }} />
+            <div className="relative flex flex-col gap-2">
+              <div className="text-[11px] text-coral font-semibold tracking-wider">المعرفة</div>
               <div className="font-serif text-[17px] text-ink leading-[1.6]">الأسس · السلاسل · المعلّمون</div>
               <div className="text-xs text-ink-muted leading-[1.7]">تقاليد الفلك الثلاثة — غربي، عربي، روحاني</div>
-              <div className="text-xs text-coral font-medium mt-1">استكشف المعرفة ←</div>
             </div>
           </div>
         </Link>
@@ -320,24 +332,6 @@ export default function TodayPage() {
         <div className="md:col-span-2">
           <Rule />
         </div>
-
-        {/* Body + moon — square full-bleed */}
-        <Link href="/self" className="block">
-          <div className="relative w-full aspect-square overflow-hidden rounded-[20px]" style={{ background: '#0D1B2A' }}>
-            <img src="/media/moon-water.webp" alt="" loading="lazy" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0) 42%, rgba(0,0,0,0.74) 100%)' }} />
-            <div className="absolute inset-0 flex flex-col justify-between p-6">
-              <div className="text-[11px] text-cream/60 font-semibold tracking-wider">الجسد والقمر</div>
-              <div>
-                <div className="font-serif text-2xl text-cream leading-snug">
-                  {stamp ? `القمر في ${stamp.moonPhase.split(' في ')[1] ?? 'السماء'}` : 'القمر والجسد'}
-                </div>
-                <div className="text-sm text-cream/70 mt-2">القمر في خريطتك وصلته بالجسد</div>
-                <div className="text-xs text-coral font-medium mt-3">افتح خريطتك ←</div>
-              </div>
-            </div>
-          </div>
-        </Link>
 
         {/* Teaching — square full-bleed */}
         <Link href="/learn" className="block">

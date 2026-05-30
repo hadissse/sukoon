@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AstralChart } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
 
@@ -91,10 +91,7 @@ interface ZoomableWheelProps {
 
 export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, showHouses = true }: ZoomableWheelProps) {
   const [chart, setChart] = useState<AstralChart | null>(chartProp ?? null);
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [hovered, setHovered] = useState<string | null>(null);
-  const dragging = useRef<{ x: number; y: number; pan: { x: number; y: number } } | null>(null);
 
   useEffect(() => {
     if (chartProp !== undefined) { setChart(chartProp); return; }
@@ -103,26 +100,6 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
       if (stored) setChart(JSON.parse(stored));
     } catch { /* localStorage unavailable */ }
   }, [chartProp]);
-
-  const ZOOM_STEPS = [1, 1.6, 2.4];
-  const handleTap = () => {
-    const idx = ZOOM_STEPS.indexOf(zoom);
-    const next = ZOOM_STEPS[(idx + 1) % ZOOM_STEPS.length];
-    if (next === 1) setPan({ x: 0, y: 0 });
-    setZoom(next);
-  };
-
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (zoom <= 1) return;
-    dragging.current = { x: e.clientX, y: e.clientY, pan };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    const d = dragging.current;
-    if (!d) return;
-    setPan({ x: d.pan.x + (e.clientX - d.x), y: d.pan.y + (e.clientY - d.y) });
-  };
-  const onPointerUp = () => { dragging.current = null; };
 
   const isDark = tone === 'white';
   const bg = isDark ? 'transparent' : '#FFFFFF';
@@ -183,27 +160,12 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
   return (
     <div
       style={{
-        // Fluid: fills the parent up to `size`, staying a perfect circle.
-        // The wheel is fully resolution-independent (SVG viewBox), so a
-        // single dynamic width drives every desktop/mobile breakpoint.
         width: '100%', maxWidth: size, aspectRatio: '1 / 1',
         overflow: 'hidden', position: 'relative',
-        cursor: zoom > 1 ? 'grab' : 'pointer',
-        borderRadius: '50%', touchAction: 'none', userSelect: 'none',
+        borderRadius: '50%', userSelect: 'none',
       }}
-      onClick={handleTap}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
     >
-      <div style={{
-        width: '100%', height: '100%',
-        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-        transformOrigin: 'center center',
-        transition: dragging.current ? 'none' : 'transform 220ms cubic-bezier(0.2,0.7,0.2,1)',
-      }}>
-        <svg
+      <svg
           width="100%" height="100%" viewBox={`0 0 ${VB} ${VB}`}
           role="img" aria-label="الخريطة الفلكية"
           style={{ display: 'block' }}
@@ -233,6 +195,17 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
                 style={{ fontFamily: GLYPH_FONT, fontVariantEmoji: 'text' as React.CSSProperties['fontVariantEmoji'] }}>
                 {glyph}
               </text>
+            );
+          })}
+
+          {/* Sign boundary lines every 30° */}
+          {Array.from({ length: 12 }, (_, i) => {
+            const a = ((i * 30 - 180) * Math.PI) / 180;
+            return (
+              <line key={`sign-bound-${i}`}
+                x1={C + R_ZODIAC_IN * Math.cos(a)} y1={C - R_ZODIAC_IN * Math.sin(a)}
+                x2={C + R_ZODIAC_OUT * Math.cos(a)} y2={C - R_ZODIAC_OUT * Math.sin(a)}
+                stroke={strokeColor} strokeWidth="1.2" />
             );
           })}
 
@@ -367,21 +340,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
               </g>
             );
           })()}
-        </svg>
-      </div>
-
-      {/* Zoom badge — only visible when zoomed in */}
-      {zoom > 1 && (
-        <div style={{
-          position: 'absolute', top: 8, insetInlineEnd: 8,
-          background: 'rgba(23,27,58,0.78)', color: '#fff',
-          borderRadius: 999, padding: '4px 10px',
-          fontSize: 11, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.4px',
-          pointerEvents: 'none',
-        }}>
-          {zoom.toFixed(1)}× · اسحب
-        </div>
-      )}
+      </svg>
     </div>
   );
 }

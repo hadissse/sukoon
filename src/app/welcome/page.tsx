@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import {
   IconBack,
   Orb,
@@ -10,6 +11,8 @@ import {
 import { Logo } from '@/components/Logo';
 import { SukoonIcon } from '@/components/SukoonIcon';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } from '@/lib/auth';
+
+const HCAPTCHA_SITE_KEY = '0x4AAAAAADZm32ijpTAk7MWU';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase types
@@ -82,6 +85,8 @@ export default function WelcomePage() {
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
 
   // Mobile: auto-advance splash → breathe → welcome
   useEffect(() => {
@@ -110,8 +115,11 @@ export default function WelcomePage() {
 
   const handleSignUp = async () => {
     if (!email || !password) { setAuthError('يرجى إدخال البريد وكلمة المرور'); return; }
+    if (!captchaToken) { setAuthError('يرجى إكمال التحقق أولاً'); return; }
     setAuthLoading(true); setAuthError('');
-    const { error } = await signUpWithEmail(email, password);
+    const { error } = await signUpWithEmail(email, password, captchaToken);
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken(null);
     setAuthLoading(false);
     if (error) { setAuthError('تعذّر إنشاء الحساب — تحقق من بريدك'); return; }
     setPhase('verify');
@@ -205,6 +213,8 @@ export default function WelcomePage() {
             onVerifyDone={() => router.push('/today')}
             onGoogleAuth={handleGoogle}
             googleLoading={googleLoading}
+            captchaRef={captchaRef}
+            onCaptchaVerify={setCaptchaToken}
           />
         )}
       </div>
@@ -224,6 +234,8 @@ export default function WelcomePage() {
             onVerifyDone={() => router.push('/today')}
             onGoogleAuth={handleGoogle}
             googleLoading={googleLoading}
+            captchaRef={captchaRef}
+            onCaptchaVerify={setCaptchaToken}
           />
         </div>
       </div>
@@ -252,6 +264,8 @@ interface AuthProps {
   onVerifyDone: () => void;
   onGoogleAuth: () => void;
   googleLoading?: boolean;
+  captchaRef?: React.RefObject<HCaptcha | null>;
+  onCaptchaVerify?: (token: string) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -310,6 +324,9 @@ function DesktopAuthCard(p: AuthProps) {
           <Field label="البريد الإلكتروني" type="email" value={p.email} onChange={p.setEmail} placeholder="name@example.com" />
           <Field label="كلمة المرور" type="password" value={p.password} onChange={p.setPassword} placeholder="٨ أحرف على الأقل" />
           {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
+        </div>
+        <div className="flex justify-center">
+          <HCaptcha ref={p.captchaRef ?? null} sitekey={HCAPTCHA_SITE_KEY} onVerify={(token) => p.onCaptchaVerify?.(token)} />
         </div>
         <button onClick={p.handleSignUp} disabled={p.authLoading} className="h-[52px] rounded-[26px] bg-ink text-cream font-medium text-[15px] disabled:opacity-40">
           {p.authLoading ? '...' : 'إنشاء الحساب'}
@@ -442,7 +459,10 @@ function MobileAuthCard(p: AuthProps) {
           <Field label="كلمة المرور" type="password" value={p.password} onChange={p.setPassword} placeholder="٨ أحرف على الأقل" />
           {p.authError && <p className="text-[13px] text-coral">{p.authError}</p>}
         </div>
-        <div className="mt-6">
+        <div className="mt-4 flex justify-center">
+          <HCaptcha ref={p.captchaRef ?? null} sitekey={HCAPTCHA_SITE_KEY} onVerify={(token) => p.onCaptchaVerify?.(token)} />
+        </div>
+        <div className="mt-4">
           <PrimaryBtn onClick={p.handleSignUp} disabled={p.authLoading}>{p.authLoading ? '...' : 'متابعة'}</PrimaryBtn>
         </div>
       </div>
