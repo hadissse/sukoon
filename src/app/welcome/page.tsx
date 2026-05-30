@@ -164,7 +164,7 @@ export default function WelcomePage() {
       {/* ── Desktop top bar: icon + wordmark together top-right ── */}
       <div className="hidden md:flex items-center gap-4 px-10 pt-8">
         <SukoonIcon size={120} />
-        <img src="/sukoon-logo.svg" style={{ height: 60, width: 'auto' }} alt="سُكون" />
+        <img src="/sukoon-wordmark-black.svg" style={{ height: 60, width: 'auto' }} alt="سُكون" />
       </div>
 
       {/* ── Mobile: splash + breathe animations ── */}
