@@ -1,51 +1,50 @@
 'use client';
 
-/**
- * Self-contained natal-wheel renderer for the V2 immersive views (Scr216/217).
- *
- * The shared ZoomableWheel component loads its chart from localStorage and only
- * supports paper/white tones, so it can't render the design's fixed demo chart
- * on a dark immersive background. This is a standalone SVG built for that.
- */
-
 export interface WheelPlanet {
   name: string;
-  glyph: string;
-  lon: number; // ecliptic longitude, 0 = 0° Aries
+  key: string;
+  lon: number;
   isRetrograde?: boolean;
 }
 
 export interface WheelChart {
   ascLon: number;
+  mcLon: number;
   planets: WheelPlanet[];
 }
 
 const ZODIAC_SIGNS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 
+const PLANET_SVG_KEYS: Record<string, string> = {
+  sun: 'sun', moon: 'moon', mercury: 'mercury', venus: 'venus', mars: 'mars',
+  jupiter: 'jupiter', saturn: 'saturn', uranus: 'uranus', neptune: 'neptune',
+  pluto: 'pluto', chiron: 'chiron', northNode: 'southnode', southNode: 'northnode',
+};
+
 const ASPECT_TYPES = [
-  { angle: 0, orb: 8, color: '#9C8AB8' },
-  { angle: 60, orb: 5, color: '#7E97B8' },
-  { angle: 90, orb: 7, color: '#E9785E' },
+  { angle: 0,   orb: 8, color: '#9C8AB8' },
+  { angle: 60,  orb: 5, color: '#7E97B8' },
+  { angle: 90,  orb: 7, color: '#E9785E' },
   { angle: 120, orb: 7, color: '#8FA084' },
   { angle: 180, orb: 8, color: '#5A3E7A' },
 ];
 
-/** Fixed demo chart matching the design's defaultSukoonChart(). */
 export function defaultSukoonWheel(): WheelChart {
   return {
-    ascLon: 204, // Libra 24°
+    ascLon: 204,
+    mcLon: 294,
     planets: [
-      { name: 'الشمس', glyph: '☉', lon: 287 },
-      { name: 'القمر', glyph: '☽', lon: 203 },
-      { name: 'عطارد', glyph: '☿', lon: 264 },
-      { name: 'الزهرة', glyph: '♀', lon: 300, isRetrograde: true },
-      { name: 'المريخ', glyph: '♂', lon: 316 },
-      { name: 'المشتري', glyph: '♃', lon: 323 },
-      { name: 'زحل', glyph: '♄', lon: 13, isRetrograde: true },
-      { name: 'أورانوس', glyph: '♅', lon: 215, isRetrograde: true },
-      { name: 'نبتون', glyph: '♆', lon: 299 },
-      { name: 'بلوتو', glyph: '♇', lon: 189, isRetrograde: true },
-      { name: 'العقدة الشمالية', glyph: '☊', lon: 124, isRetrograde: true },
+      { name: 'الشمس',   key: 'sun',       lon: 287 },
+      { name: 'القمر',   key: 'moon',      lon: 203 },
+      { name: 'عطارد',   key: 'mercury',   lon: 264 },
+      { name: 'الزهرة',  key: 'venus',     lon: 300, isRetrograde: true },
+      { name: 'المريخ',  key: 'mars',      lon: 316 },
+      { name: 'المشتري', key: 'jupiter',   lon: 323 },
+      { name: 'زحل',     key: 'saturn',    lon:  13, isRetrograde: true },
+      { name: 'أورانوس', key: 'uranus',    lon: 215, isRetrograde: true },
+      { name: 'نبتون',   key: 'neptune',   lon: 299 },
+      { name: 'بلوتو',   key: 'pluto',     lon: 189, isRetrograde: true },
+      { name: 'شمال القمر', key: 'northNode', lon: 124, isRetrograde: true },
     ],
   };
 }
@@ -59,32 +58,36 @@ export function SukoonWheel({
   size?: number;
   tone?: 'paper' | 'dark';
 }) {
-  const center = size / 2;
-  const outerRadius = size / 2 - 6;
-  const zodiacRadius = outerRadius - size * 0.085;
-  const planetRadius = outerRadius - size * 0.2;
+  const C = size / 2;
+  const R_OUTER   = C - 6;
+  const R_ZOD_OUT = R_OUTER - size * 0.085;
+  const R_ZOD_IN  = R_ZOD_OUT - size * 0.10;
+  const R_PLANET  = R_ZOD_IN - size * 0.07;
+  const R_INNER   = size * 0.13;
 
   const dark = tone === 'dark';
-  const bg = dark ? '#161A38' : '#FFFFFF';
-  const ring = dark ? 'rgba(242,237,223,0.18)' : '#E8DCC8';
-  const signColor = dark ? '#F2EDDF' : '#171B3A';
-  const spoke = dark ? 'rgba(242,237,223,0.12)' : '#E5E1D8';
+  const bg        = dark ? '#161A38' : '#FFFFFF';
+  const ring      = dark ? 'rgba(242,237,223,0.22)' : '#B0A898';
+  const lightRing = dark ? 'rgba(242,237,223,0.12)' : '#D0C9BE';
+  const signColor = dark ? 'rgba(242,237,223,0.75)' : '#3A3550';
+  const mutedColor = dark ? 'rgba(242,237,223,0.40)' : '#9A9A9A';
 
-  const toXY = (lon: number, r: number) => {
-    const a = (lon - 90) * (Math.PI / 180);
-    return { x: center + r * Math.cos(a), y: center + r * Math.sin(a) };
-  };
+  // ASC-relative coords: ASC is always at LEFT (9 o'clock), zodiac increases CCW
+  function toXY(lon: number, r: number): { x: number; y: number } {
+    const a = (180 + lon - chart.ascLon) * (Math.PI / 180);
+    return { x: C + r * Math.cos(a), y: C - r * Math.sin(a) };
+  }
 
-  // Aspect lines between the 10 main planets (exclude the lunar node).
-  const main = chart.planets.filter((p) => p.glyph !== '☊');
+  // Aspect lines (exclude nodes)
+  const main = chart.planets.filter(p => p.key !== 'northNode' && p.key !== 'southNode');
   const aspectLines: { x1: number; y1: number; x2: number; y2: number; color: string }[] = [];
   for (let i = 0; i < main.length; i++) {
     for (let j = i + 1; j < main.length; j++) {
       const sep = Math.abs(((main[i].lon - main[j].lon + 180) % 360) - 180);
       for (const a of ASPECT_TYPES) {
         if (Math.abs(sep - a.angle) <= a.orb) {
-          const p1 = toXY(main[i].lon, planetRadius);
-          const p2 = toXY(main[j].lon, planetRadius);
+          const p1 = toXY(main[i].lon, R_INNER + 4);
+          const p2 = toXY(main[j].lon, R_INNER + 4);
           aspectLines.push({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, color: a.color });
           break;
         }
@@ -92,69 +95,138 @@ export function SukoonWheel({
     }
   }
 
+  // Planet collision spreading
+  const spread = chart.planets.map(p => ({ key: p.key, lon: p.lon, dispLon: p.lon }));
+  spread.sort((a, b) => a.lon - b.lon);
+  const minGap = 14;
+  for (let i = 1; i < spread.length; i++) {
+    const diff = ((spread[i].lon - spread[i-1].dispLon) % 360 + 360) % 360;
+    if (diff < minGap) spread[i].dispLon = spread[i-1].dispLon + minGap;
+  }
+
+  const glyphFont = 'Cambria, "Times New Roman", "Noto Sans Symbols 2", "Segoe UI Symbol", serif';
+
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto">
-      <circle cx={center} cy={center} r={outerRadius} fill={bg} stroke={ring} strokeWidth="1" />
-      <circle cx={center} cy={center} r={zodiacRadius} fill="none" stroke={ring} strokeWidth="1" />
-      <circle cx={center} cy={center} r={planetRadius - size * 0.04} fill="none" stroke={ring} strokeWidth="0.8" strokeDasharray="2 3" />
+      {/* Background */}
+      <circle cx={C} cy={C} r={R_OUTER} fill={bg} stroke={ring} strokeWidth="1" />
 
-      {/* Sign spokes + glyphs */}
+      {/* Zodiac band */}
+      <circle cx={C} cy={C} r={R_ZOD_OUT} fill="none" stroke={ring} strokeWidth="0.8" />
+      <circle cx={C} cy={C} r={R_ZOD_IN}  fill="none" stroke={ring} strokeWidth="0.8" />
+
+      {/* Planet ring + inner circle */}
+      <circle cx={C} cy={C} r={R_PLANET} fill="none" stroke={lightRing} strokeWidth="0.6" strokeDasharray="2 3" />
+      <circle cx={C} cy={C} r={R_INNER}  fill="none" stroke={lightRing} strokeWidth="0.8" />
+
+      {/* Zodiac sign dividers + glyphs */}
       {ZODIAC_SIGNS.map((g, i) => {
-        const a = (i * 30 - 90) * (Math.PI / 180);
-        const inner = { x: center + planetRadius * Math.cos(a), y: center + planetRadius * Math.sin(a) };
-        const outer = { x: center + outerRadius * Math.cos(a), y: center + outerRadius * Math.sin(a) };
-        const labelR = zodiacRadius + size * 0.045;
-        const la = ((i * 30 + 15) - 90) * (Math.PI / 180);
+        const spokeStart = toXY(i * 30, R_ZOD_IN);
+        const spokeEnd   = toXY(i * 30, R_ZOD_OUT);
+        const mid        = toXY(i * 30 + 15, (R_ZOD_IN + R_ZOD_OUT) / 2);
         return (
           <g key={`sign-${i}`}>
-            <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke={spoke} strokeWidth="0.6" />
-            <text
-              x={center + labelR * Math.cos(la)}
-              y={center + labelR * Math.sin(la)}
-              textAnchor="middle"
-              dy="0.35em"
-              fontSize={size * 0.045}
-              fill={signColor}
-              opacity={dark ? 0.75 : 1}
-            >
-              {g}
+            <line x1={spokeStart.x} y1={spokeStart.y} x2={spokeEnd.x} y2={spokeEnd.y}
+              stroke={lightRing} strokeWidth="0.6" />
+            <text x={mid.x} y={mid.y} textAnchor="middle" dy="0.35em"
+              fontSize={size * 0.048} fill={signColor}
+              style={{ fontFamily: glyphFont, fontVariantEmoji: 'text' }}>
+              {g}︎
             </text>
           </g>
         );
       })}
 
+      {/* 12 equal house lines from ASC */}
+      {Array.from({ length: 12 }, (_, i) => {
+        const lon = chart.ascLon + i * 30;
+        const inner = toXY(lon, R_INNER);
+        const outer = toXY(lon, R_ZOD_IN);
+        const isAsc = i === 0;
+        return (
+          <line key={`house-${i}`}
+            x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+            stroke={isAsc ? ring : lightRing}
+            strokeWidth={isAsc ? 1.6 : 0.7}
+            opacity={isAsc ? 1 : 0.7}
+          />
+        );
+      })}
+
+      {/* House numbers */}
+      {Array.from({ length: 12 }, (_, i) => {
+        const midLon = chart.ascLon + i * 30 + 15;
+        const { x, y } = toXY(midLon, (R_INNER + R_PLANET) / 2);
+        return (
+          <text key={`hn-${i}`} x={x} y={y} textAnchor="middle" dy="0.35em"
+            fontSize={size * 0.036} fill={mutedColor}
+            style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
+            {i + 1}
+          </text>
+        );
+      })}
+
+      {/* MC line */}
+      {(() => {
+        const inner = toXY(chart.mcLon, R_INNER);
+        const outer = toXY(chart.mcLon, R_ZOD_IN);
+        const lp    = toXY(chart.mcLon, R_ZOD_IN - size * 0.04);
+        return (
+          <g>
+            <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+              stroke={ring} strokeWidth="1.2" opacity={0.8} />
+            <text x={lp.x} y={lp.y} textAnchor="middle" dy="0.35em"
+              fontSize={size * 0.032} fill={mutedColor}
+              style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
+              MC
+            </text>
+          </g>
+        );
+      })()}
+
+      {/* AC label */}
+      {(() => {
+        const lp = toXY(chart.ascLon, R_ZOD_IN - size * 0.04);
+        return (
+          <text x={lp.x} y={lp.y} textAnchor="middle" dy="0.35em"
+            fontSize={size * 0.032} fontWeight="600" fill={ring}
+            style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
+            AC
+          </text>
+        );
+      })()}
+
       {/* Aspect lines */}
-      <g opacity={dark ? 0.45 : 0.5}>
+      <g opacity={0.45}>
         {aspectLines.map((l, i) => (
-          <line key={`asp-${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={l.color} strokeWidth="1" />
+          <line key={`asp-${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+            stroke={l.color} strokeWidth="0.8" />
         ))}
       </g>
 
       {/* Planets */}
       {chart.planets.map((p, i) => {
-        const { x, y } = toXY(p.lon, planetRadius);
+        const s = spread.find(s => s.key === p.key);
+        const { x, y } = toXY(s?.dispLon ?? p.lon, R_PLANET);
+        const svgKey = PLANET_SVG_KEYS[p.key] ?? p.key;
+        const gs = size * 0.12;
         return (
           <g key={`p-${i}`}>
-            <circle cx={x} cy={y} r={size * 0.028} fill="#E9785E" stroke={dark ? '#161A38' : '#FFFFFF'} strokeWidth="1.5" />
-            <text x={x} y={y} textAnchor="middle" dy="0.35em" fontSize={size * 0.035} fill="#FFFFFF" fontWeight="bold">
-              {p.glyph}
-            </text>
+            <image href={`/svg/${svgKey}.svg`}
+              x={x - gs / 2} y={y - gs / 2}
+              width={gs} height={gs}
+              style={dark ? { filter: 'invert(1)' } : undefined}
+              opacity={0.9}
+            />
+            {p.isRetrograde && (
+              <text x={x + gs * 0.32} y={y + gs * 0.32}
+                fontSize={size * 0.022} fill="#E9785E" textAnchor="middle" dy="0.35em">
+                ℞
+              </text>
+            )}
           </g>
         );
       })}
-
-      {/* Ascendant */}
-      {(() => {
-        const { x, y } = toXY(chart.ascLon, zodiacRadius);
-        return (
-          <g key="asc">
-            <line x1={center} y1={center} x2={x} y2={y} stroke={signColor} strokeWidth="2" strokeDasharray="4,2" />
-            <text x={x} y={y} dx="6" dy="-6" fontSize={size * 0.03} fill={signColor} fontWeight="bold">
-              AC
-            </text>
-          </g>
-        );
-      })()}
     </svg>
   );
 }

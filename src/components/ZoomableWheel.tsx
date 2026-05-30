@@ -40,15 +40,15 @@ const ZODIAC_ELEMENT_COLORS = [
 ];
 
 const PLANET_SIZES: Record<string, number> = {
-  sun: 28, moon: 36, mercury: 28, venus: 28, mars: 28,
-  jupiter: 32, saturn: 32, uranus: 28, neptune: 28, pluto: 28,
-  chiron: 24, northNode: 26, southNode: 26,
+  sun: 38, moon: 48, mercury: 38, venus: 38, mars: 38,
+  jupiter: 38, saturn: 42, uranus: 38, neptune: 38, pluto: 38,
+  northNode: 34, southNode: 34,
 };
 
 
 const PLANET_KEYS = [
   'sun','moon','mercury','venus','mars','jupiter',
-  'saturn','uranus','neptune','pluto','chiron','northNode','southNode',
+  'saturn','uranus','neptune','pluto','northNode','southNode',
 ] as const;
 
 // 0° Aries at 9 o'clock; longitude increases CCW visually
@@ -86,9 +86,10 @@ interface ZoomableWheelProps {
   size?: number;
   tone?: 'paper' | 'white';
   chart?: AstralChart | null;
+  showHouses?: boolean;
 }
 
-export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: ZoomableWheelProps) {
+export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, showHouses = true }: ZoomableWheelProps) {
   const [chart, setChart] = useState<AstralChart | null>(chartProp ?? null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -124,12 +125,12 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
   const onPointerUp = () => { dragging.current = null; };
 
   const isDark = tone === 'white';
-  const bg = isDark ? 'transparent' : '#F8F5EF';
+  const bg = isDark ? 'transparent' : '#FFFFFF';
   const strokeColor = isDark ? 'rgba(255,255,255,0.28)' : '#7A7A7A';
   const lightColor  = isDark ? 'rgba(255,255,255,0.18)' : '#C7C0AE';
   const mutedColor  = isDark ? 'rgba(255,255,255,0.45)' : '#9A9A9A';
   const wedgeFill   = isDark ? 'none'                   : '#FFFFFF';
-  const planetHalo  = isDark ? 'rgba(255,255,255,0.07)' : (tone === 'paper' ? '#F8F5EF' : '#FFFFFF');
+  const planetHalo  = isDark ? 'rgba(255,255,255,0.07)' : (tone === 'paper' ? '#FFFFFF' : '#FFFFFF');
 
   // Alternating zodiac wedge arcs — decorative shading
   const zodiacWedges = Array.from({ length: 12 }, (_, i) => {
@@ -208,7 +209,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
           style={{ display: 'block' }}
         >
           {/* Background fill — only inside zodiac ring (no outer degree arc) */}
-          <circle cx={C} cy={C} r={R_ZODIAC_OUT} fill={isDark ? 'rgba(255,255,255,0.04)' : '#F8F5EF'} />
+          <circle cx={C} cy={C} r={R_ZODIAC_OUT} fill={isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF'} />
 
           {/* Zodiac wedge backgrounds */}
           {zodiacWedges.map((w, i) => (
@@ -219,7 +220,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
           <circle cx={C} cy={C} r={R_ZODIAC_OUT}  fill="none" stroke={strokeColor} strokeWidth="1.2" />
           <circle cx={C} cy={C} r={R_ZODIAC_IN}   fill="none" stroke={strokeColor} strokeWidth="1.2" />
           <circle cx={C} cy={C} r={R_PLANET_INNER} fill="none" stroke={lightColor} strokeWidth="1" />
-          <circle cx={C} cy={C} r={R_CENTER}       fill={isDark ? 'rgba(255,255,255,0.06)' : '#F8F5EF'} stroke={lightColor} strokeWidth="1.2" />
+          <circle cx={C} cy={C} r={R_CENTER}       fill={isDark ? 'rgba(255,255,255,0.06)' : '#FFFFFF'} stroke={lightColor} strokeWidth="1.2" />
 
           {/* Zodiac sign glyphs — colored by element */}
           {ZODIAC_GLYPHS.map((glyph, i) => {
@@ -241,33 +242,61 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
               stroke={l.color} strokeWidth="0.8" opacity={l.opacity} />
           ))}
 
-          {/* House cusps — no numbers, AC/MC labels only */}
-          {chart && chart.houses.map((house, i) => {
+          {/* House cusps + numbers */}
+          {showHouses && chart && chart.houses.map((house, i) => {
             const inner = toXY(house.cusp, R_CENTER);
             const outer = toXY(house.cusp, R_ZODIAC_IN);
             const isAsc = house.num === 1;
-            const isMc = house.num === 10;
-            const labelPos = toXY(house.cusp, R_ZODIAC_IN - 22);
+            const nextCusp = chart.houses[(i + 1) % 12].cusp;
+            const midLon = house.cusp + ((((nextCusp - house.cusp) % 360) + 360) % 360) / 2;
+            const numPos = toXY(midLon, (R_CENTER + R_PLANET_INNER) / 2);
             return (
               <g key={`house-${i}`}>
                 <line
                   x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
                   stroke={lightColor}
-                  strokeWidth={isAsc || isMc ? '1.5' : '0.8'}
-                  opacity={isAsc || isMc ? 0.9 : 0.6}
+                  strokeWidth={isAsc ? '1.8' : '0.8'}
+                  opacity={isAsc ? 1 : 0.55}
                 />
-                {(isAsc || isMc) && (
-                  <text x={labelPos.x} y={labelPos.y}
-                    textAnchor="middle" dominantBaseline="central"
-                    fontSize="15" fontWeight="600"
-                    fill={mutedColor}
-                    style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
-                    {isAsc ? 'AC' : 'MC'}
-                  </text>
-                )}
+                <text x={numPos.x} y={numPos.y}
+                  textAnchor="middle" dominantBaseline="central"
+                  fontSize="18" fill={mutedColor} opacity={0.6}
+                  style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
+                  {house.num}
+                </text>
               </g>
             );
           })}
+          {/* MC line + label */}
+          {showHouses && chart && (() => {
+            const inner = toXY(chart.mc, R_CENTER);
+            const outer = toXY(chart.mc, R_ZODIAC_IN);
+            const labelPos = toXY(chart.mc, R_ZODIAC_IN - 22);
+            return (
+              <g>
+                <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+                  stroke={lightColor} strokeWidth="1.5" opacity={0.9} />
+                <text x={labelPos.x} y={labelPos.y}
+                  textAnchor="middle" dominantBaseline="central"
+                  fontSize="15" fontWeight="600" fill={mutedColor}
+                  style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
+                  MC
+                </text>
+              </g>
+            );
+          })()}
+          {/* AC label */}
+          {showHouses && chart && (() => {
+            const labelPos = toXY(chart.asc, R_ZODIAC_IN - 22);
+            return (
+              <text x={labelPos.x} y={labelPos.y}
+                textAnchor="middle" dominantBaseline="central"
+                fontSize="15" fontWeight="600" fill={mutedColor}
+                style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
+                AC
+              </text>
+            );
+          })()}
 
           {/* Planets: tick at true longitude + icon at spread position */}
           {chart && PLANET_KEYS.map((key, idx) => {
@@ -312,7 +341,8 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp }: 
           {hovered && chart && (() => {
             const planet = chart[hovered as (typeof PLANET_KEYS)[number]];
             if (!planet) return null;
-            const label = `${planet.name} · ${planet.degree}° ${planet.sign}`;
+            const toAr = (n: number) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d]);
+            const label = `${planet.name} · ${toAr(planet.degree)}° ${planet.sign}`;
             const idx = PLANET_KEYS.indexOf(hovered as typeof PLANET_KEYS[number]);
             const spreadAngle = spread[idx]?.angle ?? lonToAngleDeg(planet.longitude);
             const spreadRad = (spreadAngle * Math.PI) / 180;

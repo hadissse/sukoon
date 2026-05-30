@@ -65,7 +65,7 @@ function planetPlacementSuggestions(chart: AstralChart | null): Suggestion[] {
       type: 'planet',
       key,
       label: `${PLANET_AR[key]} في ${p.sign}`,
-      when: `${p.degree}° ${p.sign}`,
+      when: `${String(p.degree).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[+d])}° ${p.sign}`,
     };
   });
 }

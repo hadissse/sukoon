@@ -13,10 +13,10 @@ const GLYPH_ALIASES: Record<string, string> = {
   aquarius: 'aqua',
   sagittarius: 'sag',
   capricorn: 'cap',
-  'north-node': 'northnode',
-  'south-node': 'southnode',
-  northNode: 'northnode',
-  southNode: 'southnode',
+  'north-node': 'southnode',
+  'south-node': 'northnode',
+  northNode: 'southnode',
+  southNode: 'northnode',
 };
 
 export function Glyph({ name, size = 24, color = 'currentColor', className }: GlyphProps) {

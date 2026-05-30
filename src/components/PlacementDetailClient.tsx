@@ -34,11 +34,11 @@ const ELEMENT_AR: Record<string, { name: string; glyph: string }> = {
 };
 
 const ASPECTS: Record<number, { name: string; symbol: string; orb: number }> = {
-  0: { name: 'اقتران', symbol: '·', orb: 8 },
-  60: { name: 'سُداس', symbol: '×', orb: 6 },
+  0: { name: 'اقتران', symbol: '☌', orb: 8 },
+  60: { name: 'سُداس', symbol: '⚹', orb: 6 },
   90: { name: 'تربيع', symbol: '▫', orb: 8 },
   120: { name: 'تثليث', symbol: '△', orb: 8 },
-  180: { name: 'تقابل', symbol: '—', orb: 8 },
+  180: { name: 'تقابل', symbol: '☍', orb: 8 },
 };
 
 function toArabicDigits(input: string | number): string {

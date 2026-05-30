@@ -1,74 +1,46 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { BirthDateStep } from '@/components/onboarding/BirthDateStep';
-import { BirthTimeStep } from '@/components/onboarding/BirthTimeStep';
-import { LocationStep } from '@/components/onboarding/LocationStep';
-import { calculateChart } from '@/lib/chartCalculator';
-import { calculateTraits } from '@/lib/traitEngine';
-import { syncChart } from '@/lib/sync';
-
-type Step = 'birth-date' | 'birth-time' | 'location';
+import Link from 'next/link';
+import { NatalChartSetupForm } from '@/components/onboarding/NatalChartSetupForm';
+import type { AstralChart } from '@/lib/chartCalculator';
 
 export default function EditBirthPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('birth-date');
-  const [birthData, setBirthData] = useState({
-    year: 1990,
-    month: 6,
-    day: 15,
-    hour: 12,
-    minute: 0,
-    latitude: 24.7136,
-    longitude: 46.6753,
-    utcOffsetHours: 3,
-    timeUnknown: false,
-  });
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('sukoon.birth-data');
-      if (raw) setBirthData(JSON.parse(raw));
-    } catch {
-      // keep defaults
-    }
-  }, []);
-
-  const handleBirthDateComplete = (date: { year: number; month: number; day: number }) => {
-    setBirthData((prev) => ({ ...prev, ...date }));
-    setStep('birth-time');
-  };
-
-  const handleBirthTimeComplete = (time: { hour: number; minute: number; timeUnknown?: boolean }) => {
-    setBirthData((prev) => ({ ...prev, hour: time.hour, minute: time.minute, timeUnknown: time.timeUnknown || false }));
-    setStep('location');
-  };
-
-  const handleLocationComplete = async (location: { latitude: number; longitude: number; utcOffsetHours: number }) => {
-    const updated = { ...birthData, ...location };
-    try {
-      const chart = calculateChart(updated);
-      let quiz: Record<string, string[]> = {};
-      try {
-        const raw = localStorage.getItem('sukoon.quiz');
-        if (raw) quiz = JSON.parse(raw);
-      } catch { /* ignore */ }
-      localStorage.setItem('sukoon.birth-data', JSON.stringify(updated));
-      localStorage.setItem('sukoon.primary-chart.v1', JSON.stringify(chart));
-      calculateTraits(chart, quiz);
-      syncChart();
-    } catch {
-      localStorage.setItem('sukoon.birth-data', JSON.stringify(updated));
-    }
-    router.push('/self');
-  };
-
-  if (step === 'birth-date') {
-    return <BirthDateStep initialData={birthData} onComplete={handleBirthDateComplete} />;
+  function handleComplete(_chart: AstralChart) {
+    router.push('/settings/profile');
   }
-  if (step === 'birth-time') {
-    return <BirthTimeStep initialData={birthData} onComplete={handleBirthTimeComplete} />;
-  }
-  return <LocationStep initialData={birthData} onComplete={handleLocationComplete} />;
+
+  return (
+    <div className="max-w-[430px] mx-auto min-h-screen bg-cream" dir="rtl">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 pt-5 pb-2">
+        <Link
+          href="/settings/profile"
+          className="flex items-center gap-1.5 text-ink-muted text-sm"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          رجوع
+        </Link>
+      </div>
+
+      <div className="px-5 pb-2">
+        <h1 className="font-serif text-2xl text-ink">تعديل بيانات الميلاد</h1>
+      </div>
+
+      <NatalChartSetupForm onComplete={handleComplete} />
+    </div>
+  );
 }

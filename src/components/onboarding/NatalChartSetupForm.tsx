@@ -50,7 +50,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
       } else {
         setLocationResults([]);
       }
-    }, 500);
+    }, 250);
     return () => clearTimeout(t);
   }, [locationQuery]);
 
@@ -93,7 +93,7 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
   return (
     <div className="px-5 pt-6 pb-10 flex flex-col gap-7" dir="rtl">
       <div>
-        <h2 className="font-serif text-2xl text-ink mb-1">خريطتك النجمية</h2>
+        <h2 className="font-serif text-2xl text-ink mb-1">خريطتك الفلكية</h2>
         <p className="text-sm text-ink-muted">أدخل بيانات ميلادك لتوليد خريطتك</p>
       </div>
 
@@ -164,18 +164,20 @@ export function NatalChartSetupForm({ onComplete }: NatalChartSetupFormProps) {
 
       {/* ── Birth time ── */}
       <div className="flex flex-col gap-3">
-        <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">وقت الميلاد</span>
-        <button
-          type="button"
-          onClick={() => setTimeUnknown(!timeUnknown)}
-          className={`w-full px-4 py-3 rounded-[14px] border text-sm font-medium transition-colors text-right ${
-            timeUnknown
-              ? 'bg-cream-soft border-coral text-ink'
-              : 'bg-white border-rule-soft text-ink-muted'
-          }`}
-        >
-          لا أعرف وقت ميلادي
-        </button>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">وقت الميلاد</span>
+          <button
+            type="button"
+            onClick={() => setTimeUnknown(!timeUnknown)}
+            className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+              timeUnknown
+                ? 'bg-coral/10 border-coral text-coral'
+                : 'bg-white border-rule-soft text-ink-muted'
+            }`}
+          >
+            لا أعرف وقت ميلادي
+          </button>
+        </div>
         {!timeUnknown && (
           <div className="flex gap-2 items-end">
             <div className="flex-1">

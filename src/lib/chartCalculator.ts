@@ -117,7 +117,7 @@ const CHIRON = {
   a: 13.6400,  // AU
   e: 0.38261,
   i: toRad(6.9306),
-  Om: toRad(339.31), // longitude of ascending node
+  Om: toRad(209.4),  // longitude of ascending node
   om: toRad(339.74), // argument of perihelion
   M0: toRad(28.04),  // mean anomaly at epoch
   n: toRad(0.019534), // mean motion deg/day → rad/day (≈ 360/18432 days)
@@ -293,31 +293,11 @@ export function calculateChart(birthData: BirthData): AstralChart {
   const ramcR = toRad(ramc);
   const epsR = toRad(eps);
   const phiR = toRad(birthData.latitude);
-  const ascRaw = toDeg(Math.atan2(-Math.cos(ramcR), Math.sin(ramcR) * Math.cos(epsR) + Math.tan(phiR) * Math.sin(epsR)));
+  const ascRaw = toDeg(Math.atan2(Math.cos(ramcR), -(Math.sin(ramcR) * Math.cos(epsR) + Math.tan(phiR) * Math.sin(epsR))));
   const asc = norm360(ascRaw);
 
-  // ── Placidus cusps ────────────────────────────────────────────────────────
-  const phi = birthData.latitude;
-  const h11 = placidusUpperCusp(ramc, 1 / 3, eps, phi);
-  const h12 = placidusUpperCusp(ramc, 2 / 3, eps, phi);
-  const h2 = placidusLowerCusp(ramc, 1 / 3, eps, phi);
-  const h3 = placidusLowerCusp(ramc, 2 / 3, eps, phi);
-
-  // All 12 cusps: 1=ASC, 4=IC, 7=DSC, 10=MC; interpolated for 2,3,5,6,8,9,11,12
-  const cuspLons = [
-    asc,                       // 1
-    h2,                        // 2
-    h3,                        // 3
-    norm360(mc + 180),         // 4 (IC)
-    norm360(h3 + 180),         // 5
-    norm360(h2 + 180),         // 6
-    norm360(asc + 180),        // 7 (DSC)
-    norm360(h12 + 180),        // 8
-    norm360(h11 + 180),        // 9
-    mc,                        // 10
-    h11,                       // 11
-    h12,                       // 12
-  ];
+  // ── Equal houses — each house is exactly 30° from ASC ────────────────────
+  const cuspLons = Array.from({ length: 12 }, (_, i) => norm360(asc + i * 30));
 
   const houses: HousePosition[] = cuspLons.map((cusp, idx) => ({
     num: idx + 1,

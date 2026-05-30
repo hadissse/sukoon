@@ -11,6 +11,7 @@ import Link from 'next/link';
 
 const settingsItems = [
   { label: 'الملف الشخصي', href: '/settings/profile' },
+  { label: 'تعديل بيانات الميلاد', href: '/settings/edit-birth' },
   { label: 'المعايرة', href: '/settings/calibration' },
   { label: 'الاستشارات والممارسة', href: '/settings/practice' },
   { label: 'البيانات', href: '/settings/data' },

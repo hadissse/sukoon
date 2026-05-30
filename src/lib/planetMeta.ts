@@ -1,6 +1,6 @@
 const PLANET_SVG_OVERRIDES: Partial<Record<string, string>> = {
-  northNode: 'northnode',
-  southNode: 'southnode',
+  northNode: 'southnode',
+  southNode: 'northnode',
 };
 
 export function planetSvgKey(key: string): string {

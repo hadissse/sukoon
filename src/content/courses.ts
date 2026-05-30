@@ -144,7 +144,7 @@ export const SERIES: { id: string; title: string; sub: string; color: string; pr
 export const ASTRO_COURSES: Course[] = [
   {
     id: 'natal-chart-basics',
-    title: 'خريطتك النجمية',
+    title: 'خريطتك الفلكية',
     course: 'مقرّر · ٧ أيام',
     variant: 'dawn',
     teacher: 'بريا شاه',

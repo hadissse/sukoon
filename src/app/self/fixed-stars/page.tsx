@@ -16,8 +16,7 @@ function lonToSignDeg(lon: number): string {
   const n = ((lon % 360) + 360) % 360;
   const sign = Math.floor(n / 30);
   const deg = Math.floor(n % 30);
-  const min = Math.round((n % 1) * 60);
-  return `${ZODIAC_SIGNS_AR[sign]} ${toAr(deg)}°${min > 0 ? ` ${toAr(min)}′` : ''}`;
+  return `${ZODIAC_SIGNS_AR[sign]} ${toAr(deg)}°`;
 }
 
 type FilterKey = 'active' | 'all';
@@ -33,8 +32,8 @@ export default function FixedStarsPage() {
       if (raw) {
         const parsed: AstralChart = JSON.parse(raw);
         setChart(parsed);
-        const jd = typeof parsed.timestamp === 'number' ? parsed.timestamp : 2451545.0;
-        setConjunctions(findStarConjunctions(parsed as unknown as Record<string, { longitude: number; name: string }>, jd));
+        const jd = typeof parsed.timestamp === 'number' ? parsed.timestamp + 2451545.0 : 2451545.0;
+        setConjunctions(findStarConjunctions(parsed as unknown as Record<string, { longitude: number; name: string }>, jd, 3));
       }
     } catch {
       // no chart
@@ -88,7 +87,7 @@ export default function FixedStarsPage() {
         {visibleStars.map((star) => {
           const conj = conjunctions.filter((c) => c.star.nameLatin === star.nameLatin);
           const isActive = conj.length > 0;
-          const jd = chart && typeof chart.timestamp === 'number' ? chart.timestamp : 2451545.0;
+          const jd = chart && typeof chart.timestamp === 'number' ? chart.timestamp + 2451545.0 : 2451545.0;
           const currentLon = starLongitudeAtJD(star, jd);
           const slug = fixedStarSlug(star.nameLatin);
 

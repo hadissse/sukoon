@@ -1,34 +1,17 @@
 /**
- * Fixed star catalog — Robson (1923) as primary source.
- * Positions are tropical ecliptic longitude at J2000.0 (JD 2451545.0).
- * Source: Vivian Robson, "The Fixed Stars and Constellations in Astrology" (1923).
- *
- * Arabic names are the traditional Arabic designations preserved in modern
- * stellar nomenclature; many are derived directly from the Arabic astronomer
- * tradition (al-Sufi, Ibn Qutayba, al-Battani).
- *
- * Precession rate: ~1° per 72 years (50.29"/yr in ecliptic longitude).
- * Use currentLongitude() to get position at any Julian Day.
+ * Fixed star catalog — 15 classical stars with Arabic names.
+ * Tropical ecliptic longitudes at J2000.0 (JD 2451545.0).
+ * Precession rate: ~50.29"/yr (~1° per 72 years).
  */
 
 export interface FixedStar {
-  /** Traditional Arabic name */
   nameAr: string;
-  /** Arabic transliteration (original Arabic designation) */
   translitAr: string;
-  /** Western/Latinate name */
   nameLatin: string;
-  /** Bayer designation (e.g. α Leo) */
   bayer: string;
-  /** Tropical longitude at J2000.0 in decimal degrees */
   lon2000: number;
-  /** Ecliptic latitude (deg) — small for most, relevant for parallax */
   lat: number;
-  /** Magnitude */
   mag: number;
-  /** Robson's primary keyword (reference only, not interpretation) */
-  robsonKeyword: string;
-  /** Conjunction orb in degrees used for detection */
   orb: number;
 }
 
@@ -38,109 +21,59 @@ export const FIXED_STARS: FixedStar[] = [
     translitAr: "Ra's al-Ghul",
     nameLatin: 'Algol',
     bayer: 'β Persei',
-    lon2000: 56.15,
+    lon2000: 56.17,
     lat: 22.5,
     mag: 2.12,
-    robsonKeyword: 'Variable star — winking demon',
     orb: 1.0,
   },
   {
-    nameAr: 'الثريّا',
-    translitAr: 'ath-Thurayya',
-    nameLatin: 'Alcyone / Pleiades',
+    nameAr: 'أم النجوم',
+    translitAr: 'Umm al-Nujum',
+    nameLatin: 'Alcyone',
     bayer: 'η Tauri',
     lon2000: 59.80,
     lat: 4.03,
     mag: 2.87,
-    robsonKeyword: 'Cluster — tears, sight',
     orb: 2.0,
   },
   {
     nameAr: 'الدبران',
-    translitAr: 'ad-Dabarān',
+    translitAr: 'ad-Dabaran',
     nameLatin: 'Aldebaran',
     bayer: 'α Tauri',
     lon2000: 69.75,
     lat: -5.47,
     mag: 0.85,
-    robsonKeyword: 'Royal star of East — honor, courage',
     orb: 2.0,
   },
   {
-    nameAr: 'رِجل الجوزاء',
-    translitAr: 'Rijl al-Jawzā',
-    nameLatin: 'Rigel',
-    bayer: 'β Orionis',
-    lon2000: 76.85,
-    lat: -31.12,
-    mag: 0.12,
-    robsonKeyword: 'Wealth, honor, fortune',
-    orb: 1.5,
-  },
-  {
-    nameAr: 'العيّوق',
-    translitAr: "al-'Ayyūq",
+    nameAr: 'العيوق',
+    translitAr: "al-'Ayuq",
     nameLatin: 'Capella',
     bayer: 'α Aurigae',
     lon2000: 81.95,
     lat: 22.86,
     mag: 0.08,
-    robsonKeyword: 'Honor, eminence, renown',
     orb: 1.5,
   },
   {
-    nameAr: 'إبط الجوزاء',
-    translitAr: 'Ibt al-Jawzā',
-    nameLatin: 'Betelgeuse',
-    bayer: 'α Orionis',
-    lon2000: 88.73,
-    lat: -16.04,
-    mag: 0.42,
-    robsonKeyword: 'Honor, intellect, success',
-    orb: 1.5,
-  },
-  {
-    nameAr: 'الشِّعرى اليمانية',
-    translitAr: "ash-Shi'rā al-Yamāniyya",
+    nameAr: 'الشعرى اليمانية',
+    translitAr: "ash-Shi'ra al-Yamaniyya",
     nameLatin: 'Sirius',
     bayer: 'α Canis Majoris',
     lon2000: 104.08,
     lat: -39.6,
     mag: -1.46,
-    robsonKeyword: 'Wealth, renown, faithfulness',
     orb: 2.0,
   },
   {
-    nameAr: 'رأس التوأم المقدِّم',
-    translitAr: "Ra's at-Taw'am al-Muqaddim",
-    nameLatin: 'Castor',
-    bayer: 'α Geminorum',
-    lon2000: 110.28,
-    lat: 10.05,
-    mag: 1.58,
-    robsonKeyword: 'Prominence, distinction, sometimes violence',
-    orb: 1.0,
-  },
-  {
-    nameAr: 'رأس التوأم المؤخِّر',
-    translitAr: "Ra's at-Taw'am al-Mu'akhkhir",
-    nameLatin: 'Pollux',
-    bayer: 'β Geminorum',
-    lon2000: 113.27,
-    lat: 6.68,
-    mag: 1.14,
-    robsonKeyword: 'Craft, tact, caution',
-    orb: 1.0,
-  },
-  {
-    nameAr: 'الشِّعرى الشامية',
-    translitAr: "ash-Shi'rā ash-Shāmiyya",
+    nameAr: 'الشعرى الشامية',
+    translitAr: "ash-Shi'ra ash-Shamiyya",
     nameLatin: 'Procyon',
     bayer: 'α Canis Minoris',
     lon2000: 115.82,
     lat: -16.02,
     mag: 0.38,
-    robsonKeyword: 'Impetuosity, willfulness',
     orb: 1.0,
   },
   {
@@ -151,40 +84,56 @@ export const FIXED_STARS: FixedStar[] = [
     lon2000: 149.98,
     lat: 0.46,
     mag: 1.35,
-    robsonKeyword: 'Royal star — success if revenge avoided',
     orb: 2.0,
   },
   {
-    nameAr: 'السِّماك الأعزل',
-    translitAr: "as-Simāk al-A'zal",
+    nameAr: 'الأيد',
+    translitAr: "al-'Ayd",
+    nameLatin: 'Alkaid',
+    bayer: 'η Ursae Majoris',
+    lon2000: 177.12,
+    lat: 54.92,
+    mag: 1.86,
+    orb: 1.0,
+  },
+  {
+    nameAr: 'الغراب',
+    translitAr: 'al-Gharab',
+    nameLatin: 'Algorab',
+    bayer: 'δ Corvi',
+    lon2000: 193.45,
+    lat: -14.04,
+    mag: 2.95,
+    orb: 1.0,
+  },
+  {
+    nameAr: 'السنبلة',
+    translitAr: 'as-Sunbula',
     nameLatin: 'Spica',
     bayer: 'α Virginis',
     lon2000: 203.84,
     lat: -2.05,
     mag: 0.98,
-    robsonKeyword: 'Renown, wealth, brilliance',
     orb: 2.0,
   },
   {
-    nameAr: 'السِّماك الرامح',
-    translitAr: 'as-Simāk ar-Rāmih',
+    nameAr: 'السماك الأعزل',
+    translitAr: "as-Simak al-A'zal",
     nameLatin: 'Arcturus',
     bayer: 'α Bootis',
     lon2000: 204.22,
     lat: 30.73,
     mag: -0.05,
-    robsonKeyword: 'Renown, riches, honor',
     orb: 1.5,
   },
   {
-    nameAr: 'الزُّبانى',
-    translitAr: 'az-Zubānā',
-    nameLatin: 'Southern Scale / Zubenelgenubi',
-    bayer: 'α Librae',
-    lon2000: 224.78,
-    lat: 0.77,
-    mag: 2.75,
-    robsonKeyword: 'Danger, disgrace, loss; favorable in good dignity',
+    nameAr: 'الفكة',
+    translitAr: 'al-Fakka',
+    nameLatin: 'Alphecca',
+    bayer: 'α Coronae Borealis',
+    lon2000: 222.32,
+    lat: 44.32,
+    mag: 2.23,
     orb: 1.0,
   },
   {
@@ -195,62 +144,26 @@ export const FIXED_STARS: FixedStar[] = [
     lon2000: 249.73,
     lat: -4.57,
     mag: 1.06,
-    robsonKeyword: 'Royal star of West — rashness, war, honor',
     orb: 2.0,
   },
   {
     nameAr: 'النسر الواقع',
-    translitAr: 'an-Nasr al-Wāqi',
+    translitAr: 'an-Nasr al-Waqi',
     nameLatin: 'Vega',
     bayer: 'α Lyrae',
     lon2000: 285.26,
     lat: 61.72,
     mag: 0.03,
-    robsonKeyword: 'Refinement, ideality, artistic gifts',
     orb: 1.5,
   },
   {
-    nameAr: 'النسر الطائر',
-    translitAr: "an-Nasr at-Ta'ir",
-    nameLatin: 'Altair',
-    bayer: 'α Aquilae',
-    lon2000: 301.70,
-    lat: 29.31,
-    mag: 0.76,
-    robsonKeyword: 'Boldness, ambition, sudden success',
-    orb: 1.0,
-  },
-  {
-    nameAr: 'ذنب الدجاجة',
-    translitAr: 'Dhanab ad-Dajāja',
-    nameLatin: 'Deneb Cygni',
-    bayer: 'α Cygni',
-    lon2000: 325.08,
-    lat: 59.94,
-    mag: 1.25,
-    robsonKeyword: 'Originality, judgment, faith',
-    orb: 1.0,
-  },
-  {
-    nameAr: 'فم الحوت',
-    translitAr: 'Fam al-Hūt',
-    nameLatin: 'Fomalhaut',
-    bayer: 'α Piscis Austrini',
-    lon2000: 333.89,
-    lat: -21.13,
-    mag: 1.16,
-    robsonKeyword: 'Royal star of North — eminence, fame',
-    orb: 2.0,
-  },
-  {
-    nameAr: 'آخر النهر',
-    translitAr: 'Ākhir an-Nahr',
-    nameLatin: 'Achernar',
-    bayer: 'α Eridani',
-    lon2000: 345.30,
-    lat: -59.51,
-    mag: 0.46,
-    robsonKeyword: 'Prominence in religion, philosophy, public affairs',
+    nameAr: 'ذنب الجدي',
+    translitAr: 'Dhanab al-Jadi',
+    nameLatin: 'Deneb Algedi',
+    bayer: 'δ Capricorni',
+    lon2000: 323.54,
+    lat: -2.69,
+    mag: 2.85,
     orb: 1.0,
   },
 ];
@@ -260,13 +173,9 @@ export function fixedStarSlug(nameLatin: string): string {
   return part.split(' ')[0].toLowerCase().replace(/[^a-z]/g, '');
 }
 
-// Precession rate in degrees per year (ecliptic longitude)
 const PRECESSION_DEG_PER_YEAR = 50.29 / 3600;
 const J2000 = 2451545.0;
 
-/**
- * Returns the precessed tropical longitude of a fixed star at the given Julian Day.
- */
 export function starLongitudeAtJD(star: FixedStar, jd: number): number {
   const years = (jd - J2000) / 365.25;
   return ((star.lon2000 + years * PRECESSION_DEG_PER_YEAR) % 360 + 360) % 360;
@@ -284,19 +193,15 @@ export interface StarConjunction {
 const PLANET_KEYS = [
   'sun', 'moon', 'mercury', 'venus', 'mars',
   'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
-  'chiron', 'northNode', 'southNode',
+  'northNode', 'southNode',
 ] as const;
 
 const PLANET_NAMES_AR: Record<string, string> = {
   sun: 'الشمس', moon: 'القمر', mercury: 'عطارد', venus: 'الزهرة', mars: 'المريخ',
   jupiter: 'المشتري', saturn: 'زحل', uranus: 'أورانوس', neptune: 'نبتون', pluto: 'بلوتو',
-  chiron: 'كيرون', northNode: 'شمال القمر', southNode: 'جنوب القمر',
+  northNode: 'شمال القمر', southNode: 'جنوب القمر',
 };
 
-/**
- * Finds all fixed star conjunctions within orb for a given chart.
- * Chart must include a timestamp (Julian Day) for precession correction.
- */
 export function findStarConjunctions(
   chart: Record<string, { longitude: number; name: string } | unknown>,
   jd: number,

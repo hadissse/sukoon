@@ -93,7 +93,7 @@ export default function OnboardingPage() {
           <h1 className="font-serif text-4xl text-ink mb-4">سُكون</h1>
           <p className="text-lg text-ink-muted mb-8">خريطتك. سماؤك. سُكونك.</p>
           <p className="text-sm text-ink mb-12 leading-relaxed">
-            لنبدأ بفهم خريطتك النجمية. ستحتاج إلى تاريخ ميلادك، ووقته، ومكانه.
+            لنبدأ بفهم خريطتك الفلكية. ستحتاج إلى تاريخ ميلادك، ووقته، ومكانه.
           </p>
           <button
             onClick={handleStartOnboarding}

@@ -26,11 +26,11 @@ const TRANSIT_BODIES: { key: string; body: Astronomy.Body }[] = [
 ];
 
 const ASPECTS = [
-  { angle: 0,   name: 'اقتران', symbol: '·', orb: 6, color: '#5C5C7A' },
-  { angle: 60,  name: 'سُداس',  symbol: '×', orb: 4, color: '#4A7FB5' },
+  { angle: 0,   name: 'اقتران', symbol: '☌', orb: 6, color: '#5C5C7A' },
+  { angle: 60,  name: 'سُداس',  symbol: '⚹', orb: 4, color: '#4A7FB5' },
   { angle: 90,  name: 'تربيع',  symbol: '▫', orb: 5, color: '#C0392B' },
   { angle: 120, name: 'تثليث',  symbol: '△', orb: 5, color: '#27AE60' },
-  { angle: 180, name: 'تقابل',  symbol: '—', orb: 6, color: '#C0392B' },
+  { angle: 180, name: 'تقابل',  symbol: '☍', orb: 6, color: '#C0392B' },
 ];
 
 const NATAL_KEYS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'northNode', 'southNode'] as const;
@@ -54,9 +54,7 @@ function toArabicDigits(input: string | number): string {
 }
 
 export function orbLabel(orb: number): string {
-  const deg = Math.floor(orb);
-  const min = Math.round((orb - deg) * 60);
-  return `${toArabicDigits(deg)}°${toArabicDigits(String(min).padStart(2, '0'))}′`;
+  return `${toArabicDigits(Math.floor(orb))}°`;
 }
 
 export function calculateTransits(natal: AstralChart, date: Date = new Date()): Transit[] {

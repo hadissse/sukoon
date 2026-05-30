@@ -24,7 +24,7 @@ export function Header({ title = 'سُكون' }: HeaderProps) {
           </Link>
         </div>
 
-        <h1 className="text-base font-bold text-ink">{title}</h1>
+        <div />
 
         <div className="flex items-center gap-3">
           <Link

@@ -36,7 +36,7 @@ export default function SkyPlanetPage({ params }: { params: Promise<{ key: strin
 
   const planetName = PLANET_AR[planetKey] ?? planetKey;
   const signName = planet ? ZODIAC_NAMES_AR[planet.signNumber] : '…';
-  const degreeStr = planet ? `${toArabicDigits(planet.degree)}°${planet.minute > 0 ? `${toArabicDigits(planet.minute)}′` : ''}` : '';
+  const degreeStr = planet ? `${toArabicDigits(planet.degree)}°` : '';
 
   return (
     <div className="max-w-[430px] mx-auto w-full pb-28" dir="rtl">
