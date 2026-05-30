@@ -6,36 +6,43 @@ import Link from 'next/link';
 import { signOut } from '@/lib/auth';
 import { getSupabase } from '@/lib/supabase';
 
+// ── External link icon ───────────────────────────────────────────────────────
+function ExternalIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted opacity-40 shrink-0">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted opacity-40 shrink-0 rotate-180">
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px] font-semibold text-ink-muted tracking-wider uppercase px-5 mt-6 mb-2">{children}</p>;
+}
+
 // ── Inline-edit row ──────────────────────────────────────────────────────────
 function EditRow({
-  label,
-  value,
-  type = 'text',
-  masked,
-  actionLabel = 'Edit',
-  actionStyle = 'button',
-  onSave,
+  label, value, type = 'text', masked, actionLabel = 'تعديل', actionStyle = 'button', hint, onSave,
 }: {
-  label: string;
-  value: string;
-  type?: string;
-  masked?: boolean;
-  actionLabel?: string;
-  actionStyle?: 'button' | 'link';
+  label: string; value: string; type?: string; masked?: boolean;
+  actionLabel?: string; actionStyle?: 'button' | 'link'; hint?: string;
   onSave?: (v: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (editing) inputRef.current?.focus();
-  }, [editing]);
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+  useEffect(() => { setDraft(value); }, [value]);
 
-  const save = () => {
-    onSave?.(draft);
-    setEditing(false);
-  };
+  const save = () => { onSave?.(draft); setEditing(false); };
 
   return (
     <div className="py-4 flex items-start justify-between gap-4">
@@ -43,19 +50,18 @@ function EditRow({
         <div className="text-[13px] font-semibold text-ink">{label}</div>
         {editing ? (
           <input
-            ref={inputRef}
-            type={type}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }}
-            className="mt-1 w-full text-sm text-ink bg-cream-soft border border-coral/40 rounded-[10px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-coral/30"
-            dir="ltr"
+            ref={inputRef} type={type} value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }}
+            className="mt-1.5 w-full text-sm text-ink bg-cream-soft border border-coral/40 rounded-[10px] px-3 py-2 focus:outline-none focus:ring-1 focus:ring-coral/20"
+            dir={type === 'email' || type === 'password' ? 'ltr' : 'rtl'}
           />
         ) : (
           <div className="text-sm text-ink-muted mt-0.5 truncate" dir={type === 'email' ? 'ltr' : 'rtl'}>
             {masked ? '••••••••••' : (value || '—')}
           </div>
         )}
+        {hint && !editing && <div className="text-[11px] text-ink-muted mt-0.5 opacity-70">{hint}</div>}
       </div>
       {editing ? (
         <div className="flex gap-2 shrink-0 pt-1">
@@ -68,7 +74,7 @@ function EditRow({
           className={`shrink-0 pt-0.5 ${
             actionStyle === 'link'
               ? 'text-sm text-coral font-medium'
-              : 'px-5 py-1.5 rounded-full bg-cream-soft border border-rule-soft text-sm font-medium text-ink hover:bg-white transition-colors'
+              : 'px-4 py-1.5 rounded-full bg-cream-soft border border-rule-soft text-[13px] font-medium text-ink hover:bg-white transition-colors'
           }`}
         >
           {actionLabel}
@@ -78,47 +84,32 @@ function EditRow({
   );
 }
 
-function Divider() {
-  return <div className="h-px bg-rule-soft" />;
-}
-
 // ── Delete confirm modal ─────────────────────────────────────────────────────
 function DeleteModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm px-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm px-6" dir="rtl">
       <div className="bg-white rounded-[24px] p-6 max-w-[340px] w-full shadow-xl">
         <h2 className="font-serif text-xl text-ink mb-2">حذف الحساب؟</h2>
         <p className="text-sm text-ink-muted leading-[1.7] mb-6">
           سيُحذف حسابك وجميع بياناتك بشكل نهائي خلال ٣٠ يومًا. لا يمكن التراجع عن هذا الإجراء.
         </p>
         <div className="flex gap-3">
-          <button
-            onClick={onConfirm}
-            className="flex-1 py-3 rounded-[14px] bg-red-500 text-white font-medium text-sm"
-          >
-            حذف الحساب
-          </button>
-          <button
-            onClick={onCancel}
-            className="flex-1 py-3 rounded-[14px] bg-cream-soft text-ink font-medium text-sm"
-          >
-            إلغاء
-          </button>
+          <button onClick={onConfirm} className="flex-1 py-3 rounded-[14px] bg-red-500 text-white font-medium text-sm">حذف الحساب</button>
+          <button onClick={onCancel} className="flex-1 py-3 rounded-[14px] bg-cream-soft text-ink font-medium text-sm">إلغاء</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Main settings page ───────────────────────────────────────────────────────
+// ── Main page ────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  // Local state for editable fields (loaded from localStorage)
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [copyDone, setCopyDone] = useState(false);
 
   useEffect(() => {
     setFirstName(localStorage.getItem('sukoon.first-name') || '');
@@ -126,93 +117,105 @@ export default function SettingsPage() {
     setEmail(localStorage.getItem('sukoon.email') || '');
   }, []);
 
-  const save = (key: string, val: string) => localStorage.setItem(key, val);
+  const persist = (key: string, val: string) => localStorage.setItem(key, val);
 
   const handleSignOut = async () => {
     await signOut();
     const keys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k?.startsWith('sukoon.')) keys.push(k);
+      const k = localStorage.key(i); if (k?.startsWith('sukoon.')) keys.push(k);
     }
-    keys.forEach((k) => localStorage.removeItem(k));
+    keys.forEach(k => localStorage.removeItem(k));
     router.push('/welcome');
   };
 
   const handleDeleteAccount = async () => {
-    try {
-      const sb = getSupabase();
-      if (sb) await sb.functions.invoke('delete-account');
-    } catch { /* ignore */ }
+    try { const sb = getSupabase(); if (sb) await sb.functions.invoke('delete-account'); } catch {}
     const keys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k?.startsWith('sukoon.')) keys.push(k);
+      const k = localStorage.key(i); if (k?.startsWith('sukoon.')) keys.push(k);
     }
-    keys.forEach((k) => localStorage.removeItem(k));
+    keys.forEach(k => localStorage.removeItem(k));
     router.push('/welcome');
   };
 
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText('info@arabic-astro.com').then(() => {
+      setCopyDone(true);
+      setTimeout(() => setCopyDone(false), 2000);
+    });
+  };
+
+  const displayName = [firstName, lastName].filter(Boolean).join(' ') || 'رفيق سُكون';
+
   return (
-    <div className="pb-16 md:max-w-xl md:mx-auto">
+    <div className="pb-16 md:max-w-xl md:mx-auto" dir="rtl">
       {showDeleteModal && (
-        <DeleteModal
-          onConfirm={handleDeleteAccount}
-          onCancel={() => setShowDeleteModal(false)}
-        />
+        <DeleteModal onConfirm={handleDeleteAccount} onCancel={() => setShowDeleteModal(false)} />
       )}
 
-      {/* ── Profile hero card ── */}
+      {/* ── Profile hero ── */}
       <div className="mx-5 mt-6 rounded-[20px] bg-cream-soft border border-rule-soft p-6 flex flex-col items-center gap-3 text-center">
         <div className="w-16 h-16 rounded-full overflow-hidden shadow-sm border border-rule-soft">
-          <img src="/sukoon-avatar.png" width={64} height={64} alt="avatar" className="w-full h-full object-cover" />
+          <img src="/sukoon-avatar.png" width={64} height={64} alt="صورة الملف" className="w-full h-full object-cover" />
         </div>
         <div>
-          <div className="font-serif text-2xl text-ink">
-            {firstName || lastName ? `${firstName} ${lastName}`.trim() : 'رفيق سُكون'}
-          </div>
-          <div className="text-[13px] text-ink-muted mt-0.5">Account &amp; Settings</div>
+          <div className="font-serif text-2xl text-ink">{displayName}</div>
+          <div className="text-[13px] text-ink-muted mt-0.5">الحساب والإعدادات</div>
         </div>
       </div>
 
-      {/* ── Account fields ── */}
-      <div className="mx-5 mt-5 bg-white rounded-[20px] border border-rule-soft divide-y divide-rule-soft overflow-hidden">
+      {/* ── Personal info ── */}
+      <SectionLabel>المعلومات الشخصية</SectionLabel>
+      <div className="mx-5 bg-white rounded-[20px] border border-rule-soft divide-y divide-rule-soft overflow-hidden">
         <div className="px-5">
           <EditRow
-            label="First name"
+            label="الاسم الأول"
             value={firstName}
-            onSave={(v) => { setFirstName(v); save('sukoon.first-name', v); }}
+            onSave={v => { setFirstName(v); persist('sukoon.first-name', v); }}
           />
         </div>
         <div className="px-5">
           <EditRow
-            label="Last name"
+            label="اسم العائلة"
             value={lastName}
-            onSave={(v) => { setLastName(v); save('sukoon.last-name', v); }}
+            onSave={v => { setLastName(v); persist('sukoon.last-name', v); }}
           />
         </div>
         <div className="px-5">
-          <EditRow
-            label="بيانات الميلاد"
-            value="تعديل"
-            actionLabel="Edit"
-            onSave={() => router.push('/settings/edit-birth')}
-          />
+          <div className="py-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[13px] font-semibold text-ink">بيانات الميلاد</div>
+              <div className="text-sm text-ink-muted mt-0.5">التاريخ · الوقت · المكان</div>
+            </div>
+            <Link
+              href="/settings/edit-birth"
+              className="shrink-0 px-4 py-1.5 rounded-full bg-cream-soft border border-rule-soft text-[13px] font-medium text-ink hover:bg-white transition-colors"
+            >
+              تعديل
+            </Link>
+          </div>
         </div>
+      </div>
+
+      {/* ── Account & security ── */}
+      <SectionLabel>الحساب والأمان</SectionLabel>
+      <div className="mx-5 bg-white rounded-[20px] border border-rule-soft divide-y divide-rule-soft overflow-hidden">
         <div className="px-5">
           <EditRow
-            label="Email address"
+            label="البريد الإلكتروني"
             value={email}
             type="email"
-            onSave={(v) => { setEmail(v); save('sukoon.email', v); }}
+            hint={email ? undefined : 'لم يُضَف بعد'}
+            onSave={v => { setEmail(v); persist('sukoon.email', v); }}
           />
         </div>
         <div className="px-5">
           <EditRow
-            label="Password"
+            label="كلمة المرور"
             value="password"
             masked
-            actionLabel="Change"
+            actionLabel="تغيير"
             actionStyle="link"
             onSave={() => router.push('/welcome')}
           />
@@ -220,70 +223,72 @@ export default function SettingsPage() {
       </div>
 
       {/* ── Subscription ── */}
-      <div className="mx-5 mt-4 bg-white rounded-[20px] border border-rule-soft overflow-hidden">
-        <div className="px-5 py-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="text-[13px] font-semibold text-ink">Subscription details</div>
-              <div className="text-sm text-ink-muted mt-0.5">Inactive</div>
-            </div>
-            <div className="text-right shrink-0">
-              <div className="text-sm text-coral font-medium">Manage subscription</div>
-              <div className="text-xs text-ink-muted mt-0.5">Payment history, cancel membership</div>
-            </div>
-          </div>
-        </div>
-        <Divider />
+      <SectionLabel>الاشتراك</SectionLabel>
+      <div className="mx-5 bg-white rounded-[20px] border border-rule-soft divide-y divide-rule-soft overflow-hidden">
         <div className="px-5 py-4 flex items-center justify-between gap-4">
           <div>
-            <div className="text-[13px] font-semibold text-ink">Link social and email accounts</div>
-            <div className="text-sm text-ink-muted mt-0.5">google</div>
+            <div className="text-[13px] font-semibold text-ink">تفاصيل الاشتراك</div>
+            <div className="text-sm text-ink-muted mt-0.5">غير نشط</div>
           </div>
-          <button className="text-sm text-coral font-medium shrink-0">Manage</button>
+          <div className="text-right shrink-0">
+            <div className="text-[13px] text-coral font-medium">إدارة الاشتراك</div>
+            <div className="text-[11px] text-ink-muted mt-0.5">السجل · إلغاء العضوية</div>
+          </div>
+        </div>
+        <div className="px-5 py-4 flex items-center justify-between gap-4">
+          <div>
+            <div className="text-[13px] font-semibold text-ink">ربط الحسابات الاجتماعية</div>
+            <div className="text-sm text-ink-muted mt-0.5">Google · Apple</div>
+          </div>
+          <button className="text-[13px] text-coral font-medium shrink-0">إدارة</button>
         </div>
       </div>
 
-      {/* ── Legal & help links ── */}
-      <div className="mx-5 mt-4 bg-white rounded-[20px] border border-rule-soft divide-y divide-rule-soft overflow-hidden">
-        <Link href="/privacy-policy" target="_blank" className="flex items-center justify-between px-5 py-4">
-          <span className="text-sm text-ink">Privacy policy</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted opacity-40">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-          </svg>
+      {/* ── Legal & support ── */}
+      <SectionLabel>الدعم والقانونية</SectionLabel>
+      <div className="mx-5 bg-white rounded-[20px] border border-rule-soft divide-y divide-rule-soft overflow-hidden">
+        <Link href="/privacy-policy" target="_blank" className="flex items-center justify-between px-5 py-4 hover:bg-cream-soft/50 transition-colors">
+          <span className="text-sm text-ink">سياسة الخصوصية</span>
+          <ExternalIcon />
         </Link>
-        <Link href="/terms-and-conditions" target="_blank" className="flex items-center justify-between px-5 py-4">
-          <span className="text-sm text-ink">Terms &amp; Conditions</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted opacity-40">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-          </svg>
+        <Link href="/terms-and-conditions" target="_blank" className="flex items-center justify-between px-5 py-4 hover:bg-cream-soft/50 transition-colors">
+          <span className="text-sm text-ink">الشروط والأحكام</span>
+          <ExternalIcon />
         </Link>
-        <div className="flex items-center justify-between px-5 py-4">
-          <span className="text-sm text-ink">Help center</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted opacity-40">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
-          </svg>
-        </div>
+        {/* Email us row */}
+        <button
+          onClick={handleCopyEmail}
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-cream-soft/50 transition-colors text-right"
+        >
+          <div>
+            <div className="text-sm text-ink">تواصل معنا</div>
+            <div className="text-[12px] text-ink-muted mt-0.5" dir="ltr">info@arabic-astro.com</div>
+          </div>
+          <div className="shrink-0 text-[11px] text-coral font-medium">
+            {copyDone ? 'تم النسخ ✓' : 'نسخ'}
+          </div>
+        </button>
       </div>
 
-      {/* ── Actions ── */}
-      <div className="mx-5 mt-4 flex gap-3">
+      {/* ── Danger zone ── */}
+      <SectionLabel>الحساب</SectionLabel>
+      <div className="mx-5 flex gap-3">
         <button
           onClick={handleSignOut}
-          className="flex-1 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-sm font-medium text-ink hover:bg-white transition-colors"
+          className="flex-1 py-3 rounded-[14px] bg-white border border-rule-soft text-sm font-medium text-ink hover:bg-cream-soft transition-colors"
         >
-          Log out
+          تسجيل الخروج
         </button>
         <button
           onClick={() => setShowDeleteModal(true)}
-          className="flex-1 py-3 rounded-[14px] bg-cream-soft border border-rule-soft text-sm font-medium text-ink-muted hover:bg-white transition-colors"
+          className="flex-1 py-3 rounded-[14px] bg-white border border-rule-soft text-sm font-medium text-red-400 hover:bg-red-50 transition-colors"
         >
-          Delete account
+          حذف الحساب
         </button>
       </div>
 
-      {/* ── Footer ── */}
       <p className="text-center text-[11px] text-ink-muted mt-8 pb-4">
-        © 2026 Arabic Astrology Academy Inc.
+        © ٢٠٢٦ Arabic Astrology Academy Inc.
       </p>
     </div>
   );
