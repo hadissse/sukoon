@@ -59,6 +59,31 @@ export async function signInWithApple(): Promise<void> {
 }
 
 
+export async function signInWithEmail(email: string, password: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: 'خدمة المصادقة غير متاحة' };
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
+export async function signUpWithEmail(email: string, password: string, captchaToken?: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: 'خدمة المصادقة غير متاحة' };
+  const { error } = await sb.auth.signUp({ email, password, options: { captchaToken } });
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
+export async function resetPassword(email: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: 'خدمة المصادقة غير متاحة' };
+  const redirectTo = `${window.location.origin}/auth/callback`;
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) return { error: error.message };
+  return { error: null };
+}
+
 export async function sendEmailOtp(email: string): Promise<{ error: string | null }> {
   const sb = getSupabase();
   if (!sb) return { error: 'خدمة المصادقة غير متاحة' };
