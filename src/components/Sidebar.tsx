@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SukoonIcon } from './SukoonIcon';
+import { Logo } from './Logo';
 
 const tabs = [
   { key: 'today', label: 'اليوم', href: '/today', icon: TodayIcon },
@@ -36,8 +37,8 @@ export function Sidebar() {
       <div className="flex flex-col h-full px-5 py-6">
         {/* Brand */}
         <Link href="/today" className="flex items-center gap-3 px-2 mb-8" aria-label="سُكون">
-          <SukoonIcon size={56} />
-          <span className="font-serif text-xl text-ink">سُكون</span>
+          <SukoonIcon size={52} />
+          <Logo height={22} color="#171B3A" />
         </Link>
 
         {/* Primary navigation */}

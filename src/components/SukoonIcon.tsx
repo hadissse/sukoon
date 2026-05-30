@@ -6,7 +6,7 @@ interface SukoonIconProps {
 export function SukoonIcon({ size = 36, className }: SukoonIconProps) {
   return (
     <img
-      src="/sukoon-icon.svg"
+      src="/sukoon-logo-icon.svg"
       width={size}
       height={size}
       alt="سُكون"
