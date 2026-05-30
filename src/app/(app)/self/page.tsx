@@ -12,7 +12,7 @@ import { ZoomableWheel } from '@/components/ZoomableWheel';
 import { AstralChart } from '@/lib/chartCalculator';
 import { SIGN_SLUGS, getPlacementContent } from '@/content/placements';
 import { loadEvents, STREAM_AR, STREAM_GLYPH, type LoggedEvent } from '@/lib/events';
-import { calculateTransits, orbLabel, type Transit } from '@/lib/transits';
+import { calculateTransits, orbLabel, formatExactDate, type Transit } from '@/lib/transits';
 import { loadTraits } from '@/lib/traitEngine';
 import { NatalChartSetupForm } from '@/components/onboarding/NatalChartSetupForm';
 import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
@@ -1498,52 +1498,70 @@ function ActiveTransitsView({ chart, onNavigate }: { chart: AstralChart | null; 
         ))}
       </div>
 
-      <div className="flex flex-col gap-2.5">
-        {filtered.length === 0 ? (
-          <Card>
-            <div className="text-sm text-ink-muted">{transits.length === 0 ? 'لا توجد عبورات نشطة ضمن المدى الآن.' : 'لا عبورات بهذا النوع حالياً.'}</div>
-          </Card>
-        ) : (
-          filtered.map((t) => {
+      {filtered.length === 0 ? (
+        <p className="text-sm text-ink-muted text-center py-6">
+          {transits.length === 0 ? 'لا توجد عبورات نشطة ضمن المدى الآن.' : 'لا عبورات بهذا النوع حالياً.'}
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {filtered.map((t) => {
             const transitSlug = `${t.transitKey}-${t.natalKey}`;
             const isNoted = notedTransitKeys.has(transitSlug);
             return (
               <Link key={t.id} href={`/self/aspect/${transitSlug}`} className="block" onClick={onNavigate}>
-                <Card>
-                  <div className="flex items-center gap-3">
-                    {/* Aspect symbol badge */}
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-[18px] font-serif"
-                      style={{ background: `${t.aspectColor}18`, color: t.aspectColor, border: `1.5px solid ${t.aspectColor}40` }}
-                    >
-                      {t.aspectSymbol}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-serif text-base text-ink">{t.label}</div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[12px] font-medium" style={{ color: t.aspectColor }}>{t.aspectName}</span>
-                        <span className="text-[11px] text-ink-muted font-mono">{orbLabel(t.orb)}</span>
-                        {isNoted && (
-                          <span className="flex items-center gap-0.5 text-[10px] font-semibold text-[#8FA084]">
-                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                              <circle cx="6" cy="6" r="5.5" stroke="#8FA084" />
-                              <path d="M3.5 6l1.8 1.8L8.5 4.5" stroke="#8FA084" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            مُدوَّن
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted opacity-30 shrink-0 rotate-180">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
+                <div className="bg-white rounded-[20px] border border-rule-soft p-4 flex flex-col items-center text-center gap-3 hover:shadow-sm transition-shadow">
+                  {/* Colored orb with symbol */}
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-[26px] font-serif shrink-0"
+                    style={{
+                      background: `radial-gradient(circle at 35% 35%, ${t.aspectColor}55, ${t.aspectColor}CC)`,
+                      color: '#fff',
+                      boxShadow: `0 4px 16px ${t.aspectColor}30`,
+                    }}
+                  >
+                    {t.aspectSymbol}
                   </div>
-                </Card>
+
+                  {/* Planet names */}
+                  <div className="flex-1">
+                    <div className="font-serif text-[15px] text-ink leading-snug">
+                      {t.transitName}
+                    </div>
+                    <div className="font-serif text-[13px] text-ink-muted leading-snug mt-0.5">
+                      {t.natalName}
+                    </div>
+                  </div>
+
+                  {/* Aspect + orb */}
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[12px] font-semibold" style={{ color: t.aspectColor }}>
+                      {t.aspectName}
+                    </span>
+                    <span className="text-[11px] text-ink-muted">{orbLabel(t.orb)}</span>
+                  </div>
+
+                  {/* Exact hit date */}
+                  {t.exactDate && (
+                    <div className="text-[11px] text-ink-muted bg-cream-soft rounded-full px-2.5 py-1">
+                      {formatExactDate(t.exactDate)}
+                    </div>
+                  )}
+
+                  {isNoted && (
+                    <div className="flex items-center gap-1 text-[10px] font-semibold text-[#8FA084]">
+                      <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                        <circle cx="6" cy="6" r="5.5" stroke="#8FA084" />
+                        <path d="M3.5 6l1.8 1.8L8.5 4.5" stroke="#8FA084" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      مُدوَّن
+                    </div>
+                  )}
+                </div>
               </Link>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }
