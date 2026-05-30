@@ -13,6 +13,7 @@ import { getCurrentSky } from '@/lib/currentSky';
 import type { AstralChart } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
 import { CalendarMonthView } from '@/app/explore/CalendarMonthView';
+import { Card } from '@/components/Card';
 
 // ── Explore section helpers ──────────────────────────────────────────────────
 
@@ -32,8 +33,92 @@ const ALL_PLANETS = [
   'chiron', 'northNode', 'southNode',
 ] as const;
 
+// ── Zodiac signs for learn section ──────────────────────────────────────────
+const ZODIAC_SIGNS = [
+  { slug: 'aries',       svgKey: 'aries',   nameAr: 'الحمل',    elementAr: 'نار',   elementColor: '#E9785E' },
+  { slug: 'taurus',      svgKey: 'taurus',  nameAr: 'الثور',    elementAr: 'تراب',  elementColor: '#BDAA82' },
+  { slug: 'gemini',      svgKey: 'gemini',  nameAr: 'الجوزاء',  elementAr: 'هواء',  elementColor: '#8BB4C8' },
+  { slug: 'cancer',      svgKey: 'cancer',  nameAr: 'السرطان',  elementAr: 'ماء',   elementColor: '#7E97B8' },
+  { slug: 'leo',         svgKey: 'leo',     nameAr: 'الأسد',    elementAr: 'نار',   elementColor: '#E9785E' },
+  { slug: 'virgo',       svgKey: 'virgo',   nameAr: 'العذراء',  elementAr: 'تراب',  elementColor: '#BDAA82' },
+  { slug: 'libra',       svgKey: 'libra',   nameAr: 'الميزان',  elementAr: 'هواء',  elementColor: '#8BB4C8' },
+  { slug: 'scorpio',     svgKey: 'scorpio', nameAr: 'العقرب',   elementAr: 'ماء',   elementColor: '#7E97B8' },
+  { slug: 'sagittarius', svgKey: 'sag',     nameAr: 'القوس',    elementAr: 'نار',   elementColor: '#E9785E' },
+  { slug: 'capricorn',   svgKey: 'cap',     nameAr: 'الجدي',    elementAr: 'تراب',  elementColor: '#BDAA82' },
+  { slug: 'aquarius',    svgKey: 'aqua',    nameAr: 'الدلو',    elementAr: 'هواء',  elementColor: '#8BB4C8' },
+  { slug: 'pisces',      svgKey: 'pisces',  nameAr: 'الحوت',    elementAr: 'ماء',   elementColor: '#7E97B8' },
+];
+
+// ── Sky-to-sky aspect types (mirrors self/page.tsx ASPECTS) ─────────────────
+
+const SKY_ASPECT_DEFS = [
+  { angle: 0,   name: 'اقتران', symbol: '☌', orb: 8, color: '#5C5C7A' },
+  { angle: 60,  name: 'سُداس',  symbol: '⚹', orb: 6, color: '#4A7FB5' },
+  { angle: 90,  name: 'تربيع',  symbol: '▫', orb: 8, color: '#C0392B' },
+  { angle: 120, name: 'تثليث',  symbol: '△', orb: 8, color: '#27AE60' },
+  { angle: 180, name: 'تقابل',  symbol: '☍', orb: 8, color: '#C0392B' },
+] as const;
+
+const SKY_ASPECT_PLANET_KEYS = [
+  'sun', 'moon', 'mercury', 'venus', 'mars',
+  'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
+] as const;
+
+interface SkyAspect {
+  label: string;
+  symbol: string;
+  type: string;
+  color: string;
+  orb: string;
+  orbDeg: number;
+}
+
+function calculateSkyAspects(sky: AstralChart): SkyAspect[] {
+  const results: SkyAspect[] = [];
+
+  for (let i = 0; i < SKY_ASPECT_PLANET_KEYS.length; i++) {
+    for (let j = i + 1; j < SKY_ASPECT_PLANET_KEYS.length; j++) {
+      const p1Key = SKY_ASPECT_PLANET_KEYS[i];
+      const p2Key = SKY_ASPECT_PLANET_KEYS[j];
+      const p1 = (sky as any)[p1Key];
+      const p2 = (sky as any)[p2Key];
+      if (!p1 || !p2 || typeof p1.longitude !== 'number' || typeof p2.longitude !== 'number') continue;
+
+      const diff = Math.abs(((p1.longitude - p2.longitude + 180) % 360) - 180);
+
+      for (const asp of SKY_ASPECT_DEFS) {
+        const orbDeg = Math.abs(diff - asp.angle);
+        if (orbDeg <= asp.orb) {
+          results.push({
+            label: `${PLANET_KEYS_AR[p1Key]} ${asp.symbol} ${PLANET_KEYS_AR[p2Key]}`,
+            symbol: asp.symbol,
+            type: asp.name,
+            color: asp.color,
+            orb: `${toAr(orbDeg.toFixed(0))}°`,
+            orbDeg,
+          });
+          break; // only one aspect per pair
+        }
+      }
+    }
+  }
+
+  return results.sort((a, b) => a.orbDeg - b.orbDeg);
+}
+
+// ── Filter chip order for aspects ───────────────────────────────────────────
+
+const ASPECT_FILTER_CHIPS = [
+  { label: 'الكل',   color: null },
+  { label: 'تربيع',  color: '#C0392B' },
+  { label: 'اقتران', color: '#5C5C7A' },
+  { label: 'تثليث',  color: '#27AE60' },
+  { label: 'تقابل',  color: '#C0392B' },
+] as const;
+
 function SkySection() {
   const [sky, setSky] = useState<AstralChart | null>(null);
+  const [aspectFilter, setAspectFilter] = useState<string>('الكل');
 
   useEffect(() => {
     setSky(getCurrentSky());
@@ -44,6 +129,11 @@ function SkySection() {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' });
   const dateStr = now.toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const skyAspects = sky ? calculateSkyAspects(sky) : [];
+  const filteredAspects = aspectFilter === 'الكل'
+    ? skyAspects
+    : skyAspects.filter((a) => a.type === aspectFilter);
 
   return (
     <div className="pb-4">
@@ -89,6 +179,63 @@ function SkySection() {
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Sky-to-sky aspects ── */}
+      {sky && (
+        <div className="mt-6">
+          <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-3">جوانب السماء</div>
+
+          {/* Filter chips */}
+          <div className="flex gap-2 overflow-x-auto mb-3" style={{ scrollbarWidth: 'none' }}>
+            {ASPECT_FILTER_CHIPS.map(({ label, color }) => (
+              <button
+                key={label}
+                onClick={() => setAspectFilter(label)}
+                className="px-3.5 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0"
+                style={{
+                  background: aspectFilter === label ? (color ?? '#171B3A') : '#fff',
+                  color: aspectFilter === label ? '#F5F2EA' : '#171B3A',
+                  border: `1px solid ${aspectFilter === label ? (color ?? '#171B3A') : '#E5E1D8'}`,
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Aspect cards */}
+          <div className="flex flex-col gap-3">
+            {filteredAspects.length > 0 ? (
+              filteredAspects.map((aspect) => (
+                <Card key={aspect.label}>
+                  <div className="flex items-center gap-3">
+                    {/* Aspect symbol badge */}
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-[16px] font-serif"
+                      style={{
+                        background: `${aspect.color}18`,
+                        color: aspect.color,
+                        border: `1.5px solid ${aspect.color}40`,
+                      }}
+                    >
+                      {aspect.symbol}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-serif text-base text-ink">{aspect.label}</div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[12px] font-medium" style={{ color: aspect.color }}>{aspect.type}</span>
+                        <span className="text-[11px] text-ink-muted font-mono">{aspect.orb}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8 text-ink-muted text-sm">لا توجد جوانب في هذا التصفية</div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -364,6 +511,39 @@ export default function TodayPage() {
             </div>
           </div>
         </Link>
+        {/* Zodiac signs — learn section */}
+        <div className="md:col-span-2 mt-2">
+          <Rule />
+        </div>
+        <div className="md:col-span-2 flex flex-col gap-4">
+          <div>
+            <div className="text-[11px] text-ink-muted font-semibold tracking-wider mb-0.5">تعلّم</div>
+            <h2 className="font-serif text-2xl text-ink -tracking-0.5">الأبراج والبيوت</h2>
+            <p className="text-sm text-ink-muted mt-1">الاثنا عشر برجًا — صفاتها وعناصرها.</p>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-2.5">
+            {ZODIAC_SIGNS.map((sign) => (
+              <Link key={sign.slug} href={`/self/sign/${sign.slug}`} className="block">
+                <div className="rounded-[16px] p-3 flex flex-col items-center gap-2 bg-white border border-rule-soft text-center" style={{ minHeight: 88 }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: sign.elementColor + '22' }}>
+                    <div className="w-5 h-5" style={{
+                      WebkitMaskImage: `url('/svg/${sign.svgKey}.svg')`,
+                      maskImage: `url('/svg/${sign.svgKey}.svg')`,
+                      WebkitMaskSize: 'contain', maskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center', maskPosition: 'center',
+                      background: sign.elementColor,
+                    }} />
+                  </div>
+                  <div>
+                    <div className="font-serif text-[13px] text-ink leading-tight">{sign.nameAr}</div>
+                    <div className="text-[10px] text-ink-muted mt-0.5">{sign.elementAr}</div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

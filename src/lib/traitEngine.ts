@@ -16,8 +16,14 @@ export interface MineralEntry {
 
 export interface OrganEntry {
   planet: string;
+  planetKey: string;
   organ: string;
   theme: string;
+  sign: string;
+  signNumber: number;
+  element: 'fire' | 'earth' | 'air' | 'water';
+  houseNum: number;
+  retrograde: boolean;
 }
 
 export interface HDCentre {
@@ -63,13 +69,13 @@ const PLANET_AR: Record<string, string> = {
 };
 
 const ORGANS: Record<string, { organ: string; theme: string }> = {
-  sun:     { organ: 'القلب',   theme: 'مركز الحياة والإشعاع' },
-  moon:    { organ: 'الدماغ',  theme: 'الاستقبال والانعكاس' },
-  mercury: { organ: 'الرئتان', theme: 'التنفس والتبادل' },
+  sun:     { organ: 'القلب',    theme: 'مركز الحياة والإشعاع' },
+  moon:    { organ: 'الدماغ',   theme: 'الاستقبال والانعكاس' },
+  mercury: { organ: 'الرئتان',  theme: 'التنفس والتبادل' },
   venus:   { organ: 'الكليتان', theme: 'التوازن والجمال' },
-  mars:    { organ: 'المرارة', theme: 'الإرادة والاندفاع' },
-  jupiter: { organ: 'الكبد',   theme: 'التوسع والسعة' },
-  saturn:  { organ: 'الطحال', theme: 'التمييز والبنية' },
+  mars:    { organ: 'المرارة',  theme: 'الإرادة والاندفاع' },
+  jupiter: { organ: 'الكبد',    theme: 'التوسع والسعة' },
+  saturn:  { organ: 'الطحال',   theme: 'التمييز والبنية' },
 };
 
 const PLANET_KEYS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','northNode','southNode'] as const;
@@ -117,12 +123,54 @@ function calcMinerals(chart: AstralChart): MineralEntry[] {
   }));
 }
 
+/** Determine which house a planet longitude falls in */
+function getPlanetHouse(longitude: number, chart: AstralChart): number {
+  if (!chart.houses || chart.houses.length < 12) return 1;
+  for (let i = 0; i < 12; i++) {
+    const curr = chart.houses[i].cusp;
+    const next = chart.houses[(i + 1) % 12].cusp;
+    // Normalise to handle 0°/360° wrap
+    const lon = ((longitude % 360) + 360) % 360;
+    const c = ((curr % 360) + 360) % 360;
+    const n = ((next % 360) + 360) % 360;
+    if (n > c) {
+      if (lon >= c && lon < n) return chart.houses[i].num;
+    } else {
+      // wraps through 0°
+      if (lon >= c || lon < n) return chart.houses[i].num;
+    }
+  }
+  return 1;
+}
+
 function calcOrgans(chart: AstralChart): OrganEntry[] {
-  return Object.entries(ORGANS).map(([key, val]) => ({
-    planet: PLANET_AR[key],
-    organ: val.organ,
-    theme: val.theme,
-  }));
+  return Object.entries(ORGANS).map(([key, val]) => {
+    const p = chart[key as keyof AstralChart];
+    let sign = '—';
+    let signNumber = 0;
+    let element: 'fire' | 'earth' | 'air' | 'water' = 'fire';
+    let houseNum = 1;
+    let retrograde = false;
+    if (typeof p === 'object' && p !== null && 'signNumber' in p) {
+      const planet = p as { sign: string; signNumber: number; longitude: number; retrograde?: boolean };
+      sign = planet.sign;
+      signNumber = planet.signNumber % 12;
+      element = SIGN_ELEMENTS[signNumber] ?? 'fire';
+      houseNum = getPlanetHouse(planet.longitude, chart);
+      retrograde = !!planet.retrograde;
+    }
+    return {
+      planet: PLANET_AR[key],
+      planetKey: key,
+      organ: val.organ,
+      theme: val.theme,
+      sign,
+      signNumber,
+      element,
+      houseNum,
+      retrograde,
+    };
+  });
 }
 
 function calcHDCentres(chart: AstralChart): HDCentre[] {

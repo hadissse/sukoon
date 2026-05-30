@@ -23,6 +23,9 @@ import {
   MINERAL_MEANING,
   ORGAN_SIGNAL,
   HD_CENTRE_MEANING,
+  ORGAN_SIGN_READING,
+  ELEMENT_AR_ORGAN,
+  HOUSE_THEME_SHORT,
 } from '@/content/traitsMeaning';
 import type { HousePosition } from '@/lib/chartCalculator';
 import { planetSvgKey } from '@/lib/planetMeta';
@@ -43,9 +46,9 @@ function lonToSignDeg(lon: number): string {
 
 const chartSubtabs = [
   { key: 'planets', label: 'الكواكب' },
-  { key: 'signs', label: 'الأبراج' },
   { key: 'houses', label: 'البيوت' },
   { key: 'aspects', label: 'الجوانب' },
+  { key: 'organs', label: 'الأعضاء' },
   { key: 'stars', label: 'النجوم الثابتة' },
 ] as const;
 
@@ -769,6 +772,69 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
       )}
 
       {/* Active Transits list */}
+      {/* Organs — medical astrology */}
+      {activeSubtab === 'organs' && (() => {
+        const traits = loadTraits();
+        if (!traits) return (
+          <div className="px-5 py-12 text-center flex flex-col gap-3">
+            <Body muted>أكمل إدراج بياناتك أولًا لتظهر قراءة الأعضاء.</Body>
+            <Link href="/onboarding" className="text-coral text-sm font-medium">ابدأ الإدراج ←</Link>
+          </div>
+        );
+        const PLANET_COLOR: Record<string, string> = {
+          sun: '#FFC78A', moon: '#C2D3E2', mercury: '#C9D2BE',
+          venus: '#F8D6BE', mars: '#E9785E', jupiter: '#9C8AB8', saturn: '#5A3E7A',
+        };
+        return (
+          <div className="px-5 pb-6 flex flex-col gap-3 mt-4">
+            <FrameworkLabel label="طبّ نجومي · قراءة هرمسية" />
+            <p className="text-xs text-ink-muted leading-[1.7] -mt-1">
+              كلّ كوكبٍ يحكم عضوًا. برجُه في خريطتك يُلوِّن طريقةَ تعبير ذلك العضو عن صحّته.
+            </p>
+            {traits.organs.map((o) => {
+              const planetKey = (o as any).planetKey ?? o.planet;
+              const signNumber = (o as any).signNumber ?? 0;
+              const signKey = `${planetKey}:${signNumber}`;
+              const signReading = ORGAN_SIGN_READING[signKey];
+              const elementLabel = (o as any).element ? ELEMENT_AR_ORGAN[(o as any).element as 'fire'|'earth'|'air'|'water'] : undefined;
+              const houseLabel = (o as any).houseNum ? HOUSE_THEME_SHORT[(o as any).houseNum as number] : undefined;
+              const accentColor = PLANET_COLOR[planetKey] ?? '#E5E1D8';
+              return (
+                <Card key={planetKey}>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center mt-0.5" style={{ background: `${accentColor}30`, border: `1.5px solid ${accentColor}` }}>
+                        <div className="w-4 h-4" style={{
+                          WebkitMaskImage: `url('/svg/${planetKey}.svg')`, maskImage: `url('/svg/${planetKey}.svg')`,
+                          WebkitMaskSize: 'contain', maskSize: 'contain', WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                          WebkitMaskPosition: 'center', maskPosition: 'center', background: accentColor,
+                        }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-serif text-base text-ink">{o.organ}</div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          <span className="text-xs font-medium text-ink-muted">{o.planet}</span>
+                          <span className="text-ink-muted opacity-40 text-xs">·</span>
+                          <span className="text-xs font-semibold" style={{ color: accentColor }}>{(o as any).sign ?? ''}</span>
+                          {(o as any).retrograde && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cream-soft text-ink-muted font-mono">℞</span>}
+                          {elementLabel && <><span className="text-ink-muted opacity-40 text-xs">·</span><span className="text-[11px] text-ink-muted">{elementLabel}</span></>}
+                          {houseLabel && <><span className="text-ink-muted opacity-40 text-xs">·</span><span className="text-[11px] text-ink-muted">بيت {houseLabel}</span></>}
+                        </div>
+                      </div>
+                    </div>
+                    {signReading ? (
+                      <div className="text-sm text-ink leading-[1.8] px-3 py-2.5 rounded-[12px]" style={{ background: `${accentColor}14` }}>{signReading}</div>
+                    ) : ORGAN_SIGNAL[o.organ] ? (
+                      <div className="text-sm text-ink-muted leading-[1.7]">{ORGAN_SIGNAL[o.organ]}</div>
+                    ) : null}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {/* Fixed Stars */}
       {activeSubtab === 'stars' && <FixedStarsView chart={chart} onNavigate={saveNavState} />}
 
@@ -884,22 +950,83 @@ function BodyView() {
       {/* Organs tab */}
       {activeBodyTab === 'organs' && (
         <div className="px-5 pb-6 flex flex-col gap-3">
-          <FrameworkLabel label="قراءة هرمسية تقليدية" />
-          {traits.organs.map((o) => (
-            <Card key={o.planet}>
-              <div className="flex flex-col gap-2">
-                <div>
-                  <div className="font-serif text-base text-ink">{o.organ}</div>
-                  <div className="text-xs text-ink-muted mt-1">{o.planet} · {o.theme}</div>
-                </div>
-                {ORGAN_SIGNAL[o.organ] && (
-                  <div className="text-sm text-ink-muted leading-[1.7] mt-1">
-                    {ORGAN_SIGNAL[o.organ]}
+          <FrameworkLabel label="طبّ نجومي · قراءة هرمسية" />
+          <p className="text-xs text-ink-muted leading-[1.7] -mt-1">
+            كلّ كوكبٍ يحكم عضوًا. برجُه في خريطتك يُلوِّن طريقةَ تعبير ذلك العضو عن صحّته.
+          </p>
+          {traits.organs.map((o) => {
+            // Safe fallbacks for old localStorage data that may lack the new fields
+            const planetKey = o.planetKey ?? o.organ;
+            const signNumber = o.signNumber ?? 0;
+            const signKey = `${planetKey}:${signNumber}`;
+            const signReading = ORGAN_SIGN_READING[signKey];
+            const elementLabel = o.element ? ELEMENT_AR_ORGAN[o.element] : undefined;
+            const houseLabel = o.houseNum ? HOUSE_THEME_SHORT[o.houseNum] : undefined;
+            // Accent colour per planet
+            const PLANET_COLOR: Record<string, string> = {
+              sun: '#FFC78A', moon: '#C2D3E2', mercury: '#C9D2BE',
+              venus: '#F8D6BE', mars: '#E9785E', jupiter: '#9C8AB8', saturn: '#5A3E7A',
+            };
+            const accentColor = PLANET_COLOR[planetKey] ?? '#E5E1D8';
+            return (
+              <Card key={planetKey}>
+                <div className="flex flex-col gap-3">
+                  {/* Header row */}
+                  <div className="flex items-start gap-3">
+                    {/* Planet dot */}
+                    <div
+                      className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center mt-0.5"
+                      style={{ background: `${accentColor}30`, border: `1.5px solid ${accentColor}` }}
+                    >
+                      <div
+                        className="w-4 h-4"
+                        style={{
+                          WebkitMaskImage: `url('/svg/${planetKey}.svg')`,
+                          maskImage: `url('/svg/${planetKey}.svg')`,
+                          WebkitMaskSize: 'contain', maskSize: 'contain',
+                          WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                          WebkitMaskPosition: 'center', maskPosition: 'center',
+                          background: accentColor,
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-serif text-base text-ink">{o.organ}</div>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <span className="text-xs font-medium text-ink-muted">{o.planet}</span>
+                        <span className="text-ink-muted opacity-40 text-xs">·</span>
+                        <span className="text-xs font-semibold" style={{ color: accentColor }}>{o.sign}</span>
+                        {o.retrograde && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cream-soft text-ink-muted font-mono">℞</span>
+                        )}
+                        <span className="text-ink-muted opacity-40 text-xs">·</span>
+                        <span className="text-[11px] text-ink-muted">{elementLabel}</span>
+                        {houseLabel && (
+                          <>
+                            <span className="text-ink-muted opacity-40 text-xs">·</span>
+                            <span className="text-[11px] text-ink-muted">بيت {houseLabel}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            </Card>
-          ))}
+                  {/* Sign-specific reading */}
+                  {signReading ? (
+                    <div
+                      className="text-sm text-ink leading-[1.8] px-3 py-2.5 rounded-[12px]"
+                      style={{ background: `${accentColor}14` }}
+                    >
+                      {signReading}
+                    </div>
+                  ) : ORGAN_SIGNAL[o.organ] ? (
+                    <div className="text-sm text-ink-muted leading-[1.7]">
+                      {ORGAN_SIGNAL[o.organ]}
+                    </div>
+                  ) : null}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 
@@ -1633,7 +1760,6 @@ function SelfPageInner() {
               { key: 'chart',   label: 'الخريطة' },
               { key: 'active',  label: 'العبورات' },
               ...(chart ? [{ key: 'transits', label: 'السيرة' }] : []),
-              { key: 'body',    label: 'الجسد' },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -1673,16 +1799,6 @@ function SelfPageInner() {
                 <ChartView chart={chart} />
               </>
             )}
-          </>
-        )}
-
-        {mainTab === 'body' && (
-          <>
-            <div className="px-5 pt-6 mb-2">
-              <Headline>الجسد</Headline>
-              <p className="text-sm text-ink-muted mt-1">تُحسب من خريطتك مرّة واحدة.</p>
-            </div>
-            <BodyView />
           </>
         )}
 
