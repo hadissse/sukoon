@@ -367,7 +367,6 @@ function getSkyAspectText(sky: AstralChart): string | null {
 export default function TodayPage() {
   const [stamp, setStamp] = useState<CosmicStamp | null>(null);
   const [journey1Step, setJourney1Step] = useState<number | null>(null);
-  const [exploreView, setExploreView] = useState<'sky' | 'calendar' | 'knowledge'>('sky');
   const [heroSky, setHeroSky] = useState<AstralChart | null>(null);
 
   useEffect(() => {
@@ -407,29 +406,29 @@ export default function TodayPage() {
       </div>
 
       <div className="px-5 md:px-0 flex flex-col gap-4 pt-5 md:pt-6 md:grid md:grid-cols-2 md:gap-5 md:items-start">
-        {/* ── Explore: Sky / Calendar / Knowledge ── */}
+        {/* ── Sky ── */}
         <div id="today-sky" className="md:col-span-2">
-          {/* Tab switcher */}
-          <div className="flex gap-2 mb-5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {([
-              ['sky', 'السماء'],
-              ['calendar', 'التقويم'],
-              ['knowledge', 'المعرفة'],
-            ] as const).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setExploreView(key)}
-                className={`px-4 py-2 rounded-[14px] text-xs font-medium transition-colors whitespace-nowrap ${
-                  exploreView === key ? 'bg-ink text-cream' : 'bg-white text-ink border border-rule-soft'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {exploreView === 'sky' && <SkySection />}
-          {exploreView === 'calendar' && <CalendarSection />}
-          {exploreView === 'knowledge' && <KnowledgeSection />}
+          <SkySection />
+        </div>
+
+        <div className="md:col-span-2">
+          <Rule />
+        </div>
+
+        {/* ── التقويم ── */}
+        <div className="md:col-span-2">
+          <div className="text-[11px] font-semibold text-ink-muted tracking-wider uppercase mb-4">التقويم</div>
+          <CalendarSection />
+        </div>
+
+        <div className="md:col-span-2">
+          <Rule />
+        </div>
+
+        {/* ── المعرفة ── */}
+        <div className="md:col-span-2">
+          <div className="text-[11px] font-semibold text-ink-muted tracking-wider uppercase mb-4">المعرفة</div>
+          <KnowledgeSection />
         </div>
 
         <div className="md:col-span-2">

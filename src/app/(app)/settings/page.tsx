@@ -228,19 +228,12 @@ export default function SettingsPage() {
         <div className="px-5 py-4 flex items-center justify-between gap-4">
           <div>
             <div className="text-[13px] font-semibold text-ink">تفاصيل الاشتراك</div>
-            <div className="text-sm text-ink-muted mt-0.5">غير نشط</div>
+            <div className="text-sm text-ink-muted mt-0.5">النسخة المجانية</div>
           </div>
           <div className="text-right shrink-0">
             <div className="text-[13px] text-coral font-medium">إدارة الاشتراك</div>
             <div className="text-[11px] text-ink-muted mt-0.5">السجل · إلغاء العضوية</div>
           </div>
-        </div>
-        <div className="px-5 py-4 flex items-center justify-between gap-4">
-          <div>
-            <div className="text-[13px] font-semibold text-ink">ربط الحسابات الاجتماعية</div>
-            <div className="text-sm text-ink-muted mt-0.5">Google · Apple</div>
-          </div>
-          <button className="text-[13px] text-coral font-medium shrink-0">إدارة</button>
         </div>
       </div>
 
