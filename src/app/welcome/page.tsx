@@ -161,14 +161,10 @@ export default function WelcomePage() {
       {/* All content above the background */}
       <div className="relative flex-1 flex flex-col" style={{ zIndex: 2 }}>
 
-      {/* ── Desktop top bar: white logo centered, icon top-right ── */}
-      <div className="hidden md:block relative pt-10 pb-2">
-        <div className="absolute top-10 right-10">
-          <SukoonIcon size={120} />
-        </div>
-        <div className="flex justify-center">
-          <Logo height={100} color="white" />
-        </div>
+      {/* ── Desktop top bar: icon + wordmark together top-right ── */}
+      <div className="hidden md:flex items-center gap-4 px-10 pt-8">
+        <SukoonIcon size={120} />
+        <Logo height={60} color="white" />
       </div>
 
       {/* ── Mobile: splash + breathe animations ── */}
