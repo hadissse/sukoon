@@ -164,7 +164,7 @@ export default function WelcomePage() {
       {/* ── Desktop top bar: icon + wordmark together top-right ── */}
       <div className="hidden md:flex items-center gap-4 px-10 pt-8">
         <SukoonIcon size={120} />
-        <Logo height={60} color="#171B3A" />
+        <img src="/sukoon-logo.svg" style={{ height: 60, width: 'auto' }} alt="سُكون" />
       </div>
 
       {/* ── Mobile: splash + breathe animations ── */}
@@ -221,7 +221,7 @@ export default function WelcomePage() {
 
       {/* ── Desktop: circular card ── */}
       <div className="hidden md:flex flex-1 items-center justify-center px-6 py-8">
-        <div className="w-[960px] h-[960px] bg-white rounded-full shadow-2xl overflow-hidden flex items-center justify-center">
+        <div className="w-[960px] h-[960px] bg-transparent rounded-full overflow-hidden flex items-center justify-center">
           <div className="w-[460px]">
             <DesktopAuthCard
               phase={isAuthPhase ? phase : 'welcome'}
