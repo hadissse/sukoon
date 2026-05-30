@@ -260,7 +260,7 @@ export function ZoomableWheel({ size = 377, tone = 'paper', chart: chartProp, sh
                 />
                 <text x={numPos.x} y={numPos.y}
                   textAnchor="middle" dominantBaseline="central"
-                  fontSize="18" fill={mutedColor} opacity={0.6}
+                  fontSize="6" fill={mutedColor} opacity={0.5}
                   style={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
                   {house.num}
                 </text>

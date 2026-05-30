@@ -508,55 +508,96 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
               {/* Gradient cards for Sun / Moon / AC — square, colored fill, white text */}
               {/* Planet color map — gradient fills for luminaries+AC, stroke-only for rest */}
               {(() => {
+                // Video backgrounds for luminaries + AC
+                const VIDEO: Record<string, string> = {
+                  sun:  '/media/planet-bg-1.webm',
+                  moon: '/media/planet-bg-2.webm',
+                  ac:   '/media/planet-bg-1.webm',
+                };
+                // Overlay tints to keep luminaries recognizable
+                const VIDEO_OVERLAY: Record<string, string> = {
+                  sun:  'linear-gradient(to top, rgba(180,80,30,0.55) 0%, rgba(120,60,20,0.15) 60%, transparent 100%)',
+                  moon: 'linear-gradient(to top, rgba(40,70,120,0.55) 0%, rgba(30,50,90,0.15) 60%, transparent 100%)',
+                  ac:   'linear-gradient(to top, rgba(80,40,140,0.55) 0%, rgba(60,30,100,0.15) 60%, transparent 100%)',
+                };
+                // Gradient fills for secondary planets
                 const GRAD: Record<string, string> = {
-                  sun:  'linear-gradient(140deg, #F5C882 0%, #E9785E 100%)',
-                  moon: 'linear-gradient(140deg, #C2D3E2 0%, #7E97B8 100%)',
-                  ac:   'linear-gradient(140deg, #C8B8E8 0%, #8B6BB0 100%)',
+                  saturn:    'linear-gradient(140deg, #9B9BB0 0%, #5C5C7A 100%)',
+                  venus:     'linear-gradient(140deg, #F0C8D0 0%, #C87090 100%)',
+                  northNode: 'linear-gradient(140deg, #F0D890 0%, #B88820 100%)',
+                  mercury:   'linear-gradient(140deg, #B0C8D8 0%, #507090 100%)',
+                  mars:      'linear-gradient(140deg, #F0A878 0%, #C04020 100%)',
                 };
+                // Stroke-only for remaining planets
                 const STROKE: Record<string, string> = {
-                  mercury:   '#B8C4D0', venus:     '#E8B4C0', mars:      '#E9785E',
-                  jupiter:   '#8FA084', saturn:    '#9090A0', uranus:    '#7E97B8',
-                  neptune:   '#8078B8', pluto:     '#606080', northNode: '#C4A860',
-                  southNode: '#A09878', ic:        '#C8B8E8', dc:        '#C8B8E8',
-                  mc:        '#C8B8E8',
+                  jupiter:   '#8FA084', uranus:    '#7E97B8',
+                  neptune:   '#8078B8', pluto:     '#606080',
+                  southNode: '#A09878', ic:        '#C8B8E8',
+                  dc:        '#C8B8E8', mc:        '#C8B8E8',
                 };
-                const colored = gridItems.filter(i => i.key in GRAD);
-                const rest    = gridItems.filter(i => !(i.key in GRAD));
+
+                const videoItems    = gridItems.filter(i => i.key in VIDEO);
+                const gradItems     = gridItems.filter(i => i.key in GRAD);
+                const strokeItems   = gridItems.filter(i => !(i.key in VIDEO) && !(i.key in GRAD));
+
+                const iconStyle = (svgKey: string, color: string) => ({
+                  WebkitMaskImage: `url('/svg/${svgKey}.svg')`,
+                  maskImage: `url('/svg/${svgKey}.svg')`,
+                  WebkitMaskSize: 'contain', maskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center', maskPosition: 'center',
+                  background: color,
+                });
 
                 return (
                   <div className="flex flex-col gap-3">
-                    {/* Luminaries + AC: 2→3 col square gradient cards */}
+                    {/* Luminaries + AC — animated video background */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {colored.map(item => (
+                      {videoItems.map(item => (
                         <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
-                          <div
-                            className="rounded-[18px] aspect-square flex flex-col justify-end p-4 relative overflow-hidden"
-                            style={{ background: GRAD[item.key] }}
-                          >
-                            {/* Planet icon top-right */}
-                            <div
-                              className="absolute top-3 left-3 w-8 h-8 opacity-50"
-                              style={{
-                                WebkitMaskImage: `url('/svg/${item.svgKey}.svg')`,
-                                maskImage: `url('/svg/${item.svgKey}.svg')`,
-                                WebkitMaskSize: 'contain', maskSize: 'contain',
-                                WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-                                WebkitMaskPosition: 'center', maskPosition: 'center',
-                                background: 'rgba(255,255,255,0.7)',
-                              }}
-                            />
-                            <div className="font-serif text-[17px] text-white leading-snug">
+                          <div className="rounded-[18px] aspect-square flex flex-col justify-end p-4 relative overflow-hidden">
+                            <video
+                              autoPlay muted loop playsInline
+                              className="absolute inset-0 w-full h-full object-cover"
+                            >
+                              <source src={VIDEO[item.key]} type="video/webm" />
+                            </video>
+                            {/* Color overlay */}
+                            <div className="absolute inset-0" style={{ background: VIDEO_OVERLAY[item.key] }} />
+                            {/* Planet icon */}
+                            <div className="absolute top-3 left-3 w-8 h-8 opacity-60 z-10" style={iconStyle(item.svgKey, 'rgba(255,255,255,0.85)')} />
+                            <div className="relative z-10 font-serif text-[17px] text-white leading-snug drop-shadow-sm">
                               {item.name}{item.rx ? ' ℞' : ''}
                             </div>
-                            <div className="text-[12px] text-white/70 mt-0.5">{item.pos}</div>
+                            <div className="relative z-10 text-[12px] text-white/75 mt-0.5 drop-shadow-sm">{item.pos}</div>
                           </div>
                         </Link>
                       ))}
                     </div>
 
-                    {/* Other planets: 2→3 col white cards with colored stroke */}
+                    {/* Saturn, Venus, North Node, Mercury, Mars — gradient fill, white text */}
+                    {gradItems.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {gradItems.map(item => (
+                          <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
+                            <div
+                              className="rounded-[18px] aspect-square flex flex-col justify-end p-4 relative overflow-hidden"
+                              style={{ background: GRAD[item.key] }}
+                            >
+                              <div className="absolute top-3 left-3 w-7 h-7 opacity-50" style={iconStyle(item.svgKey, 'rgba(255,255,255,0.9)')} />
+                              <div className="font-serif text-[16px] text-white leading-snug">
+                                {item.name}{item.rx ? ' ℞' : ''}
+                              </div>
+                              <div className="text-[11px] text-white/70 mt-0.5">{item.pos}</div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Remaining planets: white + colored stroke */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-                      {rest.map(item => {
+                      {strokeItems.map(item => {
                         const stroke = STROKE[item.key] ?? '#E0DBD3';
                         return (
                           <Link key={item.key} href={item.href} onClick={saveNavState} className="block">
@@ -564,18 +605,7 @@ function ChartView({ chart }: { chart: AstralChart | null }) {
                               className="rounded-[16px] aspect-square flex flex-col justify-end p-3 relative overflow-hidden bg-white"
                               style={{ border: `1.5px solid ${stroke}` }}
                             >
-                              {/* Colored icon */}
-                              <div
-                                className="absolute top-3 left-3 w-6 h-6"
-                                style={{
-                                  WebkitMaskImage: `url('/svg/${item.svgKey}.svg')`,
-                                  maskImage: `url('/svg/${item.svgKey}.svg')`,
-                                  WebkitMaskSize: 'contain', maskSize: 'contain',
-                                  WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
-                                  WebkitMaskPosition: 'center', maskPosition: 'center',
-                                  background: stroke,
-                                }}
-                              />
+                              <div className="absolute top-3 left-3 w-6 h-6" style={iconStyle(item.svgKey, stroke)} />
                               <div className="text-[14px] font-semibold text-ink leading-snug">
                                 {item.name}{item.rx ? ' ℞' : ''}
                               </div>
@@ -1400,6 +1430,7 @@ function ChartIntroOverlay({ chart, onDone }: { chart: AstralChart; onDone: () =
 function ActiveTransitsView({ chart, onNavigate }: { chart: AstralChart | null; onNavigate: () => void }) {
   const [transits, setTransits] = useState<Transit[]>([]);
   const [notedTransitKeys, setNotedTransitKeys] = useState<Set<string>>(new Set());
+  const [aspectFilter, setAspectFilter] = useState<string>('الكل');
 
   useEffect(() => {
     if (!chart) return;
@@ -1413,20 +1444,33 @@ function ActiveTransitsView({ chart, onNavigate }: { chart: AstralChart | null; 
     setNotedTransitKeys(keys);
   }, [chart]);
 
+  const ASPECT_FILTERS = [
+    { label: 'الكل', name: null },
+    { label: 'اقتران', name: 'اقتران', color: '#5C5C7A' },
+    { label: 'سُداس', name: 'سُداس', color: '#4A7FB5' },
+    { label: 'تربيع', name: 'تربيع', color: '#C0392B' },
+    { label: 'تثليث', name: 'تثليث', color: '#27AE60' },
+    { label: 'تقابل', name: 'تقابل', color: '#C0392B' },
+  ];
+
+  const filtered = transits.filter(t =>
+    aspectFilter === 'الكل' || t.aspectName === aspectFilter
+  );
+
   if (!chart) {
     return (
       <div className="px-5 pt-8 text-center text-sm text-ink-muted">
-        أضف خريطتك أولًا لعرض التأثيرات النشطة.
+        أضف خريطتك أولًا لعرض العبورات.
       </div>
     );
   }
 
   return (
     <div className="px-5 pt-6 pb-8">
-      <Headline>التأثيرات النشطة</Headline>
+      <Headline>العبورات</Headline>
       <p className="text-sm text-ink-muted mt-1 mb-4">ما يلامس خريطتك الآن، مرتّبًا بالقرب.</p>
 
-      {/* Calendar — moved from السيرة البانورامية */}
+      {/* Calendar */}
       <div className="mb-5">
         <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-2">التقويم الفلكي</div>
         <div style={{ background: '#FFFFFF', borderRadius: 18, padding: '14px 12px', border: '1px solid #E8E2D2' }}>
@@ -1435,13 +1479,32 @@ function ActiveTransitsView({ chart, onNavigate }: { chart: AstralChart | null; 
       </div>
 
       <div className="text-[11px] font-semibold tracking-wider text-ink-muted mb-2">العبورات على خريطتك</div>
+
+      {/* Aspect filter chips */}
+      <div className="flex gap-2 overflow-x-auto pb-1 mb-3" style={{ scrollbarWidth: 'none' }}>
+        {ASPECT_FILTERS.map(f => (
+          <button
+            key={f.label}
+            onClick={() => setAspectFilter(f.label)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0"
+            style={{
+              background: aspectFilter === f.label ? (f.color ?? '#171B3A') : '#fff',
+              color: aspectFilter === f.label ? '#F5F2EA' : '#171B3A',
+              border: `1px solid ${aspectFilter === f.label ? (f.color ?? '#171B3A') : '#E8E2D8'}`,
+            }}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col gap-2.5">
-        {transits.length === 0 ? (
+        {filtered.length === 0 ? (
           <Card>
-            <div className="text-sm text-ink-muted">لا توجد عبورات نشطة ضمن المدى الآن.</div>
+            <div className="text-sm text-ink-muted">{transits.length === 0 ? 'لا توجد عبورات نشطة ضمن المدى الآن.' : 'لا عبورات بهذا النوع حالياً.'}</div>
           </Card>
         ) : (
-          transits.map((t) => {
+          filtered.map((t) => {
             const transitSlug = `${t.transitKey}-${t.natalKey}`;
             const isNoted = notedTransitKeys.has(transitSlug);
             return (
@@ -1528,7 +1591,7 @@ function SelfPageInner() {
           {[
             { key: 'chart', label: 'الخريطة' },
             { key: 'body', label: 'الجسد' },
-            { key: 'active', label: 'التأثيرات' },
+            { key: 'active', label: 'العبورات' },
             { key: 'transits', label: 'السيرة' },
           ].map((tab) => (
             <button
