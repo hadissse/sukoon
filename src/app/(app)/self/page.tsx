@@ -1580,7 +1580,7 @@ function SelfPageInner() {
             {[
               { key: 'chart',   label: 'الخريطة' },
               { key: 'active',  label: 'العبورات' },
-              { key: 'transits',label: 'السيرة' },
+              ...(chart ? [{ key: 'transits', label: 'السيرة' }] : []),
               { key: 'body',    label: 'الجسد' },
             ].map((tab) => (
               <button
@@ -1643,11 +1643,19 @@ function SelfPageInner() {
 
         {mainTab === 'transits' && (
           <>
-            <div className="px-5 mb-4">
-              <Headline>السيرة البانورامية</Headline>
-            </div>
-            <TransitsView />
-            <LifeArcView chart={chart} />
+            {!chart ? (
+              <div className="px-5 pt-10 text-center text-sm text-ink-muted">
+                أدخل بيانات مولدك أولاً لعرض السيرة البانورامية.
+              </div>
+            ) : (
+              <>
+                <div className="px-5 mb-4">
+                  <Headline>السيرة البانورامية</Headline>
+                </div>
+                <TransitsView />
+                <LifeArcView chart={chart} />
+              </>
+            )}
           </>
         )}
 
