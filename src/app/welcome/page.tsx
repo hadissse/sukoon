@@ -10,6 +10,7 @@ import {
   ProgressBar,
 } from '@/components/onboarding/PreAppUI';
 import { Logo } from '@/components/Logo';
+import { SukoonIcon } from '@/components/SukoonIcon';
 import { signInWithGoogle, signInWithApple, signInWithEmail, signUpWithEmail, resetPassword } from '@/lib/auth';
 
 /**
@@ -205,7 +206,7 @@ export default function WelcomePage() {
       {phase === 'welcome' && (
         <div className="flex-1 flex flex-col">
           <div className="flex flex-col items-center pt-14 pb-6 px-8 gap-5">
-            <Orb variant="dusk" size={150} />
+            <SukoonIcon size={64} />
             <Logo height={360} color="#171B3A" />
           </div>
           <div className="px-6 pb-14 flex flex-col">

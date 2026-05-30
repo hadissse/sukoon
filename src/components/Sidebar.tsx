@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Logo } from './Logo';
+import { SukoonIcon } from './SukoonIcon';
 
 const tabs = [
   { key: 'today', label: 'اليوم', href: '/today', icon: TodayIcon },
@@ -35,8 +35,9 @@ export function Sidebar() {
     <aside className="hidden md:flex md:flex-col md:shrink-0 md:w-[248px] lg:w-[272px] md:sticky md:top-0 md:h-dvh border-e border-rule-soft bg-cream-soft/40 backdrop-blur-xl">
       <div className="flex flex-col h-full px-5 py-6">
         {/* Brand */}
-        <Link href="/today" className="flex items-center gap-2 px-2 mb-8" aria-label="سُكون">
-          <Logo height={65} color="#171B3A" />
+        <Link href="/today" className="flex items-center gap-3 px-2 mb-8" aria-label="سُكون">
+          <SukoonIcon size={56} />
+          <span className="font-serif text-xl text-ink">سُكون</span>
         </Link>
 
         {/* Primary navigation */}

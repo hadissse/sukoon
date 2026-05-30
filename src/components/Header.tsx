@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Logo } from './Logo';
+import { SukoonIcon } from './SukoonIcon';
 
 export function Header() {
   return (
@@ -19,9 +19,9 @@ export function Header() {
           </svg>
         </Link>
 
-        {/* Center: logo */}
+        {/* Center: new icon logo */}
         <Link href="/today" aria-label="سُكون">
-          <Logo height={22} color="#171B3A" />
+          <SukoonIcon size={36} />
         </Link>
 
         {/* Right: actions */}
