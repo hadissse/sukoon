@@ -41,7 +41,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex md:flex-col md:shrink-0 md:w-[248px] lg:w-[272px] md:sticky md:top-0 md:h-dvh border-s border-rule-soft bg-cream-soft/40 backdrop-blur-xl">
+    <aside className="hidden md:flex md:flex-col md:shrink-0 md:w-[248px] lg:w-[272px] md:sticky md:top-0 md:h-dvh border-e border-rule-soft bg-cream-soft/40 backdrop-blur-xl">
       <div className="flex flex-col h-full px-5 py-6">
         {/* Brand */}
         <Link href="/today" className="flex items-center gap-2 px-2 mb-8" aria-label="سُكون">
@@ -51,7 +51,7 @@ export function Sidebar() {
         {/* Primary navigation */}
         <nav className="flex flex-col gap-1">
           {tabs.map((tab) => {
-            const active = pathname.startsWith('/' + tab.key) || (tab.key === 'today' && pathname === '/today');
+            const active = pathname.startsWith('/' + tab.key);
             const Icon = tab.icon;
             return (
               <Link
